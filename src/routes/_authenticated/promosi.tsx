@@ -1,25 +1,35 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BadgePercent } from "lucide-react";
-import { BackofficeFeaturePage } from "@/components/BackofficeFeaturePage";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { BadgePercent, Plus, Pencil, Trash2, CalendarClock } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { AppShell } from "@/components/AppShell";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/promosi")({ component: PromosiPage });
+type Promotion = { id: string; name: string; type: "percentage" | "fixed"; value: number; min_purchase: number; active: boolean; starts_at: string | null; ends_at: string | null };
 
 function PromosiPage() {
-  return (
-    <BackofficeFeaturePage
-      title="Promosi & Diskon"
-      description="Atur promo, diskon, bundle, dan campaign penjualan"
-      icon={BadgePercent}
-      stats={[
-        { label: "Promo aktif", value: "0", note: "Sedang berjalan" },
-        { label: "Voucher", value: "0", note: "Kode tersedia" },
-        { label: "Bundle", value: "0", note: "Paket menu" },
-        { label: "Campaign", value: "0", note: "Campaign marketing" },
-      ]}
-      sections={[
-        { title: "Diskon & promo", description: "Buat aturan promo yang fleksibel", items: ["Diskon persen", "Diskon nominal", "Happy hour", "Buy 1 get 1"] },
-        { title: "Bundle & voucher", description: "Dorong nilai transaksi dan repeat order", items: ["Paket bundle", "Voucher kode", "Minimum pembelian", "Periode promo"] },
-      ]}
-    />
-  );
+  const qc = useQueryClient();
+  const query = useQuery({ queryKey: ["promotions"], queryFn: async () => { const { data, error } = await supabase.from("promotions").select("*").order("created_at", { ascending: false }); if (error) throw error; return (data ?? []) as Promotion[]; } });
+  const promos = query.data ?? [];
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ id: "", name: "", type: "percentage" as "percentage" | "fixed", value: "", min_purchase: "", active: true });
+  const save = useMutation({ mutationFn: async () => { const { data: user } = await supabase.auth.getUser(); if (!user.user) throw new Error("Belum login"); const payload = { name: form.name.trim(), type: form.type, value: Number(form.value) || 0, min_purchase: Number(form.min_purchase) || 0, active: form.active, owner_id: user.user.id }; const q = form.id ? supabase.from("promotions").update(payload).eq("id", form.id) : supabase.from("promotions").insert(payload); const { error } = await q; if (error) throw error; }, onSuccess: () => { setOpen(false); void qc.invalidateQueries({ queryKey: ["promotions"] }); toast.success("Promo tersimpan"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal menyimpan promo") });
+  const remove = useMutation({ mutationFn: async (id: string) => { const { error } = await supabase.from("promotions").delete().eq("id", id); if (error) throw error; }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["promotions"] }); toast.success("Promo dihapus"); } });
+  const toggle = useMutation({ mutationFn: async ({ id, active }: { id: string; active: boolean }) => { const { error } = await supabase.from("promotions").update({ active }).eq("id", id); if (error) throw error; }, onSuccess: () => void qc.invalidateQueries({ queryKey: ["promotions"] }) });
+  return <AppShell title="Promosi & Diskon" description="Diskon, happy hour, voucher, dan campaign penjualan" actions={<Button onClick={() => { setForm({ id: "", name: "", type: "percentage", value: "", min_purchase: "", active: true }); setOpen(true); }}><Plus className="mr-2 size-4" />Buat promo</Button>}>
+    <div className="grid gap-4 md:grid-cols-4"><Stat label="Promo aktif" value={String(promos.filter((p) => p.active).length)} note="Sedang berjalan" /><Stat label="Voucher" value="0" note="Bisa ditambahkan" /><Stat label="Bundle" value="0" note="Paket menu" /><Stat label="Campaign" value={String(promos.length)} note="Total dibuat" /></div>
+    <Card className="mt-4"><CardHeader><CardTitle>Daftar promosi</CardTitle></CardHeader><CardContent className="p-0"><div className="divide-y">{promos.map((p) => <div key={p.id} className="flex flex-wrap items-center gap-4 p-4"><div className="grid size-11 place-items-center rounded-xl bg-primary/10 text-primary"><BadgePercent className="size-5" /></div><div className="min-w-48 flex-1"><div className="flex items-center gap-2"><p className="font-medium">{p.name}</p><Badge variant={p.active ? "default" : "outline"}>{p.active ? "Aktif" : "Off"}</Badge></div><p className="text-xs text-muted-foreground">{p.type === "percentage" ? `${p.value}%` : `Rp ${Number(p.value).toLocaleString("id-ID")}`} · minimum Rp {Number(p.min_purchase).toLocaleString("id-ID")}</p></div><div className="flex items-center gap-2"><Switch checked={p.active} onCheckedChange={(v) => toggle.mutate({ id: p.id, active: v })} /><Button size="icon" variant="ghost" onClick={() => { setForm({ id: p.id, name: p.name, type: p.type, value: String(p.value), min_purchase: String(p.min_purchase), active: p.active }); setOpen(true); }}><Pencil className="size-4" /></Button><Button size="icon" variant="ghost" className="text-destructive" onClick={() => { if (confirm(`Hapus promo ${p.name}?`)) remove.mutate(p.id); }}><Trash2 className="size-4" /></Button></div></div>)}{!promos.length && <p className="py-12 text-center text-sm text-muted-foreground">Belum ada promo. Buat promo pertama untuk mulai campaign.</p>}</div></CardContent></Card>
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent><DialogHeader><DialogTitle>{form.id ? "Edit promo" : "Buat promo"}</DialogTitle><DialogDescription>Atur nilai diskon dan minimum transaksi.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={(e) => { e.preventDefault(); save.mutate(); }}><div className="space-y-2"><Label>Nama promo</Label><Input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div><div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>Tipe</Label><Select value={form.type} onValueChange={(v) => setForm({ ...form, type: v as "percentage" | "fixed" })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="percentage">Persentase (%)</SelectItem><SelectItem value="fixed">Nominal (Rp)</SelectItem></SelectContent></Select></div><div className="space-y-2"><Label>Nilai</Label><Input type="number" min="0" value={form.value} onChange={(e) => setForm({ ...form, value: e.target.value })} /></div></div><div className="space-y-2"><Label>Minimum pembelian (Rp)</Label><Input type="number" min="0" value={form.min_purchase} onChange={(e) => setForm({ ...form, min_purchase: e.target.value })} /></div><div className="flex items-center justify-between rounded-xl border p-3"><div><p className="font-medium text-sm">Promo aktif</p><p className="text-xs text-muted-foreground">Bisa dipakai di checkout.</p></div><Switch checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} /></div><Button className="w-full" disabled={save.isPending}>{save.isPending ? "Menyimpan…" : "Simpan promo"}</Button></form></DialogContent></Dialog>
+  </AppShell>;
 }
+function Stat({ label, value, note }: { label: string; value: string; note: string }) { return <Card><CardContent className="p-4"><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{note}</p></CardContent></Card>; }
