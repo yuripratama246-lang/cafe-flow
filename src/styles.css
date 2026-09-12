@@ -158,3 +158,40 @@
     color: var(--color-foreground);
   }
 }
+
+@layer base {
+  body {
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+}
+
+@utility num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+@utility no-print {
+  @media print {
+    display: none !important;
+  }
+}
+
+@utility print-only-area {
+  @media print {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    padding: 24px;
+    background: white;
+    color: black;
+    z-index: 9999;
+  }
+}
