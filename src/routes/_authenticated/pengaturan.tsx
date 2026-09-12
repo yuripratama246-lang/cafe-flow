@@ -17,14 +17,34 @@ export const Route = createFileRoute("/_authenticated/pengaturan")({ component: 
 type Settings = { id?: string; owner_id: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
 const DEFAULTS = { name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
 
+async function getOwnerId() {
+  const { data, error } = await supabase.auth.getUser();
+  if (error || !data.user) throw new Error("Belum login");
+  return data.user.id;
+}
+
 function PengaturanPage() {
   const qc = useQueryClient();
-  const query = useQuery({ queryKey: ["outlet-settings"], queryFn: async () => { const { data: user } = await supabase.auth.getUser(); if (!user.user) throw new Error("Belum login"); const { data, error } = await supabase.from("outlet_settings").select("*").eq("owner_id", user.user.id).maybeSingle(); if (error) throw error; return { owner_id: user.user.id, ...(data ?? DEFAULTS) } as Settings; } });
+  const query = useQuery({
+    queryKey: ["outlet-settings"],
+    queryFn: async () => {
+      const ownerId = await getOwnerId();
+      const { data, error } = await supabase.from("outlet_settings").select("*").eq("owner_id", ownerId).maybeSingle();
+      if (error) throw error;
+      if (data) return data as Settings;
+      const initial = { owner_id: ownerId, ...DEFAULTS } as Settings;
+      const { data: created, error: createError } = await supabase.from("outlet_settings").upsert(initial, { onConflict: "owner_id" }).select("*").single();
+      if (createError) throw createError;
+      return created as Settings;
+    },
+    retry: 1,
+  });
   const [form, setForm] = useState<Settings | null>(null);
   useEffect(() => { if (query.data) setForm(query.data); }, [query.data]);
   const save = useMutation({ mutationFn: async () => { if (!form) return; const { error } = await supabase.from("outlet_settings").upsert(form, { onConflict: "owner_id" }); if (error) throw error; }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["outlet-settings"] }); toast.success("Pengaturan outlet tersimpan"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal menyimpan pengaturan") });
 
-  if (!form) return <AppShell title="Pengaturan Outlet" description="Atur outlet, pajak, pembayaran, struk, dan preferensi POS"><div className="grid gap-4 md:grid-cols-2"><Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Memuat pengaturan outlet…</CardContent></Card></div></AppShell>;
+  if (query.isError) return <AppShell title="Pengaturan Outlet" description="Atur identitas bisnis, checkout, pembayaran, struk, dan notifikasi"><Card><CardContent className="py-12 text-center"><p className="font-medium">Pengaturan gagal dimuat</p><p className="mt-2 text-sm text-muted-foreground">{query.error instanceof Error ? query.error.message : "Terjadi kesalahan saat membaca pengaturan."}</p><Button className="mt-4" onClick={() => query.refetch()}>Coba lagi</Button></CardContent></Card></AppShell>;
+  if (!form) return <AppShell title="Pengaturan Outlet" description="Atur identitas bisnis, checkout, pembayaran, struk, dan notifikasi"><div className="grid gap-4 md:grid-cols-2"><Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Memuat pengaturan outlet…</CardContent></Card></div></AppShell>;
   const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setForm({ ...form, [key]: value });
 
   return <AppShell title="Pengaturan Outlet" description="Atur identitas bisnis, checkout, pembayaran, struk, dan notifikasi" actions={<Button onClick={() => save.mutate()} disabled={save.isPending}><Save className="mr-2 size-4" />{save.isPending ? "Menyimpan…" : "Simpan perubahan"}</Button>}>
