@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { UserPlus, Pencil, Power, Play, Square, ShieldCheck, Users, Clock, Activity, Mail } from "lucide-react";
+import { UserPlus, Pencil, Play, Square, ShieldCheck, Users, Clock, Activity, Mail } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,16 +38,19 @@ function PegawaiPage() {
   function openEdit(s: StaffProfile) { setForm({ user_id: s.user_id, full_name: s.full_name, email: "", role: s.role === "manager" ? "manager" : "cashier", is_active: s.is_active, permissions: { ...DEFAULT_PERMISSIONS, ...s.permissions } }); setOpen(true); }
   const save = useMutation({ mutationFn: async () => {
     if (!form.user_id) {
-      const { error } = await supabase.functions.invoke("invite-staff", { body: { email: form.email, full_name: form.full_name, role: form.role, permissions: form.permissions } });
+      const { data, error } = await supabase.functions.invoke("invite-staff", { body: { email: form.email, full_name: form.full_name, role: form.role, permissions: form.permissions, redirect_to: `${window.location.origin}/auth` } });
       if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error ?? "Gagal mengirim undangan staff");
     } else {
       const { error } = await supabase.from("staff_profiles").update({ full_name: form.full_name, role: form.role, is_active: form.is_active, permissions: form.permissions }).eq("user_id", form.user_id);
       if (error) throw error;
     }
-  }, onSuccess: () => { setOpen(false); void qc.invalidateQueries({ queryKey: ["staff-profiles"] }); toast.success(form.user_id ? "Akun staff diperbarui" : "Undangan staff dikirim"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal menyimpan staff") });
-  const toggle = useMutation({ mutationFn: async ({ user_id, value }: { user_id: string; value: boolean }) => { const { error } = await supabase.from("staff_profiles").update({ is_active: value }).eq("user_id", user_id); if (error) throw error; }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["staff-profiles"] }); toast.success("Status akses diperbarui"); }, onError: () => toast.error("Gagal mengubah akses") });
+  }, onSuccess: () => { setOpen(false); void qc.invalidateQueries({ queryKey: ["staff-profiles"] }); toast.success(form.user_id ? "Akun staff diperbarui" : "Undangan staff dikirim ke email"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal menyimpan staff") });
+  const toggle = useMutation({ mutationFn: async ({ user_id, value }: { user_id: string; value: boolean }) => { const { error } = await supabase.from("staff_profiles").update({ is_active: value }).eq("user_id", user_id); if (error) throw error; }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["staff-profiles"] }); toast.success("Status akses diperbarui"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal mengubah akses") });
   const shift = useMutation({ mutationFn: async ({ staff_user_id, opening }: { staff_user_id: string; opening: boolean }) => { if (opening) { const { error } = await supabase.from("staff_shifts").insert({ owner_id: me.data!.owner_id, staff_user_id, opening_cash: 0, status: "open" }); if (error) throw error; } else { const { error } = await supabase.from("staff_shifts").update({ status: "closed", closed_at: new Date().toISOString() }).eq("staff_user_id", staff_user_id).eq("status", "open"); if (error) throw error; } }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["staff-shifts"] }); toast.success("Shift diperbarui"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal mengubah shift") });
 
+  if (me.isLoading) return <AppShell title="Pegawai & Shift" description="Kelola akun staff, role, akses fitur, dan shift"><Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Memuat akses owner…</CardContent></Card></AppShell>;
+  if (me.isError) return <AppShell title="Pegawai & Shift" description="Kelola akun staff, role, akses fitur, dan shift"><Card><CardContent className="py-12 text-center"><p className="font-medium">Akses staff gagal dimuat</p><p className="mt-2 text-sm text-muted-foreground">{me.error instanceof Error ? me.error.message : "Coba refresh halaman."}</p></CardContent></Card></AppShell>;
   if (me.data && me.data.role !== "owner") return <AppShell title="Pegawai & Shift" description="Akses ini hanya tersedia untuk owner"><Card><CardContent className="py-16 text-center"><ShieldCheck className="mx-auto size-10 text-muted-foreground" /><h2 className="mt-4 font-semibold">Owner only</h2><p className="mt-1 text-sm text-muted-foreground">Hanya owner outlet yang dapat mengatur akun staff dan hak akses.</p></CardContent></Card></AppShell>;
 
   const shiftFor = (userId: string) => activeShifts.find((s) => s.staff_user_id === userId);
@@ -60,11 +63,10 @@ function PegawaiPage() {
     <Dialog open={open} onOpenChange={setOpen}><DialogContent className="max-h-[90vh] overflow-y-auto"><DialogHeader><DialogTitle>{form.user_id ? "Edit akses staff" : "Tambah akun staff"}</DialogTitle><DialogDescription>{form.user_id ? "Atur role dan akses fitur akun ini." : "Staff akan menerima email undangan untuk membuat password sendiri."}</DialogDescription></DialogHeader><form className="space-y-5" onSubmit={(e) => { e.preventDefault(); if (!form.user_id && !form.email.includes("@")) return toast.error("Email staff wajib valid"); save.mutate(); }}>
       <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>Nama staff</Label><Input value={form.full_name} onChange={(e) => setForm({ ...form, full_name: e.target.value })} required /></div>{!form.user_id && <div className="space-y-2"><Label>Email login</Label><Input type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="staff@cafe.com" required /></div>}</div>
       <div className="space-y-2"><Label>Role</Label><Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v as "manager" | "cashier" })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="cashier">Kasir</SelectItem><SelectItem value="manager">Manager</SelectItem></SelectContent></Select></div>
-      <div><div className="mb-2 flex items-center justify-between"><div><p className="font-medium">Hak akses</p><p className="text-xs text-muted-foreground">Owner bisa ON/OFF per fitur.</p></div><Badge variant="outline">RLS aktif</Badge></div><div className="grid gap-2 sm:grid-cols-2">{PERMISSIONS.map((p) => <div key={p.key} className="flex items-center justify-between rounded-xl border p-3"><span className="text-sm">{p.label}</span><Switch checked={form.permissions[p.key] === true} onCheckedChange={(v) => setForm({ ...form, permissions: { ...form.permissions, [p.key]: v } })} /></div>)}</div></div>
+      <div><div className="mb-2 flex items-center justify-between"><div><p className="font-medium">Hak akses</p><p className="text-xs text-muted-foreground">Owner bisa ON/OFF per fitur.</p></div><Badge variant="outline">RLS aktif</Badge></div><div className="grid gap-2 sm:grid-cols-2">{PERMISSIONS.map((p) => <div key={p.key} className="flex items-center justify-between rounded-xl border p-3"><span className="text-sm">{p.label}</span><Switch checked={form.permissions[p.key] === true} onCheckedChange={(v) => setForm({ ...form, permissions: { ...form.permissions, [p.key]: v })} /></div>)}</div></div>
       {form.user_id && <div className="flex items-center justify-between rounded-xl border p-3"><div><p className="text-sm font-medium">Akun aktif</p><p className="text-xs text-muted-foreground">Matikan untuk memblokir akses staff.</p></div><Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} /></div>}
       <Button className="w-full" disabled={save.isPending}>{save.isPending ? "Menyimpan…" : form.user_id ? "Simpan perubahan" : <><Mail className="mr-2 size-4" />Kirim undangan staff</>}</Button>
     </form></DialogContent></Dialog>
   </AppShell>;
 }
-
 function Stat({ icon: Icon, label, value, note }: { icon: typeof Users; label: string; value: string; note: string }) { return <Card><CardContent className="flex items-center gap-3 p-4"><div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary"><Icon className="size-5" /></div><div><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{note}</p></div></CardContent></Card>; }
