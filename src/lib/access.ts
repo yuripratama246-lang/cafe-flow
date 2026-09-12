@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 export type StaffRole = "owner" | "manager" | "cashier";
-export type PermissionKey = "dashboard" | "orders" | "payments" | "products" | "inventory" | "tables" | "reports" | "customers" | "promotions";
+export type PermissionKey = "dashboard" | "orders" | "payments" | "products" | "inventory" | "tables" | "reports" | "customers" | "promotions" | "settings";
 
 export type StaffProfile = {
   user_id: string;
