@@ -1,0 +1,55 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
+import { ShoppingBag, Plus, Minus, Search, CheckCircle2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { fetchMenuProducts, fetchTables, createOrder, type Product } from "@/lib/pos";
+import { useQuery } from "@tanstack/react-query";
+import { rupiah } from "@/lib/format";
+
+export const Route = createFileRoute("/menu")({ component: PublicMenuPage });
+
+type CartItem = Product & { quantity: number };
+
+function PublicMenuPage() {
+  const params = new URLSearchParams(typeof window === "undefined" ? "" : window.location.search);
+  const tableCode = params.get("table") ?? "";
+  const productsQuery = useQuery({ queryKey: ["public-menu"], queryFn: fetchMenuProducts });
+  const tablesQuery = useQuery({ queryKey: ["public-tables"], queryFn: fetchTables });
+  const [cart, setCart] = useState<CartItem[]>([]);
+  const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("Semua");
+  const [customerName, setCustomerName] = useState("");
+  const [notes, setNotes] = useState("");
+  const [sent, setSent] = useState(false);
+
+  const table = tablesQuery.data?.find((t) => t.code === tableCode);
+  const products = productsQuery.data ?? [];
+  const categories = useMemo(() => ["Semua", ...Array.from(new Set(products.map((p) => p.category_id).filter(Boolean)))], [products]);
+  const visible = products.filter((p) => {
+    const matchesSearch = `${p.name} ${p.description ?? ""}`.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = category === "Semua" || p.category_id === category;
+    return matchesSearch && matchesCategory;
+  });
+  const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+
+  function add(product: Product) { setCart((current) => { const found = current.find((i) => i.id === product.id); return found ? current.map((i) => i.id === product.id ? { ...i, quantity: i.quantity + 1 } : i) : [...current, { ...product, quantity: 1 }]; }); }
+  function change(id: string, delta: number) { setCart((current) => current.flatMap((i) => i.id === id ? (i.quantity + delta > 0 ? [{ ...i, quantity: i.quantity + delta }] : []) : [i])); }
+  async function submitOrder() {
+    if (!table) return toast.error("QR meja tidak valid.");
+    if (!cart.length) return toast.error("Tambahkan menu terlebih dahulu.");
+    try {
+      await createOrder({ source: "qr", status: "new", table_id: table.id, customer_name: customerName.trim() || null, notes: notes.trim() || null, subtotal: total, discount: 0, tax: 0, total, is_paid: false, items: cart.map((i) => ({ product_id: i.id, product_name: i.name, unit_price: i.price, quantity: i.quantity })) });
+      setCart([]); setSent(true); toast.success("Pesanan masuk ke kasir");
+    } catch (error) { toast.error(error instanceof Error ? error.message : "Pesanan gagal dikirim"); }
+  }
+
+  if (sent) return <div className="min-h-screen bg-slate-50 p-5"><div className="mx-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-sm"><CheckCircle2 className="mx-auto size-14 text-emerald-500" /><h1 className="mt-4 text-2xl font-bold">Pesanan diterima</h1><p className="mt-2 text-sm text-slate-500">Pesanan meja {table?.name} sudah masuk ke Cafe Flow. Silakan tunggu sampai pesanan siap.</p><Button className="mt-6 w-full" onClick={() => setSent(false)}>Pesan lagi</Button></div></div>;
+
+  return <div className="min-h-screen bg-slate-50 pb-28 text-slate-900"><header className="sticky top-0 z-20 border-b bg-white/95 px-4 py-4 backdrop-blur"><div className="mx-auto max-w-3xl"><div className="flex items-center justify-between"><div><p className="text-xs font-semibold uppercase tracking-widest text-teal-600">Cafe Flow</p><h1 className="text-xl font-bold">Menu Cafe</h1>{table && <p className="text-xs text-slate-500">{table.name} · {table.code}</p>}</div><div className="grid size-10 place-items-center rounded-full bg-teal-50 text-teal-700"><ShoppingBag className="size-5" /></div></div><div className="relative mt-4"><Search className="absolute left-3 top-2.5 size-4 text-slate-400" /><Input className="pl-9" placeholder="Cari menu..." value={search} onChange={(e) => setSearch(e.target.value)} /></div><div className="mt-3 flex gap-2 overflow-x-auto pb-1">{categories.map((c) => <button key={c} onClick={() => setCategory(c)} className={`whitespace-nowrap rounded-full px-4 py-2 text-xs font-medium ${category === c ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600"}`}>{c === "Semua" ? c : products.find((p) => p.category_id === c)?.name ? "Kategori" : c}</button>)}</div></div></header>
+    <main className="mx-auto max-w-3xl p-4"><div className="grid gap-3">{visible.map((p) => <article key={p.id} className="flex gap-3 rounded-2xl bg-white p-3 shadow-sm"><div className="size-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">{p.image_url ? <img src={p.image_url} alt={p.name} className="size-full object-cover" /> : <div className="grid size-full place-items-center text-xs text-slate-400">No photo</div>}</div><div className="min-w-0 flex-1"><h2 className="font-semibold">{p.name}</h2><p className="mt-1 line-clamp-2 text-xs text-slate-500">{p.description}</p><div className="mt-3 flex items-center justify-between gap-2"><strong>{rupiah(p.price)}</strong><Button size="sm" onClick={() => add(p)}><Plus className="mr-1 size-4" />Tambah</Button></div></div></article>)}</div></main>
+    {cart.length > 0 && <section className="fixed inset-x-0 bottom-0 z-30 border-t bg-white p-4 shadow-2xl"><div className="mx-auto max-w-3xl"><div className="flex max-h-36 flex-col gap-2 overflow-y-auto">{cart.map((item) => <div key={item.id} className="flex items-center justify-between text-sm"><span className="min-w-0 flex-1 truncate">{item.name}</span><div className="ml-3 flex items-center gap-2"><Button size="icon" variant="outline" className="size-7" onClick={() => change(item.id, -1)}><Minus className="size-3" /></Button><span className="w-5 text-center">{item.quantity}</span><Button size="icon" variant="outline" className="size-7" onClick={() => change(item.id, 1)}><Plus className="size-3" /></Button></div></div>)}</div><div className="mt-3 grid gap-2 sm:grid-cols-2"><Input placeholder="Nama pelanggan (opsional)" value={customerName} onChange={(e) => setCustomerName(e.target.value)} /><Textarea className="sm:row-span-2" placeholder="Catatan pesanan (opsional)" value={notes} onChange={(e) => setNotes(e.target.value)} /></div><div className="mt-3 flex items-center justify-between"><div><p className="text-xs text-slate-500">Total</p><p className="text-lg font-bold">{rupiah(total)}</p></div><Button size="lg" onClick={submitOrder}>Kirim pesanan</Button></div></div></section>}
+  </div>;
+}
