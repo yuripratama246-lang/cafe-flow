@@ -4,7 +4,6 @@ import {
   LayoutDashboard,
   ScanLine,
   Package,
-  ReceiptText,
   ClipboardList,
   QrCode,
   LogOut,
@@ -14,6 +13,8 @@ import {
   Users,
   Settings,
   ChevronDown,
+  BadgePercent,
+  UserCog,
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
@@ -25,9 +26,7 @@ import { cn } from "@/lib/utils";
 const GROUPS = [
   {
     label: "Utama",
-    items: [
-      { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    ],
+    items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
   },
   {
     label: "Transaksi",
@@ -37,24 +36,26 @@ const GROUPS = [
     ],
   },
   {
-    label: "Produk & Inventori",
+    label: "Produk & Outlet",
     items: [
       { to: "/produk", label: "Produk & Stok", icon: Package },
       { to: "/meja", label: "Meja & QR Menu", icon: QrCode },
+      { to: "/inventory", label: "Inventory", icon: Boxes },
     ],
   },
   {
-    label: "Analitik",
+    label: "Growth",
+    items: [
+      { to: "/customers", label: "Pelanggan & Loyalty", icon: Users },
+      { to: "/promosi", label: "Promosi & Diskon", icon: BadgePercent },
+    ],
+  },
+  {
+    label: "Manajemen",
     items: [
       { to: "/laporan", label: "Laporan Penjualan", icon: BarChart3 },
-    ],
-  },
-  {
-    label: "Segera Hadir",
-    items: [
-      { to: "/dashboard", label: "Inventory & Supplier", icon: Boxes },
-      { to: "/dashboard", label: "Pelanggan & Loyalty", icon: Users },
-      { to: "/dashboard", label: "Pengaturan Outlet", icon: Settings },
+      { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog },
+      { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings },
     ],
   },
 ] as const;
@@ -68,27 +69,20 @@ function NavList({ onNavigate }: { onNavigate?: () => void }) {
             {group.label}
           </p>
           <div className="space-y-0.5">
-            {group.items.map(({ to, label, icon: Icon }, index) => {
-              const upcoming = group.label === "Segera Hadir";
-              return (
-                <Link
-                  key={`${label}-${index}`}
-                  to={to}
-                  onClick={onNavigate}
-                  className={cn(
-                    "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    upcoming && "opacity-55",
-                  )}
-                  activeProps={{
-                    className: "bg-sidebar-primary/15 text-sidebar-primary hover:bg-sidebar-primary/20",
-                  }}
-                >
-                  <Icon className="size-4.5" />
-                  <span className="min-w-0 flex-1 truncate">{label}</span>
-                  {upcoming ? <span className="text-[9px]">soon</span> : null}
-                </Link>
-              );
-            })}
+            {group.items.map(({ to, label, icon: Icon }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={onNavigate}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+                activeProps={{
+                  className: "bg-sidebar-primary/15 text-sidebar-primary hover:bg-sidebar-primary/20",
+                }}
+              >
+                <Icon className="size-4.5" />
+                <span className="min-w-0 flex-1 truncate">{label}</span>
+              </Link>
+            ))}
           </div>
         </div>
       ))}
@@ -188,9 +182,7 @@ export function AppShell({
 
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-lg font-semibold md:text-xl">{title}</h1>
-            {description ? (
-              <p className="truncate text-xs text-muted-foreground md:text-sm">{description}</p>
-            ) : null}
+            {description ? <p className="truncate text-xs text-muted-foreground md:text-sm">{description}</p> : null}
           </div>
           <OutletSwitcher />
           {actions}
