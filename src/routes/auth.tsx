@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ScanLine, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,7 +26,8 @@ export const Route = createFileRoute("/auth")({
 
 function AuthPage() {
   const navigate = useNavigate();
-  const inviteMode = new URLSearchParams(window.location.search).get("invite") === "1";
+  const [inviteMode, setInviteMode] = useState(false);
+  const [inviteModeResolved, setInviteModeResolved] = useState(false);
   const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -35,7 +36,15 @@ function AuthPage() {
   const [checkingSession, setCheckingSession] = useState(true);
   const [inviteSession, setInviteSession] = useState(false);
 
+  // Read browser-only URL state after hydration. Never touch window during SSR.
   useEffect(() => {
+    setInviteMode(new URLSearchParams(window.location.search).get("invite") === "1");
+    setInviteModeResolved(true);
+  }, []);
+
+  useEffect(() => {
+    if (!inviteModeResolved) return;
+
     let active = true;
 
     const checkSession = async () => {
@@ -73,9 +82,9 @@ function AuthPage() {
       active = false;
       listener.subscription.unsubscribe();
     };
-  }, [inviteMode, navigate]);
+  }, [inviteMode, inviteModeResolved, navigate]);
 
-  async function handleInvitePassword(e: React.FormEvent) {
+  async function handleInvitePassword(e: FormEvent) {
     e.preventDefault();
     if (password.length < 8) return toast.error("Password minimal 8 karakter");
     if (password !== confirmPassword) return toast.error("Konfirmasi password tidak sama");
@@ -93,7 +102,7 @@ function AuthPage() {
     }
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setLoading(true);
     try {
@@ -133,7 +142,7 @@ function AuthPage() {
     navigate({ to: "/dashboard", replace: true });
   }
 
-  if (checkingSession) {
+  if (checkingSession || !inviteModeResolved) {
     return (
       <div className="grid min-h-screen place-items-center bg-sidebar px-4">
         <div className="text-sm text-sidebar-foreground/70">Memuat Cafe Flow…</div>
