@@ -1,133 +1,67 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  LayoutDashboard,
-  ScanLine,
-  Package,
-  ClipboardList,
-  QrCode,
-  LogOut,
-  Menu,
-  BarChart3,
-  Boxes,
-  Users,
-  Settings,
-  ChevronDown,
-  BadgePercent,
-  UserCog,
-} from "lucide-react";
+import { LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert } from "lucide-react";
 import { useState, type ReactNode } from "react";
-
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { canAccess, useStaffProfile, type PermissionKey } from "@/lib/access";
 
-const GROUPS = [
-  {
-    label: "Utama",
-    items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard }],
-  },
-  {
-    label: "Transaksi",
-    items: [
-      { to: "/kasir", label: "Kasir", icon: ScanLine },
-      { to: "/pesanan", label: "Pesanan", icon: ClipboardList },
-    ],
-  },
-  {
-    label: "Produk & Outlet",
-    items: [
-      { to: "/produk", label: "Produk & Stok", icon: Package },
-      { to: "/meja", label: "Meja & QR Menu", icon: QrCode },
-      { to: "/inventory", label: "Inventory", icon: Boxes },
-    ],
-  },
-  {
-    label: "Growth",
-    items: [
-      { to: "/customers", label: "Pelanggan & Loyalty", icon: Users },
-      { to: "/promosi", label: "Promosi & Diskon", icon: BadgePercent },
-    ],
-  },
-  {
-    label: "Manajemen",
-    items: [
-      { to: "/laporan", label: "Laporan Penjualan", icon: BarChart3 },
-      { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog },
-      { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings },
-    ],
-  },
-] as const;
+const GROUPS: { label: string; items: { to: string; label: string; icon: typeof LayoutDashboard; permission: PermissionKey }[] }[] = [
+  { label: "Utama", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" }] },
+  { label: "Transaksi", items: [
+    { to: "/kasir", label: "Kasir", icon: ScanLine, permission: "orders" },
+    { to: "/pesanan", label: "Pesanan", icon: ClipboardList, permission: "orders" },
+  ] },
+  { label: "Produk & Outlet", items: [
+    { to: "/produk", label: "Produk & Stok", icon: Package, permission: "products" },
+    { to: "/meja", label: "Meja & QR Menu", icon: QrCode, permission: "tables" },
+    { to: "/inventory", label: "Inventory", icon: Boxes, permission: "inventory" },
+  ] },
+  { label: "Growth", items: [
+    { to: "/customers", label: "Pelanggan & Loyalty", icon: Users, permission: "customers" },
+    { to: "/promosi", label: "Promosi & Diskon", icon: BadgePercent, permission: "promotions" },
+  ] },
+  { label: "Manajemen", items: [
+    { to: "/laporan", label: "Laporan Penjualan", icon: BarChart3, permission: "reports" },
+    { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog, permission: "settings" },
+    { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings, permission: "settings" },
+  ] },
+];
 
-function NavList({ onNavigate }: { onNavigate?: () => void }) {
+function NavList({ onNavigate, profile }: { onNavigate?: () => void; profile?: ReturnType<typeof useStaffProfile>["data"] }) {
   return (
     <nav className="space-y-4">
-      {GROUPS.map((group) => (
-        <div key={group.label}>
-          <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">
-            {group.label}
-          </p>
+      {GROUPS.map((group) => {
+        const items = profile ? group.items.filter((item) => canAccess(profile, item.permission)) : group.items;
+        if (!items.length) return null;
+        return <div key={group.label}>
+          <p className="mb-1 px-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/40">{group.label}</p>
           <div className="space-y-0.5">
-            {group.items.map(({ to, label, icon: Icon }) => (
-              <Link
-                key={to}
-                to={to}
-                onClick={onNavigate}
-                className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                activeProps={{
-                  className: "bg-sidebar-primary/15 text-sidebar-primary hover:bg-sidebar-primary/20",
-                }}
-              >
-                <Icon className="size-4.5" />
-                <span className="min-w-0 flex-1 truncate">{label}</span>
-              </Link>
-            ))}
+            {items.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={onNavigate} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-sidebar-foreground/75 transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground" activeProps={{ className: "bg-sidebar-primary/15 text-sidebar-primary hover:bg-sidebar-primary/20" }}>
+              <Icon className="size-4.5" /><span className="min-w-0 flex-1 truncate">{label}</span>
+            </Link>)}
           </div>
-        </div>
-      ))}
+        </div>;
+      })}
     </nav>
   );
 }
 
 function Brand() {
-  return (
-    <div className="flex items-center gap-2.5 px-3 py-1">
-      <div className="grid size-9 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground">
-        <ScanLine className="size-5" />
-      </div>
-      <div className="leading-tight">
-        <p className="font-display text-base font-semibold text-sidebar-foreground">Cafe Flow</p>
-        <p className="text-[11px] text-sidebar-foreground/55">POS &amp; QR Ordering</p>
-      </div>
-    </div>
-  );
+  return <div className="flex items-center gap-2.5 px-3 py-1"><div className="grid size-9 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground"><ScanLine className="size-5" /></div><div className="leading-tight"><p className="font-display text-base font-semibold text-sidebar-foreground">Cafe Flow</p><p className="text-[11px] text-sidebar-foreground/55">POS &amp; QR Ordering</p></div></div>;
 }
 
 function OutletSwitcher() {
-  return (
-    <button className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left text-xs shadow-sm md:flex">
-      <span className="size-2 rounded-full bg-emerald-500" />
-      <span className="max-w-32 truncate font-medium">Outlet Utama</span>
-      <ChevronDown className="size-3.5 text-muted-foreground" />
-    </button>
-  );
+  return <button className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left text-xs shadow-sm md:flex"><span className="size-2 rounded-full bg-emerald-500" /><span className="max-w-32 truncate font-medium">Outlet Utama</span><ChevronDown className="size-3.5 text-muted-foreground" /></button>;
 }
 
-export function AppShell({
-  title,
-  description,
-  actions,
-  children,
-}: {
-  title: string;
-  description?: string;
-  actions?: ReactNode;
-  children: ReactNode;
-}) {
+export function AppShell({ title, description, actions, children }: { title: string; description?: string; actions?: ReactNode; children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [open, setOpen] = useState(false);
+  const staff = useStaffProfile();
 
   async function handleSignOut() {
     await queryClient.cancelQueries();
@@ -136,60 +70,23 @@ export function AppShell({
     navigate({ to: "/auth", replace: true });
   }
 
-  return (
-    <div className="flex min-h-screen bg-background">
-      <aside className="no-print sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar p-3 lg:flex">
-        <div className="space-y-5 overflow-y-auto pr-1">
-          <Brand />
-          <NavList />
-        </div>
-        <div className="pt-3">
-          <Button
-            variant="ghost"
-            onClick={handleSignOut}
-            className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-          >
-            <LogOut className="size-4.5" /> Keluar
-          </Button>
-        </div>
-      </aside>
+  const blocked = !!staff.data && !staff.data.is_active;
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="no-print sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:px-6">
-          <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="lg:hidden">
-                <Menu className="size-5" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-3">
-              <SheetTitle className="sr-only">Navigasi</SheetTitle>
-              <div className="mt-6 flex h-[calc(100vh-3rem)] flex-col">
-                <div className="flex-1 space-y-6 overflow-y-auto">
-                  <Brand />
-                  <NavList onNavigate={() => setOpen(false)} />
-                </div>
-                <Button
-                  variant="ghost"
-                  onClick={handleSignOut}
-                  className="mt-4 w-full justify-start gap-3 text-sidebar-foreground/70"
-                >
-                  <LogOut className="size-4.5" /> Keluar
-                </Button>
-              </div>
-            </SheetContent>
-          </Sheet>
-
-          <div className="min-w-0 flex-1">
-            <h1 className="truncate text-lg font-semibold md:text-xl">{title}</h1>
-            {description ? <p className="truncate text-xs text-muted-foreground md:text-sm">{description}</p> : null}
-          </div>
-          <OutletSwitcher />
-          {actions}
-        </header>
-
-        <main className={cn("flex-1 p-4 md:p-6")}>{children}</main>
-      </div>
+  return <div className="flex min-h-screen bg-background">
+    <aside className="no-print sticky top-0 hidden h-screen w-64 shrink-0 flex-col justify-between border-r border-sidebar-border bg-sidebar p-3 lg:flex">
+      <div className="space-y-5 overflow-y-auto pr-1"><Brand />{blocked ? <Blocked /> : <NavList profile={staff.data} />}</div>
+      <div className="pt-3"><Button variant="ghost" onClick={handleSignOut} className="w-full justify-start gap-3 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"><LogOut className="size-4.5" /> Keluar</Button></div>
+    </aside>
+    <div className="flex min-w-0 flex-1 flex-col">
+      <header className="no-print sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/90 px-4 py-3 backdrop-blur md:px-6">
+        <Sheet open={open} onOpenChange={setOpen}><SheetTrigger asChild><Button variant="outline" size="icon" className="lg:hidden"><Menu className="size-5" /></Button></SheetTrigger><SheetContent side="left" className="w-72 border-sidebar-border bg-sidebar p-3"><SheetTitle className="sr-only">Navigasi</SheetTitle><div className="mt-6 flex h-[calc(100vh-3rem)] flex-col"><div className="flex-1 space-y-6 overflow-y-auto"><Brand />{blocked ? <Blocked /> : <NavList profile={staff.data} />}</div><Button variant="ghost" onClick={handleSignOut} className="mt-4 w-full justify-start gap-3 text-sidebar-foreground/70"><LogOut className="size-4.5" /> Keluar</Button></div></SheetContent></Sheet>
+        <div className="min-w-0 flex-1"><h1 className="truncate text-lg font-semibold md:text-xl">{title}</h1>{description ? <p className="truncate text-xs text-muted-foreground md:text-sm">{description}</p> : null}</div><OutletSwitcher />{actions}
+      </header>
+      {blocked ? <div className="m-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center"><ShieldAlert className="mx-auto mb-3 size-8 text-destructive" /><h2 className="font-semibold">Akun dinonaktifkan</h2><p className="mt-1 text-sm text-muted-foreground">Akses akun ini sudah dimatikan oleh owner. Hubungi owner untuk mengaktifkannya kembali.</p></div> : <main className={cn("flex-1 p-4 md:p-6")}>{children}</main>}
     </div>
-  );
+  </div>;
+}
+
+function Blocked() {
+  return <div className="rounded-xl border border-sidebar-border bg-sidebar-accent/30 p-3 text-xs text-sidebar-foreground/70"><ShieldAlert className="mb-2 size-4" /><p className="font-medium text-sidebar-foreground">Akses dinonaktifkan</p><p className="mt-1">Hubungi owner outlet.</p></div>;
 }
