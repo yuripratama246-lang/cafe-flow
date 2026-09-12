@@ -1,25 +1,47 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Boxes } from "lucide-react";
-import { BackofficeFeaturePage } from "@/components/BackofficeFeaturePage";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { Boxes, Plus, ArrowDownToLine, ArrowUpFromLine, AlertTriangle, ClipboardCheck } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { AppShell } from "@/components/AppShell";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { fetchProducts, type Product } from "@/lib/pos";
+import { rupiah } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/inventory")({ component: InventoryPage });
 
 function InventoryPage() {
-  return (
-    <BackofficeFeaturePage
-      title="Inventory"
-      description="Kontrol stok, bahan, supplier, dan pergerakan inventori"
-      icon={Boxes}
-      stats={[
-        { label: "SKU aktif", value: "24", note: "Produk yang dipantau" },
-        { label: "Stok menipis", value: "2", note: "Perlu restock" },
-        { label: "Supplier", value: "4", note: "Supplier terdaftar" },
-        { label: "Purchase order", value: "0", note: "Belum diproses" },
-      ]}
-      sections={[
-        { title: "Manajemen stok", description: "Fitur inti inventory ala POS restoran", items: ["Stock opname", "Stock adjustment", "Stock alert", "Riwayat stok"] },
-        { title: "Purchasing", description: "Siapkan alur pembelian barang", items: ["Supplier", "Purchase order", "Penerimaan barang", "Transfer antar outlet"] },
-      ]}
-    />
-  );
+  const qc = useQueryClient();
+  const productsQuery = useQuery({ queryKey: ["products"], queryFn: fetchProducts });
+  const movementQuery = useQuery({ queryKey: ["inventory-movements"], queryFn: async () => { const { data, error } = await supabase.from("inventory_movements").select("*, products(name)").order("created_at", { ascending: false }).limit(30); if (error) throw error; return data ?? []; } });
+  const products = productsQuery.data ?? [];
+  const low = products.filter((p) => p.stock <= p.low_stock_threshold);
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ productId: "", quantity: "", type: "adjustment", note: "" });
+
+  const adjust = useMutation({ mutationFn: async () => {
+    const product = products.find((p) => p.id === form.productId);
+    const delta = Number(form.quantity);
+    if (!product || !delta) throw new Error("Pilih produk dan masukkan jumlah perubahan.");
+    const next = Math.max(0, product.stock + delta);
+    const { error } = await supabase.from("products").update({ stock: next }).eq("id", product.id); if (error) throw error;
+    const { data: user } = await supabase.auth.getUser();
+    const { error: movementError } = await supabase.from("inventory_movements").insert({ product_id: product.id, owner_id: user.user?.id ?? null, type: delta > 0 ? "purchase" : "adjustment", quantity: delta, note: form.note.trim() || null, created_by: user.user?.id ?? null }); if (movementError) throw movementError;
+  }, onSuccess: () => { setOpen(false); setForm({ productId: "", quantity: "", type: "adjustment", note: "" }); void qc.invalidateQueries({ queryKey: ["products"] }); void qc.invalidateQueries({ queryKey: ["inventory-movements"] }); toast.success("Stok diperbarui"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal mengubah stok") });
+
+  return <AppShell title="Inventory" description="Stock opname, adjustment, alert, dan riwayat pergerakan" actions={<Button onClick={() => setOpen(true)}><Plus className="mr-2 size-4" />Stock adjustment</Button>}>
+    <div className="grid gap-4 md:grid-cols-4"><Stat icon={Boxes} label="SKU aktif" value={String(products.filter((p) => p.is_active).length)} note="Produk dipantau" /><Stat icon={AlertTriangle} label="Stok menipis" value={String(low.length)} note="Perlu restock" /><Stat icon={ClipboardCheck} label="Stock opname" value="Siap" note="Adjustment manual" /><Stat icon={ArrowUpFromLine} label="Pergerakan" value={String(movementQuery.data?.length ?? 0)} note="30 aktivitas terakhir" /></div>
+    <div className="mt-4 grid gap-4 xl:grid-cols-[1.4fr_1fr]"><Card><CardHeader><CardTitle>Stok saat ini</CardTitle></CardHeader><CardContent className="p-0"><div className="divide-y">{products.map((p) => <div key={p.id} className="flex items-center gap-3 p-4"><div className="size-10 overflow-hidden rounded-lg bg-muted">{p.image_url && <img src={p.image_url} alt="" className="size-full object-cover" />}</div><div className="min-w-0 flex-1"><p className="truncate font-medium">{p.name}</p><p className="text-xs text-muted-foreground">{rupiah(p.price)}</p></div><Badge variant={p.stock <= p.low_stock_threshold ? "destructive" : "secondary"}>{p.stock} stok</Badge></div>)}</div></CardContent></Card><Card><CardHeader><CardTitle>Riwayat stok</CardTitle></CardHeader><CardContent className="space-y-3">{(movementQuery.data ?? []).map((m) => <div key={m.id} className="flex items-center justify-between border-b pb-3 last:border-0"><div><p className="text-sm font-medium">{(m as { products?: { name?: string } }).products?.name ?? "Produk"}</p><p className="text-xs text-muted-foreground">{m.note || m.type} · {new Date(m.created_at).toLocaleString("id-ID")}</p></div><span className={m.quantity >= 0 ? "font-semibold text-emerald-600" : "font-semibold text-destructive"}>{m.quantity > 0 ? "+" : ""}{m.quantity}</span></div>)}{!movementQuery.data?.length && <p className="py-10 text-center text-sm text-muted-foreground">Belum ada pergerakan stok.</p>}</CardContent></Card></div>
+
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent><DialogHeader><DialogTitle>Stock adjustment</DialogTitle><DialogDescription>Tambah atau kurangi stok dan simpan riwayatnya.</DialogDescription></DialogHeader><form className="space-y-4" onSubmit={(e) => { e.preventDefault(); adjust.mutate(); }}><div className="space-y-2"><Label>Produk</Label><Select value={form.productId} onValueChange={(v) => setForm({ ...form, productId: v })}><SelectTrigger><SelectValue placeholder="Pilih produk" /></SelectTrigger><SelectContent>{products.map((p) => <SelectItem key={p.id} value={p.id}>{p.name} · stok {p.stock}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label>Perubahan stok</Label><Input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} placeholder="+10 atau -2" /></div><div className="space-y-2"><Label>Catatan</Label><Textarea value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} placeholder="Contoh: stok opname / barang datang" /></div><Button className="w-full" disabled={adjust.isPending}>{adjust.isPending ? "Menyimpan…" : "Simpan adjustment"}</Button></form></DialogContent></Dialog>
+  </AppShell>;
 }
+function Stat({ icon: Icon, label, value, note }: { icon: typeof Boxes; label: string; value: string; note: string }) { return <Card><CardContent className="flex items-center gap-3 p-4"><div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary"><Icon className="size-5" /></div><div><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-bold">{value}</p><p className="text-xs text-muted-foreground">{note}</p></div></CardContent></Card>; }
