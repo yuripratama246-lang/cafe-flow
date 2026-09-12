@@ -13,16 +13,56 @@ export type StaffProfile = {
   permissions: Record<string, boolean>;
 };
 
+const OWNER_PERMISSIONS: Record<PermissionKey, boolean> = {
+  dashboard: true, orders: true, payments: true, products: true, inventory: true,
+  tables: true, reports: true, customers: true, promotions: true, settings: true,
+};
+
 export async function fetchMyStaffProfile(): Promise<StaffProfile | null> {
-  const { data: userData } = await supabase.auth.getUser();
-  if (!userData.user) return null;
-  const { data, error } = await supabase.from("staff_profiles").select("user_id, owner_id, full_name, role, is_active, permissions").eq("user_id", userData.user.id).maybeSingle();
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData.user) return null;
+  const user = userData.user;
+
+  const { data, error } = await supabase
+    .from("staff_profiles")
+    .select("user_id, owner_id, full_name, role, is_active, permissions")
+    .eq("user_id", user.id)
+    .maybeSingle();
   if (error) throw error;
-  return (data as StaffProfile | null) ?? null;
+  if (data) return data as StaffProfile;
+
+  // Existing projects may have been created before owner profiles were introduced.
+  // Bootstrap the first authenticated account as owner so owner-only modules work.
+  const ownerProfile = {
+    user_id: user.id,
+    owner_id: user.id,
+    full_name: String(user.user_metadata?.full_name ?? user.email?.split("@")[0] ?? "Owner"),
+    role: "owner" as const,
+    is_active: true,
+    permissions: OWNER_PERMISSIONS,
+  };
+  const { data: inserted, error: insertError } = await supabase
+    .from("staff_profiles")
+    .insert(ownerProfile)
+    .select("user_id, owner_id, full_name, role, is_active, permissions")
+    .single();
+
+  if (!insertError && inserted) return inserted as StaffProfile;
+  // Another tab/request may have created it between SELECT and INSERT.
+  if (insertError) {
+    const { data: retry, error: retryError } = await supabase
+      .from("staff_profiles")
+      .select("user_id, owner_id, full_name, role, is_active, permissions")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (!retryError && retry) return retry as StaffProfile;
+    throw insertError;
+  }
+  return ownerProfile;
 }
 
 export function useStaffProfile() {
-  return useQuery({ queryKey: ["my-staff-profile"], queryFn: fetchMyStaffProfile, staleTime: 30_000 });
+  return useQuery({ queryKey: ["my-staff-profile"], queryFn: fetchMyStaffProfile, staleTime: 30_000, retry: 1 });
 }
 
 export function canAccess(profile: StaffProfile | null | undefined, key: PermissionKey) {
