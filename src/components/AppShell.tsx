@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose } from "lucide-react";
+import { LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ const GROUPS: { label: string; items: { to: string; label: string; icon: typeof 
   { label: "Produk & Outlet", items: [{ to: "/produk", label: "Produk & Stok", icon: Package, permission: "products" }, { to: "/meja", label: "Meja & QR Menu", icon: QrCode, permission: "tables" }, { to: "/inventory", label: "Inventory", icon: Boxes, permission: "inventory" }] },
   { label: "Pelanggan", items: [{ to: "/customers", label: "Pelanggan & Loyalty", icon: Users, permission: "customers" }] },
   { label: "Marketing", items: [{ to: "/promosi", label: "Promosi & Diskon", icon: BadgePercent, permission: "promotions" }] },
-  { label: "Manajemen", items: [{ to: "/laporan", label: "Laporan Penjualan", icon: BarChart3, permission: "reports" }, { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog, permission: "settings" }, { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings, permission: "settings" }] },
+  { label: "Manajemen", items: [{ to: "/laporan", label: "Laporan Penjualan", icon: BarChart3, permission: "reports" }, { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog, permission: "settings" }, { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings, permission: "settings" }, { to: "/api", label: "API & Integrasi", icon: KeyRound, permission: "settings" }] },
 ];
 
 function NavList({ onNavigate, profile, collapsed = false, incomingCount = 0 }: { onNavigate?: () => void; profile?: ReturnType<typeof useStaffProfile>["data"]; collapsed?: boolean; incomingCount?: number }) {
