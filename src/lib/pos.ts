@@ -22,59 +22,27 @@ export async function fetchOrder(id: string): Promise<OrderWithItems | null> { c
 export type NewOrderInput = { source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: "cash" | "card" | "qris"; amount: number; cash_received?: number | null; change_amount?: number | null } };
 
 export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> {
-  const { items, payment, ...requestedOrder } = input;
+  const { items, payment, ...orderData } = input;
 
-  // POS checkout must create the order first as unpaid. Items and payment are
-  // inserted afterwards, then the order is marked completed/paid. This avoids
-  // firing the Google Sheets sync before order_items/payments exist and also
-  // prevents a payment failure from pretending the order was already paid.
-  const order =
-    input.source === "pos" && input.status === "completed" && input.is_paid
-      ? { ...requestedOrder, status: "new" as OrderStatus, is_paid: false }
-      : requestedOrder;
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang.");
 
-  const { data: created, error } = await supabase.from("orders").insert(order).select("*").single();
-  if (error) throw error;
+  // POS checkout is performed atomically inside Supabase. The database creates
+  // the order, child items and payment first, then marks it completed/paid.
+  // This guarantees Google Sheets sees the complete sale instead of an order
+  // row without its items/payment.
+  const { data, error } = await supabase.rpc("create_pos_order", {
+    p_order: orderData,
+    p_items: items,
+    p_payment: payment ?? null,
+  });
+  if (error) throw new Error(error.message || "Gagal menyimpan transaksi");
 
-  const orderId = (created as { id: string }).id;
+  const created = (data as { order?: Order } | null)?.order;
+  if (!created?.id) throw new Error("Transaksi dibuat tetapi respons order tidak valid");
 
-  const rows = items.map((i) => ({
-    order_id: orderId,
-    product_id: i.product_id,
-    product_name: i.product_name,
-    unit_price: i.unit_price,
-    quantity: i.quantity,
-    note: i.note ?? null,
-    line_total: i.unit_price * i.quantity,
-  }));
-
-  const { data: insertedItems, error: itemErr } = await supabase.from("order_items").insert(rows).select("*");
-  if (itemErr) throw itemErr;
-
-  if (payment) {
-    const { error: payErr } = await supabase.from("payments").insert({
-      order_id: orderId,
-      method: payment.method,
-      amount: payment.amount,
-      cash_received: payment.cash_received ?? null,
-      change_amount: payment.change_amount ?? null,
-    });
-    if (payErr) throw payErr;
-  }
-
-  if (input.source === "pos" && input.status === "completed" && input.is_paid) {
-    const { error: completeErr } = await supabase
-      .from("orders")
-      .update({ status: "completed", is_paid: true })
-      .eq("id", orderId);
-
-    if (completeErr) throw completeErr;
-  }
-
-  if (input.source === "qr") return { ...(created as Order), order_items: (insertedItems ?? rows) as OrderItem[] };
-
-  const full = await fetchOrder(orderId);
-  if (!full) throw new Error("Pesanan tidak ditemukan setelah dibuat");
+  const full = await fetchOrder(created.id);
+  if (!full) throw new Error("Transaksi tersimpan tetapi gagal memuat detail order");
   return full;
 }
 
