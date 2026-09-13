@@ -8,43 +8,20 @@ export type OrderItem = { id: string; order_id: string; product_id: string | nul
 export type Order = { id: string; order_no: number; source: "pos" | "qr"; status: OrderStatus; table_id: string | null; customer_name: string | null; notes: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method: "cash" | "card" | "qris" | null; payment_status: PaymentStatus; created_at: string; updated_at: string };
 export type OrderWithItems = Order & { order_items: OrderItem[]; payments?: { method: string; amount: number; cash_received: number | null; change_amount: number | null }[]; restaurant_tables?: { name: string } | null };
 export type RestaurantTable = { id: string; name: string; code: string };
-export const TAX_RATE = 0.11;
+export type OutletSettings = { name: string; tax_rate: number; service_rate: number; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
 export const STATUS_LABEL: Record<OrderStatus, string> = { new: "Baru", preparing: "Diproses", ready: "Siap", completed: "Selesai", cancelled: "Dibatalkan" };
-export const STATUS_FLOW: OrderStatus[] = ["new", "preparing", "ready", "completed"];
 export const PAYMENT_LABEL: Record<string, string> = { cash: "Tunai", card: "Kartu", qris: "QRIS", unpaid: "Belum dibayar", awaiting_confirmation: "Menunggu konfirmasi", paid: "Sudah dibayar", rejected: "Ditolak" };
 
 export async function fetchCategories(): Promise<Category[]> { const { data, error } = await supabase.from("categories").select("*").order("sort_order"); if (error) throw error; return (data ?? []) as Category[]; }
 export async function fetchProducts(): Promise<Product[]> { const { data, error } = await supabase.from("products").select("*").order("name"); if (error) throw error; return (data ?? []) as unknown as Product[]; }
 export async function fetchMenuProducts(): Promise<Product[]> { const { data, error } = await supabase.from("products").select("*").eq("show_on_menu", true).eq("is_active", true).order("name"); if (error) throw error; return (data ?? []) as unknown as Product[]; }
 export async function fetchTables(): Promise<RestaurantTable[]> { const { data, error } = await supabase.from("restaurant_tables").select("*").order("code"); if (error) throw error; return (data ?? []) as RestaurantTable[]; }
+export async function fetchOutletSettings(): Promise<OutletSettings> { const { data, error } = await supabase.rpc("get_public_outlet_settings"); if (error) throw error; const row = Array.isArray(data) ? data[0] : null; return (row ?? { name: "Cafe Flow", tax_rate: 0, service_rate: 0, cash_enabled: true, card_enabled: true, qris_enabled: true }) as OutletSettings; }
 export async function fetchOrders(opts?: { from?: string; to?: string; limit?: number }): Promise<OrderWithItems[]> { let query = supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").order("created_at", { ascending: false }); if (opts?.from) query = query.gte("created_at", opts.from); if (opts?.to) query = query.lte("created_at", opts.to); if (opts?.limit) query = query.limit(opts.limit); const { data, error } = await query; if (error) throw error; return (data ?? []) as unknown as OrderWithItems[]; }
-export async function fetchOrder(id: string): Promise<OrderWithItems | null> { const { data, error } = await supabase.from("orders").select("*, order_items(*), restaurant_tables(name)").eq("id", id).maybeSingle(); if (error) throw error; return (data ?? null) as unknown as OrderWithItems | null; }
+export async function fetchOrder(id: string): Promise<OrderWithItems | null> { const { data, error } = await supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").eq("id", id).maybeSingle(); if (error) throw error; return (data ?? null) as unknown as OrderWithItems | null; }
 
 export type NewOrderInput = { source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: "cash" | "card" | "qris" | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: "cash" | "card" | "qris"; amount: number; cash_received?: number | null; change_amount?: number | null } };
-
-export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> {
-  const { items, payment, ...orderData } = input;
-  if (input.source === "qr") {
-    const { data: created, error } = await supabase.from("orders").insert({ ...orderData, status: "new", is_paid: false }).select("*").single();
-    if (error) throw new Error(error.message || "Gagal membuat pesanan");
-    const rows = items.map((item) => ({ order_id: created.id, product_id: item.product_id, product_name: item.product_name, unit_price: item.unit_price, quantity: item.quantity, note: item.note ?? null, line_total: item.unit_price * item.quantity }));
-    const { error: itemError } = await supabase.from("order_items").insert(rows);
-    if (itemError) throw new Error(itemError.message || "Gagal menyimpan item pesanan");
-    const full = await fetchOrder(created.id);
-    if (!full) throw new Error("Pesanan dibuat tetapi detail tidak ditemukan");
-    return full;
-  }
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang.");
-  const { data, error } = await supabase.rpc("create_pos_order", { p_order: orderData, p_items: items, p_payment: payment ?? null });
-  if (error) throw new Error(error.message || "Gagal menyimpan transaksi");
-  const created = (data as { order?: Order } | null)?.order;
-  if (!created?.id) throw new Error("Transaksi dibuat tetapi respons order tidak valid");
-  const full = await fetchOrder(created.id);
-  if (!full) throw new Error("Transaksi tersimpan tetapi gagal memuat detail order");
-  return full;
-}
-
+export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> { const { items, payment, ...orderData } = input; if (input.source === "qr") { const { data: created, error } = await supabase.from("orders").insert({ ...orderData, status: "new", is_paid: false }).select("*").single(); if (error) throw new Error(error.message || "Gagal membuat pesanan"); const rows = items.map((item) => ({ order_id: created.id, product_id: item.product_id, product_name: item.product_name, unit_price: item.unit_price, quantity: item.quantity, note: item.note ?? null, line_total: item.unit_price * item.quantity })); const { error: itemError } = await supabase.from("order_items").insert(rows); if (itemError) throw new Error(itemError.message || "Gagal menyimpan item pesanan"); const full = await fetchOrder(created.id); if (!full) throw new Error("Pesanan dibuat tetapi detail tidak ditemukan"); return full; } const { data: sessionData } = await supabase.auth.getSession(); if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang."); const { data, error } = await supabase.rpc("create_pos_order", { p_order: orderData, p_items: items, p_payment: payment ?? null }); if (error) throw new Error(error.message || "Gagal menyimpan transaksi"); const created = (data as { order?: Order } | null)?.order; if (!created?.id) throw new Error("Transaksi dibuat tetapi respons order tidak valid"); const full = await fetchOrder(created.id); if (!full) throw new Error("Transaksi tersimpan tetapi gagal memuat detail order"); return full; }
 export async function updateOrderStatus(id: string, status: OrderStatus) { const { error } = await supabase.from("orders").update({ status }).eq("id", id); if (error) throw error; }
 export async function approveQrOrder(id: string, cashReceived?: number | null): Promise<Order> { const { data, error } = await supabase.rpc("approve_qr_order", { p_order_id: id, p_cash_received: cashReceived ?? null }); if (error) throw new Error(error.message || "Gagal mengonfirmasi pembayaran"); return data as Order; }
 export async function rejectQrOrder(id: string): Promise<Order> { const { data, error } = await supabase.rpc("reject_qr_order", { p_order_id: id }); if (error) throw new Error(error.message || "Gagal menolak pesanan"); return data as Order; }
