@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { ShieldCheck, UserPlus, RefreshCw, UserRound } from "lucide-react";
+import { ShieldCheck, UserPlus, RefreshCw, UserRound, Trash2 } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
@@ -51,6 +51,27 @@ function AdminPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Gagal membuat akun owner"),
   });
 
+  const deleteOwner = useMutation({
+    mutationFn: async (owner: Owner) => {
+      const confirmed = window.confirm(`Hapus akun Owner ${owner.full_name}?\n\nAkun Supabase Auth dan seluruh data outlet milik Owner ini juga akan terhapus. Tindakan ini tidak dapat dibatalkan.`);
+      if (!confirmed) throw new Error("Dibatalkan");
+      const { data, error } = await supabase.functions.invoke("create-owner", {
+        body: { action: "delete", user_id: owner.user_id },
+      });
+      if (error) throw error;
+      if (!data?.ok) throw new Error(data?.error ?? "Gagal menghapus akun owner");
+      return data;
+    },
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ["admin-owners"] });
+      toast.success("Akun Owner dan data outletnya berhasil dihapus dari Supabase.");
+    },
+    onError: (error) => {
+      if (error instanceof Error && error.message === "Dibatalkan") return;
+      toast.error(error instanceof Error ? error.message : "Gagal menghapus akun owner");
+    },
+  });
+
   if (me.isLoading) return <AppShell title="Admin Cafe Flow" description="Kelola akun owner"><Card><CardContent className="py-12 text-center text-sm text-muted-foreground">Memuat akses…</CardContent></Card></AppShell>;
   if (me.data?.role !== "super_admin") return <AppShell title="Admin Cafe Flow" description="Akses administrator"><Card><CardContent className="py-16 text-center"><ShieldCheck className="mx-auto size-10 text-muted-foreground" /><h2 className="mt-4 font-semibold">Akses terbatas</h2><p className="mt-1 text-sm text-muted-foreground">Halaman ini hanya untuk Admin Cafe Flow.</p></CardContent></Card></AppShell>;
 
@@ -77,7 +98,7 @@ function AdminPage() {
             <Button variant="outline" size="sm" onClick={() => owners.refetch()} disabled={owners.isFetching}><RefreshCw className="mr-2 size-4" />Refresh</Button>
           </CardHeader>
           <CardContent className="p-0">
-            {owners.isLoading ? <div className="p-6 text-sm text-muted-foreground">Memuat owner…</div> : owners.isError ? <div className="p-6 text-sm text-destructive">{owners.error instanceof Error ? owners.error.message : "Gagal memuat owner"}</div> : owners.data?.length ? <div className="divide-y">{owners.data.map((owner) => <div key={owner.user_id} className="flex items-center gap-3 p-4"><div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary"><UserRound className="size-5" /></div><div className="min-w-0 flex-1"><p className="font-medium">{owner.full_name}</p><p className="truncate text-sm text-muted-foreground">{owner.email}</p></div><Badge variant={owner.is_active ? "default" : "destructive"}>{owner.is_active ? "Aktif" : "Nonaktif"}</Badge></div>)}</div> : <div className="p-8 text-center text-sm text-muted-foreground">Belum ada akun Owner lain.</div>}
+            {owners.isLoading ? <div className="p-6 text-sm text-muted-foreground">Memuat owner…</div> : owners.isError ? <div className="p-6 text-sm text-destructive">{owners.error instanceof Error ? owners.error.message : "Gagal memuat owner"}</div> : owners.data?.length ? <div className="divide-y">{owners.data.map((owner) => <div key={owner.user_id} className="flex items-center gap-3 p-4"><div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary"><UserRound className="size-5" /></div><div className="min-w-0 flex-1"><p className="font-medium">{owner.full_name}</p><p className="truncate text-sm text-muted-foreground">{owner.email}</p></div><Badge variant={owner.is_active ? "default" : "destructive"}>{owner.is_active ? "Aktif" : "Nonaktif"}</Badge><Button variant="destructive" size="sm" onClick={() => deleteOwner.mutate(owner)} disabled={deleteOwner.isPending}><Trash2 className="mr-2 size-4" />Hapus</Button></div>)}</div> : <div className="p-8 text-center text-sm text-muted-foreground">Belum ada akun Owner lain.</div>}
           </CardContent>
         </Card>
       </div>
