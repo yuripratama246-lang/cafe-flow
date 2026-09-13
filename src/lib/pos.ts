@@ -24,13 +24,36 @@ export type NewOrderInput = { source: "pos" | "qr"; status: OrderStatus; table_i
 export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> {
   const { items, payment, ...orderData } = input;
 
+  // Public QR orders must work without an authenticated cashier session.
+  // POS orders use the atomic RPC so items/payment are committed together.
+  if (input.source === "qr") {
+    const { data: created, error } = await supabase.from("orders").insert({
+      ...orderData,
+      status: "new",
+      is_paid: false,
+    }).select("*").single();
+    if (error) throw new Error(error.message || "Gagal membuat pesanan");
+
+    const rows = items.map((item) => ({
+      order_id: created.id,
+      product_id: item.product_id,
+      product_name: item.product_name,
+      unit_price: item.unit_price,
+      quantity: item.quantity,
+      note: item.note ?? null,
+      line_total: item.unit_price * item.quantity,
+    }));
+    const { error: itemError } = await supabase.from("order_items").insert(rows);
+    if (itemError) throw new Error(itemError.message || "Gagal menyimpan item pesanan");
+
+    const full = await fetchOrder(created.id);
+    if (!full) throw new Error("Pesanan dibuat tetapi detail tidak ditemukan");
+    return full;
+  }
+
   const { data: sessionData } = await supabase.auth.getSession();
   if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang.");
 
-  // POS checkout is performed atomically inside Supabase. The database creates
-  // the order, child items and payment first, then marks it completed/paid.
-  // This guarantees Google Sheets sees the complete sale instead of an order
-  // row without its items/payment.
   const { data, error } = await supabase.rpc("create_pos_order", {
     p_order: orderData,
     p_items: items,
