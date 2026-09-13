@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ShoppingBag, Plus, Minus, Search, CheckCircle2, CreditCard, Banknote, QrCode } from "lucide-react";
+import { ShoppingBag, Plus, Minus, Search, CheckCircle2, Banknote, QrCode } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -92,7 +92,7 @@ function PublicMenuPage() {
         <div className="grid gap-3 sm:grid-cols-2">
           {visible.map((p) => (
             <article key={p.id} className="flex gap-3 rounded-2xl bg-white p-3 shadow-[0_2px_12px_rgba(0,0,0,0.04)]">
-              <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">{p.image_url ? <img src={p.image_url} alt={p.name} className="size-full object-cover" /> : <div className="grid size-full place-items-center text-xs text-slate-400">No photo</div>}</div>
+              <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-slate-100">{p.image_url ? <img src={p.image_url} alt={p.name} className="size-full object-cover" loading="lazy" /> : <div className="grid size-full place-items-center text-xs text-slate-400">No photo</div>}</div>
               <div className="min-w-0 flex-1"><h2 className="font-semibold leading-5">{p.name}</h2><p className="mt-1 line-clamp-2 text-xs leading-4 text-slate-500">{p.description || "Menu pilihan Cafe Flow"}</p><div className="mt-3 flex items-center justify-between gap-2"><strong className="text-sm">{rupiah(p.price)}</strong><Button size="sm" className="rounded-xl" onClick={() => add(p)}><Plus className="mr-1 size-4" />Tambah</Button></div></div>
             </article>
           ))}
@@ -111,7 +111,7 @@ function PublicMenuPage() {
         <div className="fixed inset-0 z-50 bg-black/40 p-4" onClick={() => setCheckoutOpen(false)}>
           <div className="mx-auto mt-auto max-w-lg rounded-3xl bg-white p-5 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between"><div><h2 className="text-lg font-bold">Checkout</h2><p className="text-xs text-slate-500">Review pesanan sebelum dikirim</p></div><button type="button" className="text-sm text-slate-400" onClick={() => setCheckoutOpen(false)}>Tutup</button></div>
-            <div className="mt-4 max-h-44 space-y-2 overflow-y-auto">{cart.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-2"><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{item.name}</p><p className="text-xs text-slate-500">{rupiah(item.price)} × {item.quantity}</p></div><Button size="icon" variant="outline" className="size-7 rounded-lg" onClick={() => change(item.id, -1)}><Minus className="size-3" /></Button><span className="w-4 text-center text-sm font-semibold">{item.quantity}</span><Button size="icon" variant="outline" className="size-7 rounded-lg" onClick={() => change(item.id, 1)}><Plus className="size-3" /></Button></div>)}</div>
+            <div className="mt-4 max-h-60 space-y-2 overflow-y-auto">{cart.map((item) => <div key={item.id} className="flex items-center gap-3 rounded-xl bg-slate-50 p-2"><div className="size-16 shrink-0 overflow-hidden rounded-lg bg-slate-200">{item.image_url ? <img src={item.image_url} alt={item.name} className="size-full object-cover" loading="lazy" /> : <div className="grid size-full place-items-center text-[10px] text-slate-400">No photo</div>}</div><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{item.name}</p><p className="text-xs text-slate-500">{rupiah(item.price)} × {item.quantity}</p></div><Button size="icon" variant="outline" className="size-7 rounded-lg" onClick={() => change(item.id, -1)}><Minus className="size-3" /></Button><span className="w-4 text-center text-sm font-semibold">{item.quantity}</span><Button size="icon" variant="outline" className="size-7 rounded-lg" onClick={() => change(item.id, 1)}><Plus className="size-3" /></Button></div>)}</div>
             <div className="mt-4 grid gap-2 sm:grid-cols-2"><Input placeholder="Nama pelanggan (opsional)" value={customerName} onChange={(e) => setCustomerName(e.target.value)} /><Textarea placeholder="Catatan pesanan (opsional)" value={notes} onChange={(e) => setNotes(e.target.value)} /></div>
             <div className="mt-4"><p className="mb-2 text-sm font-bold">Pilih pembayaran</p><div className="grid grid-cols-2 gap-2">
               <button type="button" onClick={() => setPayment("cash")} className={`flex items-center gap-3 rounded-2xl border p-3 text-left ${payment === "cash" ? "border-teal-600 bg-teal-50 ring-1 ring-teal-600" : "border-slate-200"}`}><span className="grid size-10 place-items-center rounded-xl bg-amber-50 text-amber-600"><Banknote className="size-5" /></span><span><b className="block text-sm">Bayar di kasir</b><small className="text-xs text-slate-500">Tunai / kartu</small></span></button>
