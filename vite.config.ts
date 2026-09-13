@@ -7,6 +7,14 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 
 export default defineConfig({
+  // Keep the generated bundle compatible with Chrome 101+ while remaining fully
+  // compatible with current/latest browsers.
+  vite: {
+    build: {
+      target: "chrome101",
+    },
+    cssTarget: "chrome101",
+  },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
