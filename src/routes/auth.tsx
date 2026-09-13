@@ -4,7 +4,6 @@ import { ScanLine, MailCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { supabase } from "@/integrations/supabase/client";
-import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,10 +15,10 @@ export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Masuk Kasir — Cafe Flow" },
-      { name: "description", content: "Masuk ke dashboard Cafe Flow untuk mengelola penjualan, produk, dan pesanan." },
-      { property: "og:title", content: "Masuk Kasir — Cafe Flow" },
-      { property: "og:description", content: "Masuk ke dashboard Cafe Flow untuk mengelola penjualan dan pesanan." },
+      { title: "Masuk — Cafe Flow" },
+      { name: "description", content: "Masuk ke Cafe Flow menggunakan akun yang telah dibuat oleh administrator atau owner." },
+      { property: "og:title", content: "Masuk — Cafe Flow" },
+      { property: "og:description", content: "Masuk ke dashboard Cafe Flow." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -27,21 +26,25 @@ export const Route = createFileRoute("/auth")({
   component: AuthPage,
 });
 
-function isStaffInvite(user: { user_metadata?: Record<string, unknown> } | null) {
-  return user?.user_metadata?.staff_invite === "true";
+function isAccountInvite(user: { user_metadata?: Record<string, unknown> } | null) {
+  return user?.user_metadata?.staff_invite === "true" || user?.user_metadata?.account_invite === "true";
+}
+
+function isOwnerInvite(user: { user_metadata?: Record<string, unknown> } | null) {
+  return user?.user_metadata?.assigned_role === "owner";
 }
 
 function AuthPage() {
   const navigate = useNavigate();
   const [inviteMode, setInviteMode] = useState(false);
   const [inviteModeResolved, setInviteModeResolved] = useState(false);
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [checkingSession, setCheckingSession] = useState(true);
   const [inviteSession, setInviteSession] = useState(false);
+  const [ownerInvite, setOwnerInvite] = useState(false);
 
   useEffect(() => {
     setInviteMode(new URLSearchParams(window.location.search).get("invite") === "1");
@@ -52,21 +55,28 @@ function AuthPage() {
     if (!inviteModeResolved) return;
     let active = true;
 
-    const handleSession = (session: Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"]) => {
+    const handleSession = async (session: Awaited<ReturnType<typeof supabase.auth.getSession>>["data"]["session"]) => {
       if (!active) return;
-      const staffInvite = isStaffInvite(session?.user ?? null);
-      const shouldActivate = inviteMode || staffInvite;
+      const accountInvite = isAccountInvite(session?.user ?? null);
+      const shouldActivate = inviteMode || accountInvite;
 
       if (shouldActivate) {
+        const owner = isOwnerInvite(session?.user ?? null);
         setInviteMode(true);
         setInviteSession(Boolean(session));
+        setOwnerInvite(owner);
         setEmail(session?.user.email ?? "");
         setCheckingSession(false);
         return;
       }
 
       if (session) {
-        navigate({ to: "/dashboard", replace: true });
+        const { data: profile } = await supabase
+          .from("staff_profiles")
+          .select("role")
+          .eq("user_id", session.user.id)
+          .maybeSingle();
+        navigate({ to: profile?.role === "super_admin" ? "/pegawai" : "/dashboard", replace: true });
         return;
       }
       setCheckingSession(false);
@@ -74,12 +84,12 @@ function AuthPage() {
 
     const checkSession = async () => {
       const { data } = await supabase.auth.getSession();
-      handleSession(data.session);
+      await handleSession(data.session);
     };
     void checkSession();
 
     const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
-      handleSession(session);
+      void handleSession(session);
     });
 
     return () => {
@@ -97,10 +107,10 @@ function AuthPage() {
     try {
       const { error } = await supabase.auth.updateUser({
         password,
-        data: { staff_invite: "false" },
+        data: { staff_invite: "false", account_invite: "false" },
       });
       if (error) throw error;
-      toast.success("Password berhasil dibuat. Silakan masuk ke Cafe Flow.");
+      toast.success(`${ownerInvite ? "Akun owner" : "Akun staff"} berhasil diaktifkan. Silakan masuk ke Cafe Flow.`);
       await supabase.auth.signOut();
       navigate({ to: "/auth", replace: true });
     } catch (err) {
@@ -114,37 +124,14 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      if (mode === "signup") {
-        const { data, error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: { emailRedirectTo: "https://posdemovin.netlify.app/auth" },
-        });
-        if (error) throw error;
-        if (data.session) navigate({ to: "/dashboard", replace: true });
-        else toast.success("Akun dibuat. Cek email Anda untuk konfirmasi.");
-      } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        navigate({ to: "/dashboard", replace: true });
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      toast.success("Berhasil masuk");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Terjadi kesalahan");
+      toast.error(err instanceof Error ? err.message : "Email atau password salah");
     } finally {
       setLoading(false);
     }
-  }
-
-  async function handleGoogle() {
-    const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: "https://posdemovin.netlify.app",
-    });
-    if (result.error) {
-      toast.error("Gagal masuk dengan Google");
-      return;
-    }
-    if (result.redirected) return;
-    navigate({ to: "/dashboard", replace: true });
   }
 
   if (checkingSession || !inviteModeResolved) {
@@ -159,8 +146,8 @@ function AuthPage() {
           <Card>
             <CardHeader>
               <div className="mx-auto mb-2 grid size-12 place-items-center rounded-full bg-primary/10 text-primary"><MailCheck className="size-6" /></div>
-              <CardTitle className="text-center">Aktivasi akun staff</CardTitle>
-              <CardDescription className="text-center">{inviteSession ? "Undangan berhasil diterima. Buat password terlebih dahulu sebelum login." : "Link undangan tidak aktif atau sudah kedaluwarsa. Minta owner mengirim undangan baru."}</CardDescription>
+              <CardTitle className="text-center">Aktivasi akun {ownerInvite ? "owner" : "staff"}</CardTitle>
+              <CardDescription className="text-center">{inviteSession ? `Undangan berhasil diterima. Buat password ${ownerInvite ? "owner" : "staff"} terlebih dahulu sebelum login.` : "Link undangan tidak aktif atau sudah kedaluwarsa. Minta administrator mengirim undangan baru."}</CardDescription>
             </CardHeader>
             <CardContent>
               {inviteSession ? (
@@ -183,16 +170,13 @@ function AuthPage() {
       <div className="w-full max-w-sm space-y-6">
         <Link to="/" className="flex items-center justify-center gap-2.5"><div className="grid size-10 place-items-center rounded-xl bg-sidebar-primary text-sidebar-primary-foreground"><ScanLine className="size-5" /></div><span className="font-display text-xl font-semibold text-sidebar-foreground">Cafe Flow</span></Link>
         <Card>
-          <CardHeader><CardTitle>{mode === "signin" ? "Masuk kasir" : "Buat akun kasir"}</CardTitle><CardDescription>{mode === "signin" ? "Gunakan akun staff untuk membuka dashboard." : "Daftarkan akun staff baru untuk outlet Anda."}</CardDescription></CardHeader>
-          <CardContent className="space-y-4">
+          <CardHeader><CardTitle>Masuk ke Cafe Flow</CardTitle><CardDescription>Gunakan akun yang sudah dibuat oleh administrator atau owner.</CardDescription></CardHeader>
+          <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="kasir@kafe.com" /></div>
+              <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="nama@cafe.com" /></div>
               <div className="space-y-2"><Label htmlFor="password">Kata sandi</Label><Input id="password" type="password" required minLength={6} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /></div>
-              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Memproses…" : mode === "signin" ? "Masuk" : "Daftar"}</Button>
+              <Button type="submit" className="w-full" disabled={loading}>{loading ? "Memproses…" : "Masuk"}</Button>
             </form>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground"><span className="h-px flex-1 bg-border" /> atau <span className="h-px flex-1 bg-border" /></div>
-            <Button variant="outline" className="w-full" onClick={handleGoogle}>Lanjutkan dengan Google</Button>
-            <p className="text-center text-sm text-muted-foreground">{mode === "signin" ? "Belum punya akun?" : "Sudah punya akun?"}{" "}<button type="button" className="font-medium text-primary hover:underline" onClick={() => setMode(mode === "signin" ? "signup" : "signin")}>{mode === "signin" ? "Daftar" : "Masuk"}</button></p>
           </CardContent>
         </Card>
       </div>
