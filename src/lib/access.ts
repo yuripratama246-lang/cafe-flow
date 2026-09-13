@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export type StaffRole = "owner" | "manager" | "cashier";
+export type StaffRole = "super_admin" | "owner" | "manager" | "cashier";
 export type PermissionKey = "dashboard" | "orders" | "payments" | "products" | "inventory" | "tables" | "reports" | "customers" | "promotions" | "settings";
 
 export type StaffProfile = {
@@ -31,8 +31,6 @@ export async function fetchMyStaffProfile(): Promise<StaffProfile | null> {
   if (error) throw error;
   if (data) return data as StaffProfile;
 
-  // Existing projects may have been created before owner profiles were introduced.
-  // Bootstrap the first authenticated account as owner so owner-only modules work.
   const ownerProfile = {
     user_id: user.id,
     owner_id: user.id,
@@ -48,7 +46,6 @@ export async function fetchMyStaffProfile(): Promise<StaffProfile | null> {
     .single();
 
   if (!insertError && inserted) return inserted as StaffProfile;
-  // Another tab/request may have created it between SELECT and INSERT.
   if (insertError) {
     const { data: retry, error: retryError } = await supabase
       .from("staff_profiles")
@@ -67,5 +64,5 @@ export function useStaffProfile() {
 
 export function canAccess(profile: StaffProfile | null | undefined, key: PermissionKey) {
   if (!profile?.is_active) return false;
-  return profile.role === "owner" || profile.permissions?.[key] === true;
+  return profile.role === "super_admin" || profile.role === "owner" || profile.permissions?.[key] === true;
 }
