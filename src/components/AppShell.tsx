@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound } from "lucide-react";
+import { LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound, Bot } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { canAccess, useStaffProfile, type PermissionKey } from "@/lib/access";
 
 const GROUPS: { label: string; items: { to: string; label: string; icon: typeof LayoutDashboard; permission: PermissionKey }[] }[] = [
   { label: "Utama", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" }] },
+  { label: "AI", items: [{ to: "/ai", label: "AI Assistant", icon: Bot, permission: "reports" }] },
   { label: "Transaksi", items: [{ to: "/kasir", label: "Kasir", icon: ScanLine, permission: "orders" }, { to: "/pesanan", label: "Pesanan", icon: ClipboardList, permission: "orders" }, { to: "/history", label: "History", icon: History, permission: "orders" }] },
   { label: "Produk & Outlet", items: [{ to: "/produk", label: "Produk & Stok", icon: Package, permission: "products" }, { to: "/meja", label: "Meja & QR Menu", icon: QrCode, permission: "tables" }, { to: "/inventory", label: "Inventory", icon: Boxes, permission: "inventory" }] },
   { label: "Pelanggan", items: [{ to: "/customers", label: "Pelanggan & Loyalty", icon: Users, permission: "customers" }] },
