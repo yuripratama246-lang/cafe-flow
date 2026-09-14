@@ -7,6 +7,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as MenuRouteImport } from './routes/menu'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedAiRouteImport } from './routes/_authenticated/ai'
 import { Route as AuthenticatedKasirRouteImport } from './routes/_authenticated/kasir'
 import { Route as AuthenticatedProdukRouteImport } from './routes/_authenticated/produk'
 import { Route as AuthenticatedPesananRouteImport } from './routes/_authenticated/pesanan'
@@ -23,6 +24,7 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({ id: '/_au
 const AuthRoute = AuthRouteImport.update({ id: '/auth', path: '/auth', getParentRoute: () => rootRouteImport } as any)
 const MenuRoute = MenuRouteImport.update({ id: '/menu', path: '/menu', getParentRoute: () => rootRouteImport } as any)
 const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({ id: '/dashboard', path: '/dashboard', getParentRoute: () => AuthenticatedRouteRoute } as any)
+const AuthenticatedAiRoute = AuthenticatedAiRouteImport.update({ id: '/ai', path: '/ai', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedKasirRoute = AuthenticatedKasirRouteImport.update({ id: '/kasir', path: '/kasir', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedProdukRoute = AuthenticatedProdukRouteImport.update({ id: '/produk', path: '/produk', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedPesananRoute = AuthenticatedPesananRouteImport.update({ id: '/pesanan', path: '/pesanan', getParentRoute: () => AuthenticatedRouteRoute } as any)
@@ -35,11 +37,11 @@ const AuthenticatedPromosiRoute = AuthenticatedPromosiRouteImport.update({ id: '
 const AuthenticatedPegawaiRoute = AuthenticatedPegawaiRouteImport.update({ id: '/pegawai', path: '/pegawai', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedPengaturanRoute = AuthenticatedPengaturanRouteImport.update({ id: '/pengaturan', path: '/pengaturan', getParentRoute: () => AuthenticatedRouteRoute } as any)
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute; '/auth': typeof AuthRoute; '/menu': typeof MenuRoute; '/dashboard': typeof AuthenticatedDashboardRoute; '/kasir': typeof AuthenticatedKasirRoute; '/produk': typeof AuthenticatedProdukRoute; '/pesanan': typeof AuthenticatedPesananRoute; '/dapur': typeof AuthenticatedDapurRoute; '/meja': typeof AuthenticatedMejaRoute; '/laporan': typeof AuthenticatedLaporanRoute; '/inventory': typeof AuthenticatedInventoryRoute; '/customers': typeof AuthenticatedCustomersRoute; '/promosi': typeof AuthenticatedPromosiRoute; '/pegawai': typeof AuthenticatedPegawaiRoute; '/pengaturan': typeof AuthenticatedPengaturanRoute
+  '/': typeof IndexRoute; '/auth': typeof AuthRoute; '/menu': typeof MenuRoute; '/dashboard': typeof AuthenticatedDashboardRoute; '/ai': typeof AuthenticatedAiRoute; '/kasir': typeof AuthenticatedKasirRoute; '/produk': typeof AuthenticatedProdukRoute; '/pesanan': typeof AuthenticatedPesananRoute; '/dapur': typeof AuthenticatedDapurRoute; '/meja': typeof AuthenticatedMejaRoute; '/laporan': typeof AuthenticatedLaporanRoute; '/inventory': typeof AuthenticatedInventoryRoute; '/customers': typeof AuthenticatedCustomersRoute; '/promosi': typeof AuthenticatedPromosiRoute; '/pegawai': typeof AuthenticatedPegawaiRoute; '/pengaturan': typeof AuthenticatedPengaturanRoute
 }
 export interface FileRoutesByTo extends FileRoutesByFullPath {}
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport; '/': typeof IndexRoute; '/_authenticated': typeof AuthenticatedRouteRouteWithChildren; '/auth': typeof AuthRoute; '/menu': typeof MenuRoute; '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute; '/_authenticated/kasir': typeof AuthenticatedKasirRoute; '/_authenticated/produk': typeof AuthenticatedProdukRoute; '/_authenticated/pesanan': typeof AuthenticatedPesananRoute; '/_authenticated/dapur': typeof AuthenticatedDapurRoute; '/_authenticated/meja': typeof AuthenticatedMejaRoute; '/_authenticated/laporan': typeof AuthenticatedLaporanRoute; '/_authenticated/inventory': typeof AuthenticatedInventoryRoute; '/_authenticated/customers': typeof AuthenticatedCustomersRoute; '/_authenticated/promosi': typeof AuthenticatedPromosiRoute; '/_authenticated/pegawai': typeof AuthenticatedPegawaiRoute; '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
+  __root__: typeof rootRouteImport; '/': typeof IndexRoute; '/_authenticated': typeof AuthenticatedRouteRouteWithChildren; '/auth': typeof AuthRoute; '/menu': typeof MenuRoute; '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute; '/_authenticated/ai': typeof AuthenticatedAiRoute; '/_authenticated/kasir': typeof AuthenticatedKasirRoute; '/_authenticated/produk': typeof AuthenticatedProdukRoute; '/_authenticated/pesanan': typeof AuthenticatedPesananRoute; '/_authenticated/dapur': typeof AuthenticatedDapurRoute; '/_authenticated/meja': typeof AuthenticatedMejaRoute; '/_authenticated/laporan': typeof AuthenticatedLaporanRoute; '/_authenticated/inventory': typeof AuthenticatedInventoryRoute; '/_authenticated/customers': typeof AuthenticatedCustomersRoute; '/_authenticated/promosi': typeof AuthenticatedPromosiRoute; '/_authenticated/pegawai': typeof AuthenticatedPegawaiRoute; '/_authenticated/pengaturan': typeof AuthenticatedPengaturanRoute
 }
 export interface FileRouteTypes { fileRoutesByFullPath: FileRoutesByFullPath; fullPaths: keyof FileRoutesByFullPath; fileRoutesByTo: FileRoutesByTo; to: keyof FileRoutesByFullPath; id: keyof FileRoutesById; fileRoutesById: FileRoutesById }
 export interface RootRouteChildren { IndexRoute: typeof IndexRoute; AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren; AuthRoute: typeof AuthRoute; MenuRoute: typeof MenuRoute }
@@ -49,6 +51,7 @@ declare module '@tanstack/react-router' { interface FileRoutesByPath {
   '/auth': { id: '/auth'; path: '/auth'; fullPath: '/auth'; preLoaderRoute: typeof AuthRouteImport; parentRoute: typeof rootRouteImport }
   '/menu': { id: '/menu'; path: '/menu'; fullPath: '/menu'; preLoaderRoute: typeof MenuRouteImport; parentRoute: typeof rootRouteImport }
   '/_authenticated/dashboard': { id: '/_authenticated/dashboard'; path: '/dashboard'; fullPath: '/dashboard'; preLoaderRoute: typeof AuthenticatedDashboardRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
+  '/_authenticated/ai': { id: '/_authenticated/ai'; path: '/ai'; fullPath: '/ai'; preLoaderRoute: typeof AuthenticatedAiRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
   '/_authenticated/kasir': { id: '/_authenticated/kasir'; path: '/kasir'; fullPath: '/kasir'; preLoaderRoute: typeof AuthenticatedKasirRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
   '/_authenticated/produk': { id: '/_authenticated/produk'; path: '/produk'; fullPath: '/produk'; preLoaderRoute: typeof AuthenticatedProdukRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
   '/_authenticated/pesanan': { id: '/_authenticated/pesanan'; path: '/pesanan'; fullPath: '/pesanan'; preLoaderRoute: typeof AuthenticatedPesananRouteImport; parentRoute: typeof AuthenticatedRouteRoute }
