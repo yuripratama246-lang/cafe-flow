@@ -19,6 +19,7 @@ import { Route as AuthenticatedCustomersRouteImport } from './routes/_authentica
 import { Route as AuthenticatedPromosiRouteImport } from './routes/_authenticated/promosi'
 import { Route as AuthenticatedPegawaiRouteImport } from './routes/_authenticated/pegawai'
 import { Route as AuthenticatedPengaturanRouteImport } from './routes/_authenticated/pengaturan'
+import { Route as AuthenticatedKeuanganRouteImport } from './routes/_authenticated/keuangan'
 const IndexRoute = IndexRouteImport.update({ id: '/', path: '/', getParentRoute: () => rootRouteImport } as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({ id: '/_authenticated', getParentRoute: () => rootRouteImport } as any)
 const AuthRoute = AuthRouteImport.update({ id: '/auth', path: '/auth', getParentRoute: () => rootRouteImport } as any)
@@ -36,8 +37,9 @@ const AuthenticatedCustomersRoute = AuthenticatedCustomersRouteImport.update({ i
 const AuthenticatedPromosiRoute = AuthenticatedPromosiRouteImport.update({ id: '/promosi', path: '/promosi', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedPegawaiRoute = AuthenticatedPegawaiRouteImport.update({ id: '/pegawai', path: '/pegawai', getParentRoute: () => AuthenticatedRouteRoute } as any)
 const AuthenticatedPengaturanRoute = AuthenticatedPengaturanRouteImport.update({ id: '/pengaturan', path: '/pengaturan', getParentRoute: () => AuthenticatedRouteRoute } as any)
+const AuthenticatedKeuanganRoute = AuthenticatedKeuanganRouteImport.update({ id: '/keuangan', path: '/keuangan', getParentRoute: () => AuthenticatedRouteRoute } as any)
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute; '/auth': typeof AuthRoute; '/menu': typeof MenuRoute; '/dashboard': typeof AuthenticatedDashboardRoute; '/ai': typeof AuthenticatedAiRoute; '/kasir': typeof AuthenticatedKasirRoute; '/produk': typeof AuthenticatedProdukRoute; '/pesanan': typeof AuthenticatedPesananRoute; '/dapur': typeof AuthenticatedDapurRoute; '/meja': typeof AuthenticatedMejaRoute; '/laporan': typeof AuthenticatedLaporanRoute; '/inventory': typeof AuthenticatedInventoryRoute; '/customers': typeof AuthenticatedCustomersRoute; '/promosi': typeof AuthenticatedPromosiRoute; '/pegawai': typeof AuthenticatedPegawaiRoute; '/pengaturan': typeof AuthenticatedPengaturanRoute
+  '/': typeof IndexRoute; '/auth': typeof AuthRoute; '/menu': typeof MenuRoute; '/dashboard': typeof AuthenticatedDashboardRoute; '/ai': typeof AuthenticatedAiRoute; '/kasir': typeof AuthenticatedKasirRoute; '/produk': typeof AuthenticatedProdukRoute; '/pesanan': typeof AuthenticatedPesananRoute; '/dapur': typeof AuthenticatedDapurRoute; '/meja': typeof AuthenticatedMejaRoute; '/laporan': typeof AuthenticatedLaporanRoute; '/inventory': typeof AuthenticatedInventoryRoute; '/customers': typeof AuthenticatedCustomersRoute; '/promosi': typeof AuthenticatedPromosiRoute; '/pegawai': typeof AuthenticatedPegawaiRoute; '/pengaturan': typeof AuthenticatedPengaturanRoute; '/keuangan': typeof AuthenticatedKeuanganRoute
 }
 export interface FileRoutesByTo extends FileRoutesByFullPath {}
 export interface FileRoutesById {
