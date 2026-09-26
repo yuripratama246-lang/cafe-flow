@@ -1,0 +1,2 @@
+DROP POLICY IF EXISTS "Public can view active product customization options" ON public.product_customization_options;
+CREATE POLICY "Public can view product customization options" ON public.product_customization_options FOR SELECT USING (true);
