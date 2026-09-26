@@ -1,27 +1,98 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BarChart3, CalendarDays, CreditCard, RefreshCw, ShoppingCart, Wallet } from "lucide-react";
-import { Line, LineChart, Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { CalendarDays, RefreshCw, Trash2 } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { fetchOrders, PAYMENT_LABEL } from "@/lib/pos";
-import { endOfDayISO, rupiah, startOfDayISO, toDateInput } from "@/lib/format";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
+import { rupiah } from "@/lib/format";
+
 export const Route = createFileRoute("/_authenticated/laporan")({ component: ReportsPage });
-function offset(date: string, n: number) { const d = new Date(`${date}T00:00:00`); d.setDate(d.getDate() + n); return toDateInput(d); }
+
+function localDateKey(iso: string): string {
+  const date = new Date(iso);
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+}
+
+async function fetchAllOrders(): Promise<OrderWithItems[]> {
+  const pageSize = 1000;
+  const rows: OrderWithItems[] = [];
+  for (let from = 0; ; from += pageSize) {
+    const { data, error } = await supabase.from("orders")
+      .select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)")
+      .order("created_at", { ascending: false }).range(from, from + pageSize - 1);
+    if (error) throw error;
+    const page = (data ?? []) as unknown as OrderWithItems[];
+    rows.push(...page);
+    if (page.length < pageSize) break;
+  }
+  return rows;
+}
+
 function ReportsPage() {
-  const [date, setDate] = useState(toDateInput(new Date())); const from = startOfDayISO(offset(date, -6)); const to = endOfDayISO(date); const query = useQuery({ queryKey: ["orders", "report", date], queryFn: () => fetchOrders({ from, to, limit: 1000 }), refetchInterval: 30000 });
-  const all = query.data ?? []; const day = all.filter((o) => o.created_at.slice(0, 10) === date && o.status !== "cancelled"); const paid = day.filter((o) => o.is_paid); const sales = paid.reduce((s, o) => s + Number(o.total), 0); const items = day.reduce((s, o) => s + o.order_items.reduce((n, i) => n + i.quantity, 0), 0); const avg = paid.length ? sales / paid.length : 0;
-  const trend = useMemo(() => Array.from({ length: 7 }, (_, i) => { const d = offset(date, i - 6); const list = all.filter((o) => o.created_at.slice(0, 10) === d && o.status !== "cancelled" && o.is_paid); return { date: new Date(`${d}T00:00:00`).toLocaleDateString("id-ID", { day: "2-digit", month: "short" }), sales: list.reduce((s, o) => s + Number(o.total), 0) }; }), [all, date]);
-  const hours = useMemo(() => Array.from({ length: 13 }, (_, i) => i + 9).map((h) => ({ hour: `${String(h).padStart(2, "0")}:00`, sales: paid.filter((o) => new Date(o.created_at).getHours() === h).reduce((s, o) => s + Number(o.total), 0) })), [paid]);
-  const products = useMemo(() => { const map = new Map<string, { qty: number; revenue: number }>(); day.forEach((o) => o.order_items.forEach((i) => { const x = map.get(i.product_name) ?? { qty: 0, revenue: 0 }; x.qty += i.quantity; x.revenue += Number(i.line_total); map.set(i.product_name, x); })); return [...map.entries()].sort((a, b) => b[1].qty - a[1].qty).slice(0, 8).map(([name, x]) => ({ name, qty: x.qty, revenue: x.revenue })); }, [day]);
-  const payment = useMemo(() => { const map = new Map<string, number>(); paid.forEach((o) => o.payments?.forEach((p) => map.set(p.method, (map.get(p.method) ?? 0) + Number(p.amount)))); return [...map.entries()].sort((a, b) => b[1] - a[1]); }, [paid]);
-  return <AppShell title="Laporan Penjualan" description="Analitik penjualan, jam ramai, produk, dan pembayaran" actions={<div className="flex items-center gap-2"><label className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 text-xs"><CalendarDays className="size-4 text-muted-foreground" /><input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="bg-transparent outline-none" /></label><Button variant="outline" size="sm" onClick={() => query.refetch()}><RefreshCw className="mr-2 size-4" />Refresh</Button></div>}>
-    <div className="space-y-4"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{[["Penjualan hari ini", rupiah(sales), Wallet], ["Transaksi", String(day.length), ShoppingCart], ["Item terjual", String(items), BarChart3], ["Rata-rata", rupiah(avg), CreditCard]].map(([label, value, Icon]) => <Card key={String(label)}><CardContent className="flex items-start justify-between p-5"><div><p className="text-xs text-muted-foreground">{label}</p><p className="num mt-1 text-2xl font-bold">{value}</p><p className="mt-1 text-[11px] text-muted-foreground">{label === "Transaksi" ? `${paid.length} lunas` : "Data transaksi aktif"}</p></div><div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><Icon className="size-5" /></div></CardContent></Card>)}</div>
-      <Card><CardHeader><CardTitle className="text-base">Tren penjualan 7 hari</CardTitle><p className="text-xs text-muted-foreground">Bandingkan omzet harian dengan tanggal yang dipilih</p></CardHeader><CardContent><div className="h-72"><ResponsiveContainer width="100%" height="100%"><LineChart data={trend} margin={{ top: 10, right: 12, left: 8, bottom: 4 }}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="date" tickLine={false} axisLine={false} /><YAxis width={70} tickLine={false} axisLine={false} tickFormatter={(v) => rupiah(Number(v)).replace("Rp", "")} /><Tooltip formatter={(v) => rupiah(Number(v))} /><Line type="monotone" dataKey="sales" name="Penjualan" stroke="currentColor" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} className="text-primary" /></LineChart></ResponsiveContainer></div></CardContent></Card>
-      <div className="grid gap-4 xl:grid-cols-3"><Card className="xl:col-span-2"><CardHeader><CardTitle className="text-base">Penjualan per jam</CardTitle><p className="text-xs text-muted-foreground">Identifikasi jam ramai untuk operasional outlet</p></CardHeader><CardContent><div className="h-60"><ResponsiveContainer width="100%" height="100%"><BarChart data={hours}><CartesianGrid strokeDasharray="3 3" /><XAxis dataKey="hour" tickLine={false} axisLine={false} /><YAxis width={65} tickLine={false} axisLine={false} tickFormatter={(v) => rupiah(Number(v)).replace("Rp", "")} /><Tooltip formatter={(v) => rupiah(Number(v))} /><Bar dataKey="sales" name="Penjualan" radius={[6, 6, 0, 0]} className="fill-primary" /></BarChart></ResponsiveContainer></div></CardContent></Card><Card><CardHeader><CardTitle className="text-base">Pembayaran</CardTitle></CardHeader><CardContent className="space-y-4">{payment.length ? payment.map(([m, amount]) => <div key={m}><div className="flex justify-between text-sm"><span>{PAYMENT_LABEL[m] ?? m}</span><b className="num">{rupiah(amount)}</b></div><div className="mt-2 h-2 rounded-full bg-muted"><div className="h-2 rounded-full bg-primary" style={{ width: `${sales ? Math.min(amount / sales * 100, 100) : 0}%` }} /></div></div>) : <p className="py-10 text-center text-sm text-muted-foreground">Belum ada pembayaran.</p>}</CardContent></Card></div>
-      <Card><CardHeader><CardTitle className="text-base">Produk terlaris</CardTitle><p className="text-xs text-muted-foreground">Ranking berdasarkan jumlah item terjual</p></CardHeader><CardContent><div className="grid gap-3 sm:grid-cols-2">{products.length ? products.map((p, i) => <div key={p.name} className="flex items-center gap-3 rounded-xl border p-3"><span className="grid size-8 shrink-0 place-items-center rounded-lg bg-muted text-xs font-bold">{i + 1}</span><div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold">{p.name}</p><p className="text-xs text-muted-foreground">{p.qty} item · {rupiah(p.revenue)}</p></div><Badge variant="secondary">{p.qty}</Badge></div>) : <p className="col-span-2 py-10 text-center text-sm text-muted-foreground">Belum ada produk terjual.</p>}</div></CardContent></Card>
-    </div></AppShell>;
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: ["orders", "report", "all-time"], queryFn: fetchAllOrders, refetchInterval: 30000 });
+  const all = query.data ?? [];
+  const filtered = useMemo(() => all.filter((order) => {
+    const date = localDateKey(order.created_at);
+    return (!fromDate || date >= fromDate) && (!toDate || date <= toDate);
+  }), [all, fromDate, toDate]);
+  const validSales = filtered.filter((order) => order.status !== "cancelled" && order.is_paid);
+  const revenue = validSales.reduce((sum, order) => sum + Number(order.total || 0), 0);
+  const itemCount = validSales.reduce((sum, order) => sum + order.order_items.reduce((count, item) => count + item.quantity, 0), 0);
+  const average = validSales.length ? revenue / validSales.length : 0;
+
+  async function handleDelete(order: OrderWithItems) {
+    if (!window.confirm(`Hapus transaksi #${order.order_no}? Data transaksi, item, dan pembayarannya akan dihapus permanen dari Supabase.`)) return;
+    setDeleting(order.id);
+    try {
+      const { error } = await supabase.rpc("delete_order_with_details", { p_order_id: order.id });
+      if (error) throw error;
+      await queryClient.invalidateQueries({ queryKey: ["orders"] });
+      await query.refetch();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Gagal menghapus transaksi.");
+    } finally { setDeleting(null); }
+  }
+
+  return <AppShell title="Laporan Penjualan" description="Rekap seluruh transaksi sejak awal, dengan rincian dan pengelolaan data">
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4">
+        <div className="space-y-1"><label className="text-xs text-muted-foreground">Dari tanggal</label><Input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} /></div>
+        <div className="space-y-1"><label className="text-xs text-muted-foreground">Sampai tanggal</label><Input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} /></div>
+        <Button variant="outline" onClick={() => { setFromDate(""); setToDate(""); }}><CalendarDays className="mr-2 size-4" />Semua waktu</Button>
+        <Button variant="outline" onClick={() => query.refetch()}><RefreshCw className="mr-2 size-4" />Refresh</Button>
+        <span className="text-xs text-muted-foreground">{fromDate || toDate ? "Periode terfilter" : "Dari transaksi pertama sampai terbaru"}</span>
+      </div>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {[[ "Total transaksi lunas", String(validSales.length) ], ["Total omzet", rupiah(revenue)], ["Total item terjual", String(itemCount)], ["Rata-rata transaksi", rupiah(average)]].map(([label, value]) =>
+          <Card key={label}><CardContent className="p-5"><p className="text-xs text-muted-foreground">{label}</p><p className="num mt-2 text-2xl font-bold">{value}</p></CardContent></Card>)}
+      </div>
+      <Card><CardContent className="p-0">
+        <div className="border-b p-4"><h2 className="font-semibold">Detail transaksi</h2><p className="text-xs text-muted-foreground">{filtered.length} transaksi ditemukan · data dari Supabase</p></div>
+        {query.isLoading ? <p className="p-8 text-center text-sm text-muted-foreground">Memuat seluruh riwayat transaksi…</p>
+        : query.isError ? <p className="p-8 text-center text-sm text-destructive">Gagal memuat laporan. Coba refresh.</p>
+        : filtered.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">Belum ada transaksi pada periode ini.</p>
+        : <div className="overflow-x-auto"><table className="w-full min-w-[850px] text-sm">
+          <thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr><th className="p-3">Tanggal</th><th className="p-3">No. transaksi</th><th className="p-3">Pelanggan</th><th className="p-3">Detail produk</th><th className="p-3">Pembayaran</th><th className="p-3 text-right">Total</th><th className="p-3 text-right">Aksi</th></tr></thead>
+          <tbody>{filtered.map((order) => <tr key={order.id} className="border-t align-top">
+            <td className="whitespace-nowrap p-3">{new Date(order.created_at).toLocaleString("id-ID")}</td>
+            <td className="p-3 font-medium">#{order.order_no}<div className="text-xs text-muted-foreground">{order.status === "cancelled" ? "Dibatalkan" : order.is_paid ? "Lunas" : "Belum lunas"}</div></td>
+            <td className="p-3">{order.customer_name || "Walk-in"}</td>
+            <td className="max-w-[280px] p-3">{order.order_items.map((item) => <div key={item.id}>{item.quantity}× {item.product_name} <span className="text-muted-foreground">({rupiah(item.line_total)})</span></div>)}</td>
+            <td className="p-3">{order.is_paid ? PAYMENT_LABEL[order.payment_method ?? "cash"] ?? "Lainnya" : "Belum dibayar"}</td>
+            <td className="whitespace-nowrap p-3 text-right font-semibold">{rupiah(order.total)}</td>
+            <td className="p-3 text-right"><Button variant="destructive" size="sm" disabled={deleting === order.id} onClick={() => handleDelete(order)}><Trash2 className="mr-1 size-4" />{deleting === order.id ? "Menghapus…" : "Hapus"}</Button></td>
+          </tr>)}</tbody>
+        </table></div>}
+      </CardContent></Card>
+      <p className="text-xs text-muted-foreground">Penghapusan permanen akan mengurangi angka historis. Transaksi batal tetap terlihat tetapi tidak dihitung sebagai omzet.</p>
+    </div>
+  </AppShell>;
 }
