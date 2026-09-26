@@ -2,6 +2,23 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Category = { id: string; name: string; sort_order: number };
 export type Product = { id: string; name: string; description: string | null; price: number; image_url: string | null; category_id: string | null; stock: number; low_stock_threshold: number; show_on_menu: boolean; is_active: boolean; created_at: string };
+export type Promotion = { id: string; name: string; type: "percentage" | "fixed"; value: number; min_purchase: number; scope: "cart" | "product"; product_id: string | null; starts_at: string | null; ends_at: string | null };
+export type VoucherItem = { product_id: string; unit_price: number; quantity: number };
+export function promotionBase(promotion: Promotion, items: VoucherItem[]) {
+  return promotion.scope === "product"
+    ? items.filter((item) => item.product_id === promotion.product_id).reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0)
+    : items.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
+}
+export function promotionDiscount(promotion: Promotion, items: VoucherItem[]): number | null {
+  const base = promotionBase(promotion, items);
+  if (base < Number(promotion.min_purchase || 0)) return null;
+  return Math.min(base, promotion.type === "percentage" ? base * Number(promotion.value) / 100 : Number(promotion.value));
+}
+export async function fetchAvailablePromotions(): Promise<Promotion[]> {
+  const { data, error } = await supabase.rpc("get_active_public_promotions");
+  if (error) throw error;
+  return (data ?? []) as Promotion[];
+}
 export type OrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
 export type PaymentStatus = "unpaid" | "awaiting_confirmation" | "paid" | "rejected";
 export type OrderItem = { id: string; order_id: string; product_id: string | null; product_name: string; unit_price: number; quantity: number; note: string | null; line_total: number };
