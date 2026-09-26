@@ -28,7 +28,14 @@ function CashShiftPage() {
   }, refetchInterval: 30000 });
   const shifts = shiftsQuery.data ?? []; const activeShift = shifts.find((s) => s.staff_user_id === me.data?.user_id && s.status === "open");
   const orderQuery = useQuery({ queryKey: ["shift-cash-orders", activeShift?.id], enabled: !!activeShift, queryFn: () => fetchOrders({ from: activeShift!.opened_at, to: new Date().toISOString(), limit: 2000 }), refetchInterval: 30000 });
-  const cashSales = useMemo(() => (orderQuery.data ?? []).filter((o) => o.status !== "cancelled" && o.is_paid).reduce((sum, order) => sum + (order.payments ?? []).filter((p) => p.method === "cash").reduce((n, p) => n + Number(p.amount), 0), 0), [orderQuery.data]);
+  const cashSales = useMemo(() => (orderQuery.data ?? []).filter((o) => o.status !== "cancelled" && o.is_paid).reduce((sum, order) => {
+    const cashPayments = (order.payments ?? []).filter((p) => p.method === "cash");
+    // Use payment rows when present; fall back to the order-level payment method used by POS/dashboard.
+    const orderCash = cashPayments.length > 0
+      ? cashPayments.reduce((n, payment) => n + Number(payment.amount || 0), 0)
+      : order.payment_method === "cash" ? Number(order.total || 0) : 0;
+    return sum + orderCash;
+  }, 0), [orderQuery.data]);
   const expenseAmount = cashExpense.trim() === "" ? 0 : Number(cashExpense);
   const expectedCash = Number(activeShift?.opening_cash ?? 0) + cashSales - expenseAmount;
   const difference = closingCash.trim() === "" ? null : Number(closingCash) - expectedCash;
