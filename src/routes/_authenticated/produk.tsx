@@ -21,6 +21,8 @@ import { fetchCategories, fetchProducts, type Product } from "@/lib/pos";
 export const Route = createFileRoute("/_authenticated/produk")({ component: ProdukPage });
 
 type FormState = { id?: string; name: string; description: string; price: string; image_url: string; category_id: string; stock: string; low_stock_threshold: string; show_on_menu: boolean; is_active: boolean };
+type AddonDraft = { name: string; price: string; is_active: boolean };
+const EMPTY_ADDON: AddonDraft = { name: "", price: "0", is_active: true };
 const EMPTY: FormState = { name: "", description: "", price: "", image_url: "", category_id: "none", stock: "0", low_stock_threshold: "5", show_on_menu: true, is_active: true };
 
 function ProdukPage() {
@@ -31,13 +33,14 @@ function ProdukPage() {
   const [form, setForm] = useState<FormState>(EMPTY);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [addons, setAddons] = useState<AddonDraft[]>([]);
   const categories = categoriesQuery.data ?? [];
   const products = productsQuery.data ?? [];
   const categoryName = (id: string | null) => categories.find((c) => c.id === id)?.name ?? "—";
 
   function resetImage() { setImageFile(null); setImagePreview(form.image_url); }
-  function openNew() { setForm(EMPTY); setImageFile(null); setImagePreview(""); setOpen(true); }
-  function openEdit(p: Product) { setForm({ id: p.id, name: p.name, description: p.description ?? "", price: String(p.price), image_url: p.image_url ?? "", category_id: p.category_id ?? "none", stock: String(p.stock), low_stock_threshold: String(p.low_stock_threshold), show_on_menu: p.show_on_menu, is_active: p.is_active }); setImageFile(null); setImagePreview(p.image_url ?? ""); setOpen(true); }
+  function openNew() { setForm(EMPTY); setAddons([]); setImageFile(null); setImagePreview(""); setOpen(true); }
+  async function openEdit(p: Product) { setForm({ id: p.id, name: p.name, description: p.description ?? "", price: String(p.price), image_url: p.image_url ?? "", category_id: p.category_id ?? "none", stock: String(p.stock), low_stock_threshold: String(p.low_stock_threshold), show_on_menu: p.show_on_menu, is_active: p.is_active }); setImageFile(null); setImagePreview(p.image_url ?? ""); setOpen(true); const { data, error } = await supabase.from("product_addons").select("name, price, is_active").eq("product_id", p.id).order("created_at"); if (error) { toast.error("Gagal memuat topping produk"); setAddons([]); } else setAddons((data ?? []).map((a) => ({ name: a.name, price: String(a.price), is_active: a.is_active }))); }
   function onImageChange(file: File | null) { if (!file) return; if (!file.type.startsWith("image/")) { toast.error("Pilih file gambar"); return; } if (file.size > 5 * 1024 * 1024) { toast.error("Ukuran gambar maksimal 5 MB"); return; } setImageFile(file); setImagePreview(URL.createObjectURL(file)); }
 
   const save = useMutation({
@@ -51,8 +54,13 @@ function ProdukPage() {
         imageUrl = supabase.storage.from("product-images").getPublicUrl(path).data.publicUrl;
       }
       const payload = { name: form.name.trim(), description: form.description.trim() || null, price: Number(form.price) || 0, image_url: imageUrl, category_id: form.category_id === "none" ? null : form.category_id, stock: Number(form.stock) || 0, low_stock_threshold: Number(form.low_stock_threshold) || 0, show_on_menu: form.show_on_menu, is_active: form.is_active };
-      if (form.id) { const { error } = await supabase.from("products").update(payload).eq("id", form.id); if (error) throw error; }
-      else { const { error } = await supabase.from("products").insert(payload); if (error) throw error; }
+      let productId = form.id;
+      if (productId) { const { error } = await supabase.from("products").update(payload).eq("id", productId); if (error) throw error; }
+      else { const { data, error } = await supabase.from("products").insert(payload).select("id").single(); if (error) throw error; productId = data.id; }
+      if (!productId) throw new Error("ID produk tidak ditemukan");
+      const { error: removeError } = await supabase.from("product_addons").delete().eq("product_id", productId); if (removeError) throw removeError;
+      const addonRows = addons.filter((a) => a.name.trim()).map((a) => ({ product_id: productId, name: a.name.trim(), price: Math.max(0, Number(a.price) || 0), is_active: a.is_active }));
+      if (addonRows.length) { const { error } = await supabase.from("product_addons").insert(addonRows); if (error) throw error; }
     },
     onSuccess: () => { setOpen(false); setImageFile(null); void queryClient.invalidateQueries({ queryKey: ["products"] }); toast.success("Produk tersimpan"); },
     onError: (err) => toast.error(err instanceof Error ? err.message : "Gagal menyimpan produk"),
@@ -69,6 +77,7 @@ function ProdukPage() {
         <div className="space-y-2"><Label htmlFor="name">Nama</Label><Input id="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></div>
         <div className="space-y-2"><Label htmlFor="desc">Deskripsi</Label><Textarea id="desc" rows={2} value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></div>
         <div className="grid gap-4 sm:grid-cols-2"><div className="space-y-2"><Label>Harga (Rp)</Label><Input inputMode="numeric" required className="num" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></div><div className="space-y-2"><Label>Kategori</Label><Select value={form.category_id} onValueChange={(v) => setForm({ ...form, category_id: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="none">Tanpa kategori</SelectItem>{categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}</SelectContent></Select></div><div className="space-y-2"><Label>Stok</Label><Input inputMode="numeric" className="num" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} /></div><div className="space-y-2"><Label>Ambang stok menipis</Label><Input inputMode="numeric" className="num" value={form.low_stock_threshold} onChange={(e) => setForm({ ...form, low_stock_threshold: e.target.value })} /></div></div>
+        <section className="space-y-3 rounded-xl border p-3"><div className="flex items-center justify-between"><div><p className="text-sm font-semibold">Tambahan / topping</p><p className="text-xs text-muted-foreground">Atur nama, harga, dan status topping yang tampil saat pelanggan memilih produk ini.</p></div><Button type="button" size="sm" variant="outline" onClick={() => setAddons((old) => [...old, { ...EMPTY_ADDON }])}><Plus className="mr-1 size-4" />Tambah</Button></div>{addons.map((addon, index) => <div key={index} className="grid grid-cols-[1fr_110px_auto_auto] items-center gap-2"><Input aria-label="Nama topping" placeholder="Nama topping" value={addon.name} onChange={(e) => setAddons((old) => old.map((a, i) => i === index ? { ...a, name: e.target.value } : a))} /><Input aria-label="Harga topping" inputMode="numeric" placeholder="Harga" value={addon.price} onChange={(e) => setAddons((old) => old.map((a, i) => i === index ? { ...a, price: e.target.value } : a))} /><Switch checked={addon.is_active} onCheckedChange={(v) => setAddons((old) => old.map((a, i) => i === index ? { ...a, is_active: v } : a))} aria-label="Aktifkan topping" /><Button type="button" size="icon" variant="ghost" aria-label="Hapus topping" onClick={() => setAddons((old) => old.filter((_, i) => i !== index))}><Trash2 className="size-4" /></Button></div>)}{addons.length === 0 && <p className="text-xs text-muted-foreground">Belum ada topping tambahan untuk produk ini.</p>}</section>
         <div className="flex items-center justify-between rounded-xl border p-3"><div><p className="text-sm font-medium">Tampilkan di QR menu</p><p className="text-xs text-muted-foreground">Terlihat pelanggan</p></div><Switch checked={form.show_on_menu} onCheckedChange={(v) => setForm({ ...form, show_on_menu: v })} /></div>
         <div className="flex items-center justify-between rounded-xl border p-3"><div><p className="text-sm font-medium">Produk aktif</p><p className="text-xs text-muted-foreground">Bisa dijual di kasir</p></div><Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} /></div>
         <Button type="submit" className="w-full" disabled={save.isPending}>{save.isPending ? "Menyimpan…" : "Simpan produk"}</Button>
