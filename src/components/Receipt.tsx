@@ -20,10 +20,10 @@ function printReceipt() {
 <style>
   @page { size: 80mm auto; margin: 0; }
   * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; width: 80mm; background: #fff; color: #000; }
+  html, body { margin: 0 !important; padding: 0 !important; width: 80mm !important; min-width: 80mm !important; background: #fff !important; color: #000 !important; }
   body { font: 10pt/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  #receipt-area { display: block; width: 72mm; margin: 0; padding: 4mm; color: #000; background: #fff; }
-  #receipt-area * { color: #000 !important; border-color: #777 !important; }
+  #receipt-area { display: block !important; box-sizing: border-box !important; width: 72mm !important; min-width: 72mm !important; max-width: 72mm !important; margin: 0 !important; padding: 2mm !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; color: #000 !important; background: #fff !important; overflow: visible !important; }
+  #receipt-area * { box-sizing: border-box !important; color: #000 !important; border-color: #777 !important; box-shadow: none !important; text-shadow: none !important; }\n  #receipt-area p, #receipt-area ul, #receipt-area dl { margin-top: 2mm; margin-bottom: 2mm; }\n  #receipt-area ul { padding: 0; list-style: none; }\n  #receipt-area .border-t { border-top: 1px dashed #777 !important; }\n  #receipt-area .border-dashed { border-style: dashed !important; }\n  #receipt-area .rounded-xl { border-radius: 0 !important; }\n  #receipt-area .bg-card { background: #fff !important; }\n  #receipt-area .p-5 { padding: 2mm !important; }\n  #receipt-area .max-w-xs { max-width: 72mm !important; }
   .text-center { text-align: center; }
   .text-base { font-size: 12pt; }
   .text-sm { font-size: 10pt; }
@@ -45,7 +45,7 @@ function printReceipt() {
   .border-dashed { border-style: dashed; }
   .leading-relaxed { line-height: 1.45; }
   .no-print { display: none !important; }
-  @media print { html, body { width: 80mm; } }
+  @media print { html, body { width: 80mm !important; min-width: 80mm !important; } #receipt-area { break-inside: avoid; page-break-inside: avoid; } }
 </style></head><body>${receipt.outerHTML}</body></html>`);
   printWindow.document.close();
   printWindow.focus();
