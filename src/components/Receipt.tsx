@@ -5,13 +5,64 @@ import { Button } from "@/components/ui/button";
 import { rupiah, dateTimeLabel } from "@/lib/format";
 import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
 
+function printReceipt() {
+  const receipt = document.getElementById("receipt-area");
+  if (!receipt) return;
+  const printWindow = window.open("", "_blank", "width=420,height=700");
+  if (!printWindow) {
+    window.alert("Popup diblokir browser. Izinkan popup untuk mencetak struk.");
+    return;
+  }
+
+  printWindow.document.open();
+  printWindow.document.write(`<!doctype html>
+<html><head><meta charset="utf-8"><title>Struk ${receipt.dataset.orderNo ?? ""}</title>
+<style>
+  @page { size: 80mm auto; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; width: 80mm; background: #fff; color: #000; }
+  body { font: 10pt/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #receipt-area { display: block; width: 72mm; margin: 0; padding: 4mm; color: #000; background: #fff; }
+  #receipt-area * { color: #000 !important; border-color: #777 !important; }
+  .text-center { text-align: center; }
+  .text-base { font-size: 12pt; }
+  .text-sm { font-size: 10pt; }
+  .text-\[11px\] { font-size: 8pt; }
+  .font-semibold { font-weight: 700; }
+  .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .flex { display: flex; }
+  .justify-between { justify-content: space-between; }
+  .gap-2 { gap: 8px; }
+  .min-w-0 { min-width: 0; }
+  .flex-1 { flex: 1; }
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .space-y-1 > * + * { margin-top: 4px; }
+  .space-y-2 > * + * { margin-top: 8px; }
+  .my-3 { margin-top: 10px; margin-bottom: 10px; }
+  .mt-2 { margin-top: 8px; }
+  .pt-2 { padding-top: 8px; }
+  .border-t { border-top: 1px solid #777; }
+  .border-dashed { border-style: dashed; }
+  .leading-relaxed { line-height: 1.45; }
+  .no-print { display: none !important; }
+  @media print { html, body { width: 80mm; } }
+</style></head><body>${receipt.outerHTML}</body></html>`);
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.onload = () => {
+    printWindow.print();
+    printWindow.onafterprint = () => printWindow.close();
+  };
+}
+
 export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {
-  useEffect(() => { if (!autoPrint) return; const timer = window.setTimeout(() => window.print(), 350); return () => window.clearTimeout(timer); }, [autoPrint, order.id]);
+  useEffect(() => { if (!autoPrint) return; const timer = window.setTimeout(() => printReceipt(), 350); return () => window.clearTimeout(timer); }, [autoPrint, order.id]);
   const payment = order.payments?.[0];
   return (
     <div className="space-y-4">
       <div
         id="receipt-area"
+        data-order-no={order.order_no}
         className="print-only-area mx-auto w-full max-w-xs rounded-xl border border-dashed border-border bg-card p-5 font-mono text-[13px] leading-relaxed"
       >
         <div className="text-center">
@@ -69,7 +120,7 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
         <p className="text-center text-[11px] text-muted-foreground">Terima kasih atas kunjungan Anda!</p>
       </div>
 
-      <div className="no-print flex gap-2"><Button variant="outline" className="flex-1" onClick={() => window.print()}>
+      <div className="no-print flex gap-2"><Button variant="outline" className="flex-1" onClick={printReceipt}>
         <Printer className="size-4" /> Cetak struk
       </Button>{onClose ? <Button variant="ghost" onClick={onClose}>Tutup</Button> : null}</div>
     </div>
