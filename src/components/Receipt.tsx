@@ -1,10 +1,11 @@
+import { useEffect } from "react";
 import { Printer } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { rupiah, dateTimeLabel } from "@/lib/format";
 import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
 
-export function Receipt({ order }: { order: OrderWithItems }) {
+export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {\n  useEffect(() => { if (!autoPrint) return; const timer = window.setTimeout(() => window.print(), 350); return () => window.clearTimeout(timer); }, [autoPrint, order.id]);
   const payment = order.payments?.[0];
   return (
     <div className="space-y-4">
@@ -67,7 +68,7 @@ export function Receipt({ order }: { order: OrderWithItems }) {
         <p className="text-center text-[11px] text-muted-foreground">Terima kasih atas kunjungan Anda!</p>
       </div>
 
-      <Button variant="outline" className="no-print w-full" onClick={() => window.print()}>
+      <div className="no-print flex gap-2"><Button variant="outline" className="flex-1" onClick={() => window.print()}>
         <Printer className="size-4" /> Cetak struk
       </Button>
     </div>
