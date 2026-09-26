@@ -1,7 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 export type Category = { id: string; name: string; sort_order: number };
-export type Product = { id: string; name: string; description: string | null; price: number; image_url: string | null; category_id: string | null; stock: number; low_stock_threshold: number; show_on_menu: boolean; is_active: boolean; created_at: string };
+export type Product = { id: string; name: string; description: string | null; price: number; image_url: string | null; category_id: string | null; stock: number; low_stock_threshold: number; menu_badge?: string | null; show_on_menu: boolean; is_active: boolean; created_at: string };
 export type Promotion = { id: string; name: string; type: "percentage" | "fixed"; value: number; min_purchase: number; scope: "cart" | "product"; product_id: string | null; starts_at: string | null; ends_at: string | null };
 export type VoucherItem = { product_id: string; unit_price: number; quantity: number };
 export function promotionBase(promotion: Promotion, items: VoucherItem[]) {
