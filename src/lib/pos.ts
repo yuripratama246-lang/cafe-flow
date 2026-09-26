@@ -2,6 +2,24 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Category = { id: string; name: string; sort_order: number };
 export type Product = { id: string; name: string; description: string | null; price: number; image_url: string | null; category_id: string | null; stock: number; low_stock_threshold: number; show_on_menu: boolean; is_active: boolean; created_at: string };
+export type Promotion = { id: string; name: string; type: "percentage" | "fixed"; value: number; min_purchase: number; scope: "cart" | "product"; product_id: string | null; starts_at: string | null; ends_at: string | null };
+export type VoucherItem = { product_id: string; unit_price: number; quantity: number };
+export function promotionBase(promotion: Promotion, items: VoucherItem[]) {
+  return promotion.scope === "product"
+    ? items.filter((item) => item.product_id === promotion.product_id).reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0)
+    : items.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
+}
+export function promotionDiscount(promotion: Promotion, items: VoucherItem[]): number | null {
+  if (promotion.scope === "product" && !items.some((item) => item.product_id === promotion.product_id && item.quantity > 0)) return null;
+  const base = promotionBase(promotion, items);
+  if (base < Number(promotion.min_purchase || 0)) return null;
+  return Math.min(base, promotion.type === "percentage" ? base * Number(promotion.value) / 100 : Number(promotion.value));
+}
+export async function fetchAvailablePromotions(): Promise<Promotion[]> {
+  const { data, error } = await supabase.rpc("get_active_public_promotions");
+  if (error) throw error;
+  return (data ?? []) as Promotion[];
+}
 export type OrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
 export type PaymentStatus = "unpaid" | "awaiting_confirmation" | "paid" | "rejected";
 export type OrderItem = { id: string; order_id: string; product_id: string | null; product_name: string; unit_price: number; quantity: number; note: string | null; line_total: number };
@@ -20,7 +38,7 @@ export async function fetchOutletSettings(): Promise<OutletSettings> { const { d
 export async function fetchOrders(opts?: { from?: string; to?: string; limit?: number }): Promise<OrderWithItems[]> { let query = supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").order("created_at", { ascending: false }); if (opts?.from) query = query.gte("created_at", opts.from); if (opts?.to) query = query.lte("created_at", opts.to); if (opts?.limit) query = query.limit(opts.limit); const { data, error } = await query; if (error) throw error; return (data ?? []) as unknown as OrderWithItems[]; }
 export async function fetchOrder(id: string): Promise<OrderWithItems | null> { const { data, error } = await supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").eq("id", id).maybeSingle(); if (error) throw error; return (data ?? null) as unknown as OrderWithItems | null; }
 
-export type NewOrderInput = { source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: "cash" | "card" | "qris" | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: "cash" | "card" | "qris"; amount: number; cash_received?: number | null; change_amount?: number | null } };
+export type NewOrderInput = { promotion_id?: string | null; source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: "cash" | "card" | "qris" | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: "cash" | "card" | "qris"; amount: number; cash_received?: number | null; change_amount?: number | null } };
 export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> { const { items, payment, ...orderData } = input; if (input.source === "qr") { const { data, error } = await supabase.rpc("create_qr_order", { p_order: { ...orderData, source: "qr", status: "new", is_paid: false }, p_items: items }); if (error) throw new Error(error.message || "Gagal membuat pesanan"); const created = (data as { order?: Order } | null)?.order; if (!created?.id) throw new Error("Pesanan dibuat tetapi respons order tidak valid"); const full = await fetchOrder(created.id); if (!full) throw new Error("Pesanan tersimpan tetapi gagal memuat detail"); return full; } const { data: sessionData } = await supabase.auth.getSession(); if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang."); const { data, error } = await supabase.rpc("create_pos_order", { p_order: orderData, p_items: items, p_payment: payment ?? null }); if (error) throw new Error(error.message || "Gagal menyimpan transaksi"); const created = (data as { order?: Order } | null)?.order; if (!created?.id) throw new Error("Transaksi dibuat tetapi respons order tidak valid"); const full = await fetchOrder(created.id); if (!full) throw new Error("Transaksi tersimpan tetapi gagal memuat detail order"); return full; }
 export async function updateOrderStatus(id: string, status: OrderStatus) { const { error } = await supabase.from("orders").update({ status }).eq("id", id); if (error) throw error; }
 export async function approveQrOrder(id: string, cashReceived?: number | null): Promise<Order> { const { data, error } = await supabase.rpc("approve_qr_order", { p_order_id: id, p_cash_received: cashReceived ?? null }); if (error) throw new Error(error.message || "Gagal mengonfirmasi pembayaran"); return data as Order; }
