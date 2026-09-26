@@ -42,6 +42,7 @@ BEGIN
    SELECT coalesce(sum(coalesce((x->>'unit_price')::numeric,0)*coalesce((x->>'quantity')::integer,0)),0) INTO v_base
    FROM jsonb_array_elements(p_items) x WHERE nullif(x->>'product_id','')::uuid=v_promotion.product_id;
   ELSE v_base:=v_subtotal; END IF;
+  IF v_promotion.scope='product' AND v_base<=0 THEN RAISE EXCEPTION 'Voucher hanya berlaku untuk produk tertentu'; END IF;
   IF v_base<coalesce(v_promotion.min_purchase,0) THEN RAISE EXCEPTION 'Belum memenuhi minimum voucher'; END IF;
   v_discount:=CASE WHEN v_promotion.type='percentage' THEN least(v_base,v_base*v_promotion.value/100) ELSE least(v_base,v_promotion.value) END;
  END IF;
