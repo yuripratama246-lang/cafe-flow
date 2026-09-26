@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useStaffProfile } from "@/lib/access";
 import { fetchOrders } from "@/lib/pos";
-import { rupiah } from "@/lib/format";
+import { endOfDayISO, rupiah, startOfDayISO, toDateInput } from "@/lib/format";
 
 export const Route = createFileRoute("/_authenticated/shift-kasir")({ component: CashShiftPage });
 
@@ -27,15 +27,22 @@ function CashShiftPage() {
     if (error) throw error; return data ?? [];
   }, refetchInterval: 30000 });
   const shifts = shiftsQuery.data ?? []; const activeShift = shifts.find((s) => s.staff_user_id === me.data?.user_id && s.status === "open");
-  const orderQuery = useQuery({ queryKey: ["shift-cash-orders", activeShift?.id], enabled: !!activeShift, queryFn: () => fetchOrders({ from: activeShift!.opened_at, to: new Date().toISOString(), limit: 2000 }), refetchInterval: 30000 });
-  const cashSales = useMemo(() => (orderQuery.data ?? []).filter((o) => o.status !== "cancelled" && o.is_paid).reduce((sum, order) => {
-    const cashPayments = (order.payments ?? []).filter((p) => p.method === "cash");
-    // Use payment rows when present; fall back to the order-level payment method used by POS/dashboard.
-    const orderCash = cashPayments.length > 0
-      ? cashPayments.reduce((n, payment) => n + Number(payment.amount || 0), 0)
-      : order.payment_method === "cash" ? Number(order.total || 0) : 0;
-    return sum + orderCash;
-  }, 0), [orderQuery.data]);
+  // Match Dashboard's selected-day payment aggregation: same local-day boundaries,
+  // paid/non-cancelled orders, and cash amounts from payments(method, amount).
+  const dashboardDate = toDateInput(new Date());
+  const dashboardFrom = startOfDayISO(dashboardDate);
+  const dashboardTo = endOfDayISO(dashboardDate);
+  const orderQuery = useQuery({
+    queryKey: ["shift-dashboard-cash-sales", dashboardDate],
+    queryFn: () => fetchOrders({ from: dashboardFrom, to: dashboardTo, limit: 300 }),
+    refetchInterval: 15000,
+  });
+  const cashSales = useMemo(() => (orderQuery.data ?? [])
+    .filter((o) => o.status !== "cancelled" && o.is_paid)
+    .reduce((sum, order) => sum + (order.payments ?? [])
+      .filter((payment) => payment.method === "cash")
+      .reduce((n, payment) => n + Number(payment.amount || 0), 0), 0),
+  [orderQuery.data]);
   const expenseAmount = cashExpense.trim() === "" ? 0 : Number(cashExpense);
   const expectedCash = Number(activeShift?.opening_cash ?? 0) + cashSales - expenseAmount;
   const difference = closingCash.trim() === "" ? null : Number(closingCash) - expectedCash;
@@ -55,17 +62,17 @@ function CashShiftPage() {
 
   return <AppShell title="Opening & Closing Kasir" description="Catat modal awal, hitung kas yang diharapkan, dan rekonsiliasi kas akhir">
     <div className="mx-auto max-w-5xl space-y-5"><div className="grid gap-4 lg:grid-cols-2">
-      <Card><CardHeader><div className="flex items-center gap-2"><Play className="size-4 text-emerald-500" /><CardTitle className="text-base">Opening — Buka Shift</CardTitle></div><p className="text-sm text-muted-foreground">Masukkan uang tunai awal yang tersedia di laci kasir.</p></CardHeader><CardContent className="space-y-3">
-        <div className="space-y-1.5"><Label>Modal awal (Rp)</Label><Input type="number" min="0" inputMode="numeric" placeholder="Contoh: 200000" value={openingCash} onChange={(e) => setOpeningCash(e.target.value)} disabled={!!activeShift} /></div>
+      <Card><CardHeader><div className="flex items-center gap-2"><Play className="size-4 text-emerald-500" /><CardTitle className="text-base">Opening — Buka Shift</CardTitle></div><p className="text-sm text-muted-foreground">Penjualan tunai mengikuti angka Pembayaran → Tunai di Dashboard untuk hari ini. Masukkan uang fisik awal di laci.</p></CardHeader><CardContent className="space-y-3">
+        <div className="rounded-xl border bg-muted/30 p-3"><p className="text-xs text-muted-foreground">Penjualan tunai Dashboard hari ini</p><p className="num mt-1 text-lg font-semibold">{orderQuery.isLoading ? "Memuat…" : rupiah(cashSales)}</p></div>\n        <div className="space-y-1.5"><Label>Modal awal (Rp)</Label><Input type="number" min="0" inputMode="numeric" placeholder="Contoh: 200000" value={openingCash} onChange={(e) => setOpeningCash(e.target.value)} disabled={!!activeShift} /></div>
         <div className="space-y-1.5"><Label>Catatan opening (opsional)</Label><Textarea rows={2} placeholder="Contoh: uang pecahan untuk kembalian" value={note} onChange={(e) => setNote(e.target.value)} disabled={!!activeShift} /></div>
         <Button className="w-full" disabled={!!activeShift || openShift.isPending || !openingCash.trim()} onClick={() => openShift.mutate()}><Play className="mr-2 size-4" />{openShift.isPending ? "Membuka shift…" : "Buka Shift"}</Button>
         {activeShift && <p className="text-xs text-amber-600">Masih ada shift aktif. Tutup shift tersebut sebelum membuka shift baru.</p>}
       </CardContent></Card>
-      <Card><CardHeader><div className="flex items-center gap-2"><LockKeyhole className="size-4 text-sky-500" /><CardTitle className="text-base">Closing — Tutup Shift</CardTitle></div><p className="text-sm text-muted-foreground">Masukkan pengeluaran tunai bila ada, lalu hitung uang fisik di laci untuk rekonsiliasi.</p></CardHeader><CardContent className="space-y-3">
+      <Card><CardHeader><div className="flex items-center gap-2"><LockKeyhole className="size-4 text-sky-500" /><CardTitle className="text-base">Closing — Tutup Shift</CardTitle></div><p className="text-sm text-muted-foreground">Penjualan tunai memakai sumber dan periode yang sama dengan Dashboard hari ini. Catat pengeluaran, lalu hitung kas fisik.</p></CardHeader><CardContent className="space-y-3">
         {activeShift ? <><div className="grid grid-cols-2 gap-3"><Metric label="Modal awal" value={rupiah(activeShift.opening_cash)} /><Metric label="Penjualan tunai" value={orderQuery.isLoading ? "Memuat…" : rupiah(cashSales)} /><Metric label="Pengeluaran tunai" value={rupiah(expenseAmount)} /><Metric label="Kas seharusnya setelah pengeluaran" value={orderQuery.isLoading ? "Memuat…" : rupiah(expectedCash)} /><Metric label="Selisih sementara" value={difference === null ? "—" : rupiah(difference)} /></div>
           <div className="space-y-1.5"><Label>Pengeluaran tunai selama shift (Rp)</Label><Input type="number" min="0" inputMode="numeric" placeholder="Contoh: 100000 untuk beli gas" value={cashExpense} onChange={(e) => setCashExpense(e.target.value)} /><Input aria-label="Keperluan pengeluaran tunai" placeholder="Keperluan: beli gas, belanja, dll." value={expenseReason} onChange={(e) => setExpenseReason(e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Kas akhir aktual (Rp)</Label><Input type="number" min="0" inputMode="numeric" placeholder="Hitung uang fisik di laci" value={closingCash} onChange={(e) => setClosingCash(e.target.value)} /></div>
-          <div className="rounded-xl border bg-muted/30 p-3"><p className="text-xs text-muted-foreground">Kas seharusnya = modal awal + penjualan tunai − pengeluaran. Selisih = kas aktual − kas seharusnya.</p><p className={`num mt-1 text-xl font-bold ${difference === null ? "" : difference === 0 ? "text-emerald-500" : "text-amber-500"}`}>{difference === null ? "Isi kas akhir untuk melihat selisih" : difference === 0 ? "Seimbang · Rp0" : rupiah(difference)}</p></div>
+          <div className="rounded-xl border bg-muted/30 p-3"><p className="text-xs text-muted-foreground">Kas seharusnya = modal awal + penjualan tunai Dashboard hari ini − pengeluaran tunai. Selisih = kas aktual − kas seharusnya.</p><p className={`num mt-1 text-xl font-bold ${difference === null ? "" : difference === 0 ? "text-emerald-500" : "text-amber-500"}`}>{difference === null ? "Isi kas akhir untuk melihat selisih" : difference === 0 ? "Seimbang · Rp0" : rupiah(difference)}</p></div>
           <div className="space-y-1.5"><Label>Catatan closing (opsional)</Label><Textarea rows={2} placeholder="Catatan selisih / kejadian selama shift" value={closeNote} onChange={(e) => setCloseNote(e.target.value)} /></div>
           <Button variant="destructive" className="w-full" disabled={closeShift.isPending || closingCash.trim() === "" || orderQuery.isLoading} onClick={() => closeShift.mutate()}><LockKeyhole className="mr-2 size-4" />{closeShift.isPending ? "Menyimpan closing…" : "Tutup Shift & Simpan Kas"}</Button>
         </> : <div className="rounded-xl border border-dashed p-8 text-center"><WalletCards className="mx-auto mb-3 size-8 text-muted-foreground" /><p className="font-medium">Belum ada shift aktif</p><p className="mt-1 text-sm text-muted-foreground">Buka shift dan input modal awal untuk mulai mencatat kas.</p></div>}
