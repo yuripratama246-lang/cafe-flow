@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
 import { rupiah } from "@/lib/format";
+import { useStaffProfile } from "@/lib/access";
 
 export const Route = createFileRoute("/_authenticated/laporan")({ component: ReportsPage });
 
@@ -33,6 +34,8 @@ async function fetchAllOrders(): Promise<OrderWithItems[]> {
 }
 
 function ReportsPage() {
+  const staff = useStaffProfile();
+  const isOwner = staff.data?.role === "owner" && staff.data.is_active;
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -80,7 +83,7 @@ function ReportsPage() {
         : query.isError ? <p className="p-8 text-center text-sm text-destructive">Gagal memuat laporan. Coba refresh.</p>
         : filtered.length === 0 ? <p className="p-8 text-center text-sm text-muted-foreground">Belum ada transaksi pada periode ini.</p>
         : <div className="overflow-x-auto"><table className="w-full min-w-[850px] text-sm">
-          <thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr><th className="p-3">Tanggal</th><th className="p-3">No. transaksi</th><th className="p-3">Pelanggan</th><th className="p-3">Detail produk</th><th className="p-3">Pembayaran</th><th className="p-3 text-right">Total</th><th className="p-3 text-right">Aksi</th></tr></thead>
+          <thead className="bg-muted/50 text-left text-xs text-muted-foreground"><tr><th className="p-3">Tanggal</th><th className="p-3">No. transaksi</th><th className="p-3">Pelanggan</th><th className="p-3">Detail produk</th><th className="p-3">Pembayaran</th><th className="p-3 text-right">Total</th>{isOwner && <th className="p-3 text-right">Aksi</th>}</tr></thead>
           <tbody>{filtered.map((order) => <tr key={order.id} className="border-t align-top">
             <td className="whitespace-nowrap p-3">{new Date(order.created_at).toLocaleString("id-ID")}</td>
             <td className="p-3 font-medium">#{order.order_no}<div className="text-xs text-muted-foreground">{order.status === "cancelled" ? "Dibatalkan" : order.is_paid ? "Lunas" : "Belum lunas"}</div></td>
@@ -88,7 +91,7 @@ function ReportsPage() {
             <td className="max-w-[280px] p-3">{order.order_items.map((item) => <div key={item.id}>{item.quantity}× {item.product_name} <span className="text-muted-foreground">({rupiah(item.line_total)})</span></div>)}</td>
             <td className="p-3">{order.is_paid ? PAYMENT_LABEL[order.payment_method ?? "cash"] ?? "Lainnya" : "Belum dibayar"}</td>
             <td className="whitespace-nowrap p-3 text-right font-semibold">{rupiah(order.total)}</td>
-            <td className="p-3 text-right"><Button variant="destructive" size="sm" disabled={deleting === order.id} onClick={() => handleDelete(order)}><Trash2 className="mr-1 size-4" />{deleting === order.id ? "Menghapus…" : "Hapus"}</Button></td>
+            {isOwner && <td className="p-3 text-right"><Button variant="destructive" size="sm" disabled={deleting === order.id} onClick={() => handleDelete(order)}><Trash2 className="mr-1 size-4" />{deleting === order.id ? "Menghapus…" : "Hapus"}</Button></td>}
           </tr>)}</tbody>
         </table></div>}
       </CardContent></Card>
