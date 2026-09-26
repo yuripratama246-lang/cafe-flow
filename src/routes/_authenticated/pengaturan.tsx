@@ -92,7 +92,7 @@ function PrinterSettings() {
       return;
     }
     const width = config.paperWidth === "58" ? "58mm" : "80mm";
-    const safe = (value: string) => value.replace(/[&<>"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[char] ?? char));
+    const safe = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     printWindow.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>Test Print Cafe Flow</title><style>@page{size:${width} auto;margin:0}*{box-sizing:border-box}body{width:${width};margin:0;padding:4mm;font:10pt/1.4 monospace;color:#000}.center{text-align:center}.line{border-top:1px dashed #000;margin:4mm 0}</style></head><body><div class="center"><b>CAFE FLOW</b><br>TEST PRINT PRINTER</div><div class="line"></div><div>Printer: ${safe(config.printerName || "Belum diberi nama")}</div><div>Koneksi: ${safe(config.connection.toUpperCase())}</div><div>Kertas: ${config.paperWidth} mm</div><div class="line"></div><div class="center">Jika teks ini tercetak dengan jelas,<br>template test print berhasil.</div><div class="line"></div><div class="center">Cafe Flow POS</div></body></html>`);
     printWindow.document.close();
     printWindow.focus();
