@@ -12,7 +12,7 @@ import { rupiah } from "@/lib/format";
 export const Route = createFileRoute("/menu")({ component: PublicMenuPage });
 type Customization = { sugar: "Normal Sugar" | "Less Sugar"; ice: "Normal Ice" | "Less Ice" | "Hot"; size: "Regular" | "Large"; toppings: ("Extra Shot Espresso" | "Ice Cream")[] };
 type CartItem = Product & { quantity: number; customization: Customization | null; lineKey: string };
-const BEVERAGE_CATEGORY = /(^|\\b)(coffee|non[- ]?coffee|drink|beverage|minuman|kopi)(\\b|$)/i;
+const BEVERAGE_CATEGORY = /(coffee|non[- ]?coffee|drink|beverage|minuman|kopi)/i;
 function isBeverage(product: Product, categoryMap: Map<string, string>) { return BEVERAGE_CATEGORY.test(categoryMap.get(product.category_id ?? "") ?? ""); }
 type PaymentChoice = "cash" | "qris";
 const TOPPING_PRICE = { "Extra Shot Espresso": 8000, "Ice Cream": 6000 } as const;
