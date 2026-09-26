@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { rupiah, dateTimeLabel } from "@/lib/format";
 import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
 
-export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {\n  useEffect(() => { if (!autoPrint) return; const timer = window.setTimeout(() => window.print(), 350); return () => window.clearTimeout(timer); }, [autoPrint, order.id]);
+export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {
+  useEffect(() => { if (!autoPrint) return; const timer = window.setTimeout(() => window.print(), 350); return () => window.clearTimeout(timer); }, [autoPrint, order.id]);
   const payment = order.payments?.[0];
   return (
     <div className="space-y-4">
@@ -70,8 +71,7 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
 
       <div className="no-print flex gap-2"><Button variant="outline" className="flex-1" onClick={() => window.print()}>
         <Printer className="size-4" /> Cetak struk
-      </Button>
-    </div>
+      </Button>{onClose ? <Button variant="ghost" onClick={onClose}>Tutup</Button> : null}</div>
   );
 }
 
