@@ -10,6 +10,7 @@ export function promotionBase(promotion: Promotion, items: VoucherItem[]) {
     : items.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
 }
 export function promotionDiscount(promotion: Promotion, items: VoucherItem[]): number | null {
+  if (promotion.scope === "product" && !items.some((item) => item.product_id === promotion.product_id && item.quantity > 0)) return null;
   const base = promotionBase(promotion, items);
   if (base < Number(promotion.min_purchase || 0)) return null;
   return Math.min(base, promotion.type === "percentage" ? base * Number(promotion.value) / 100 : Number(promotion.value));
