@@ -5,58 +5,102 @@ import { Button } from "@/components/ui/button";
 import { rupiah, dateTimeLabel } from "@/lib/format";
 import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
 
-function printReceipt() {
-  const receipt = document.getElementById("receipt-area");
-  if (!receipt) return;
+function escapeHtml(value: unknown) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function printReceipt(order: OrderWithItems) {
   const printWindow = window.open("", "_blank", "width=420,height=700");
   if (!printWindow) {
     window.alert("Popup diblokir browser. Izinkan popup untuk mencetak struk.");
     return;
   }
 
-  printWindow.document.open();
-  printWindow.document.write(`<!doctype html>
-<html><head><meta charset="utf-8"><title>Struk ${receipt.dataset.orderNo ?? ""}</title>
+  const items = order.order_items.map((item) => `
+    <div class="item">
+      <div class="item-head"><span class="item-name">${escapeHtml(item.product_name)}</span><strong>${escapeHtml(rupiah(item.line_total))}</strong></div>
+      <div class="muted">${escapeHtml(item.quantity)} x ${escapeHtml(rupiah(item.unit_price))}${item.note ? ` · ${escapeHtml(item.note)}` : ""}</div>
+    </div>
+  `).join("");
+
+  const payment = order.payments?.[0];
+  const row = (label: string, value: string) => `<div class="row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value)}</span></div>`;
+  const paymentRows = payment ? `
+    ${row("Metode", PAYMENT_LABEL[payment.method] ?? payment.method)}
+    ${payment.cash_received != null ? row("Tunai", rupiah(payment.cash_received)) : ""}
+    ${payment.change_amount != null ? row("Kembalian", rupiah(payment.change_amount)) : ""}
+  ` : "";
+
+  const html = `<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Struk #${escapeHtml(order.order_no)}</title>
 <style>
   @page { size: 80mm auto; margin: 0; }
   * { box-sizing: border-box; }
-  html, body { margin: 0 !important; padding: 0 !important; width: 80mm !important; min-width: 80mm !important; background: #fff !important; color: #000 !important; }
-  body { font: 10pt/1.35 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  #receipt-area { display: block !important; box-sizing: border-box !important; width: 72mm !important; min-width: 72mm !important; max-width: 72mm !important; margin: 0 !important; padding: 2mm !important; border: 0 !important; border-radius: 0 !important; box-shadow: none !important; color: #000 !important; background: #fff !important; overflow: visible !important; }
-  #receipt-area * { box-sizing: border-box !important; color: #000 !important; border-color: #777 !important; box-shadow: none !important; text-shadow: none !important; }\n  #receipt-area p, #receipt-area ul, #receipt-area dl { margin-top: 2mm; margin-bottom: 2mm; }\n  #receipt-area ul { padding: 0; list-style: none; }\n  #receipt-area .border-t { border-top: 1px dashed #777 !important; }\n  #receipt-area .border-dashed { border-style: dashed !important; }\n  #receipt-area .rounded-xl { border-radius: 0 !important; }\n  #receipt-area .bg-card { background: #fff !important; }\n  #receipt-area .p-5 { padding: 2mm !important; }\n  #receipt-area .max-w-xs { max-width: 72mm !important; }
-  .text-center { text-align: center; }
-  .text-base { font-size: 12pt; }
-  .text-sm { font-size: 10pt; }
-  .text-\[11px\] { font-size: 8pt; }
-  .font-semibold { font-weight: 700; }
-  .font-mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-  .flex { display: flex; }
-  .justify-between { justify-content: space-between; }
-  .gap-2 { gap: 8px; }
-  .min-w-0 { min-width: 0; }
-  .flex-1 { flex: 1; }
-  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .space-y-1 > * + * { margin-top: 4px; }
-  .space-y-2 > * + * { margin-top: 8px; }
-  .my-3 { margin-top: 10px; margin-bottom: 10px; }
-  .mt-2 { margin-top: 8px; }
-  .pt-2 { padding-top: 8px; }
-  .border-t { border-top: 1px solid #777; }
-  .border-dashed { border-style: dashed; }
-  .leading-relaxed { line-height: 1.45; }
-  .no-print { display: none !important; }
-  @media print { html, body { width: 80mm !important; min-width: 80mm !important; } #receipt-area { break-inside: avoid; page-break-inside: avoid; } }
-</style></head><body>${receipt.outerHTML}</body></html>`);
+  html, body { margin: 0; padding: 0; width: 80mm; background: #fff; color: #000; }
+  body { font: 10pt/1.35 "Courier New", monospace; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .receipt { width: 72mm; margin: 0; padding: 3mm 2mm 5mm; overflow-wrap: anywhere; }
+  .center { text-align: center; }
+  .title { margin: 0; font-size: 14pt; font-weight: 700; }
+  .subtitle { margin: 1mm 0 0; font-size: 9pt; }
+  .rule { border: 0; border-top: 1px dashed #555; margin: 3mm 0; }
+  .row, .item-head { display: flex; justify-content: space-between; gap: 3mm; }
+  .row { margin: 1.5mm 0; }
+  .muted { font-size: 8.5pt; white-space: normal; overflow-wrap: anywhere; }
+  .item { margin: 2.5mm 0; break-inside: avoid; }
+  .item-name { min-width: 0; flex: 1; overflow-wrap: anywhere; }
+  .item-head strong { white-space: nowrap; }
+  .total { border-top: 1px dashed #555; margin-top: 2mm; padding-top: 2mm; font-size: 12pt; font-weight: 700; }
+  .thanks { margin: 3mm 0 0; text-align: center; font-size: 9pt; }
+  @media screen { body { margin: 0 auto; } .receipt { margin: 0 auto; } }
+</style>
+</head>
+<body>
+  <main class="receipt">
+    <header class="center"><h1 class="title">KASIRKU</h1><p class="subtitle">Struk Pembayaran</p></header>
+    <hr class="rule">
+    <div class="row"><span>No. #${escapeHtml(order.order_no)}</span><span>${escapeHtml(dateTimeLabel(order.created_at))}</span></div>
+    ${order.restaurant_tables?.name ? `<div class="row"><span>Meja: ${escapeHtml(order.restaurant_tables.name)}</span></div>` : ""}
+    ${order.customer_name ? `<div class="row"><span>Pelanggan: ${escapeHtml(order.customer_name)}</span></div>` : ""}
+    <hr class="rule">
+    ${items}
+    <hr class="rule">
+    ${row("Subtotal", rupiah(order.subtotal))}
+    ${Number(order.discount) > 0 ? row("Diskon", `- ${rupiah(order.discount)}`) : ""}
+    ${row("Pajak", rupiah(order.tax))}
+    <div class="row total"><span>Total</span><span>${escapeHtml(rupiah(order.total))}</span></div>
+    ${paymentRows}
+    <hr class="rule">
+    <p class="thanks">Terima kasih atas kunjungan Anda!</p>
+  </main>
+</body>
+</html>`;
+
+  printWindow.document.open();
+  printWindow.document.write(html);
   printWindow.document.close();
   printWindow.focus();
   printWindow.onload = () => {
-    printWindow.print();
-    printWindow.onafterprint = () => printWindow.close();
+    printWindow.setTimeout(() => printWindow.print(), 250);
   };
+  printWindow.onafterprint = () => printWindow.close();
 }
 
 export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {
-  useEffect(() => { if (!autoPrint) return; const timer = window.setTimeout(() => printReceipt(), 350); return () => window.clearTimeout(timer); }, [autoPrint, order.id]);
+  useEffect(() => {
+    if (!autoPrint) return;
+    const timer = window.setTimeout(() => printReceipt(order), 350);
+    return () => window.clearTimeout(timer);
+  }, [autoPrint, order]);
+
   const payment = order.payments?.[0];
   return (
     <div className="space-y-4">
@@ -74,12 +118,8 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
           <span>No. #{order.order_no}</span>
           <span>{dateTimeLabel(order.created_at)}</span>
         </div>
-        {order.restaurant_tables?.name ? (
-          <p className="text-[11px] text-muted-foreground">Meja: {order.restaurant_tables.name}</p>
-        ) : null}
-        {order.customer_name ? (
-          <p className="text-[11px] text-muted-foreground">Pelanggan: {order.customer_name}</p>
-        ) : null}
+        {order.restaurant_tables?.name ? <p className="text-[11px] text-muted-foreground">Meja: {order.restaurant_tables.name}</p> : null}
+        {order.customer_name ? <p className="text-[11px] text-muted-foreground">Pelanggan: {order.customer_name}</p> : null}
         <div className="my-3 border-t border-dashed border-border" />
         <ul className="space-y-2">
           {order.order_items.map((item) => (
@@ -89,8 +129,7 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
                 <span className="num">{rupiah(item.line_total)}</span>
               </div>
               <div className="text-[11px] text-muted-foreground">
-                {item.quantity} x {rupiah(item.unit_price)}
-                {item.note ? ` · ${item.note}` : ""}
+                {item.quantity} x {rupiah(item.unit_price)}{item.note ? ` · ${item.note}` : ""}
               </div>
             </li>
           ))}
@@ -101,37 +140,29 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
           {Number(order.discount) > 0 ? <Row label="Diskon" value={`- ${rupiah(order.discount)}`} /> : null}
           <Row label="Pajak" value={rupiah(order.tax)} />
           <div className="mt-2 flex justify-between border-t border-dashed border-border pt-2 text-base font-semibold">
-            <span>Total</span>
-            <span className="num">{rupiah(order.total)}</span>
+            <span>Total</span><span className="num">{rupiah(order.total)}</span>
           </div>
           {payment ? (
             <>
               <Row label="Metode" value={PAYMENT_LABEL[payment.method] ?? payment.method} />
-              {payment.cash_received != null ? (
-                <Row label="Tunai" value={rupiah(payment.cash_received)} />
-              ) : null}
-              {payment.change_amount != null ? (
-                <Row label="Kembalian" value={rupiah(payment.change_amount)} />
-              ) : null}
+              {payment.cash_received != null ? <Row label="Tunai" value={rupiah(payment.cash_received)} /> : null}
+              {payment.change_amount != null ? <Row label="Kembalian" value={rupiah(payment.change_amount)} /> : null}
             </>
           ) : null}
         </dl>
         <div className="my-3 border-t border-dashed border-border" />
         <p className="text-center text-[11px] text-muted-foreground">Terima kasih atas kunjungan Anda!</p>
       </div>
-
-      <div className="no-print flex gap-2"><Button variant="outline" className="flex-1" onClick={printReceipt}>
-        <Printer className="size-4" /> Cetak struk
-      </Button>{onClose ? <Button variant="ghost" onClick={onClose}>Tutup</Button> : null}</div>
+      <div className="no-print flex gap-2">
+        <Button variant="outline" className="flex-1" onClick={() => printReceipt(order)}>
+          <Printer className="size-4" /> Cetak struk
+        </Button>
+        {onClose ? <Button variant="ghost" onClick={onClose}>Tutup</Button> : null}
+      </div>
     </div>
   );
 }
 
 function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between">
-      <dt className="text-muted-foreground">{label}</dt>
-      <dd className="num">{value}</dd>
-    </div>
-  );
+  return <div className="flex justify-between"><dt className="text-muted-foreground">{label}</dt><dd className="num">{value}</dd></div>;
 }
