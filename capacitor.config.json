@@ -1,0 +1,10 @@
+{
+  "appId": "com.cafeflow.pos",
+  "appName": "Cafe Flow",
+  "webDir": "www",
+  "server": {
+    "url": "https://pos.yuripratama246.workers.dev",
+    "cleartext": false,
+    "allowNavigation": ["pos.yuripratama246.workers.dev"]
+  }
+}
