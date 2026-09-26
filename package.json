@@ -116,5 +116,6 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true
     }
-  }
+  },
+  "version": "1.0.0"
 }
