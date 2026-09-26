@@ -11,7 +11,7 @@ import { canAccess, useStaffProfile, type PermissionKey } from "@/lib/access";
 const GROUPS: { label: string; items: { to: string; label: string; icon: typeof LayoutDashboard; permission: PermissionKey }[] }[] = [
   { label: "Utama", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" }] },
   { label: "AI", items: [{ to: "/ai", label: "AI Assistant", icon: Bot, permission: "reports" }] },
-  { label: "Transaksi", items: [{ to: "/kasir", label: "Kasir", icon: ScanLine, permission: "orders" }, { to: "/pesanan", label: "Pesanan", icon: ClipboardList, permission: "orders" }, { to: "/history", label: "History", icon: History, permission: "orders" }, { to: "/shift-kasir", label: "Opening & Closing", icon: Banknote, permission: "orders" }] },
+  { label: "Transaksi", items: [{ to: "/kasir", label: "Kasir", icon: ScanLine, permission: "orders" }, { to: "/pesanan", label: "Pesanan", icon: ClipboardList, permission: "orders" }, { to: "/history", label: "History", icon: History, permission: "orders" }, { to: "/shift-kasir", label: "Opening & Closing", icon: Banknote, permission: "orders" }, { to: "/activity-log", label: "Log Aktivitas", icon: History, permission: "settings" }] },
   { label: "Produk & Outlet", items: [{ to: "/produk", label: "Produk & Stok", icon: Package, permission: "products" }, { to: "/meja", label: "Meja & QR Menu", icon: QrCode, permission: "tables" }, { to: "/inventory", label: "Inventory", icon: Boxes, permission: "inventory" }] },
   { label: "Pelanggan", items: [{ to: "/customers", label: "Pelanggan & Loyalty", icon: Users, permission: "customers" }] },
   { label: "Marketing", items: [{ to: "/promosi", label: "Promosi & Diskon", icon: BadgePercent, permission: "promotions" }] },
@@ -33,7 +33,7 @@ export function AppShell({ title, description, actions, children }: { title: str
   const incomingCount = incomingQuery.data ?? 0;
   useEffect(() => { const saved = window.localStorage.getItem("cafe-flow-sidebar-collapsed"); if (saved === "1") setCollapsed(true); }, []);
   function toggleSidebar() { setCollapsed((value) => { const next = !value; window.localStorage.setItem("cafe-flow-sidebar-collapsed", next ? "1" : "0"); return next; }); }
-  async function handleSignOut() { await queryClient.cancelQueries(); queryClient.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }
+  async function handleSignOut() { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data: profile } = await supabase.from("staff_profiles").select("owner_id").eq("user_id", user.id).maybeSingle(); await supabase.from("audit_logs").insert({ owner_id: profile?.owner_id ?? user.id, actor_user_id: user.id, action: "auth.logout", entity_type: "auth", entity_id: user.id, details: { method: "password" } }); } await queryClient.cancelQueries(); queryClient.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }
   const blocked = !!staff.data && !staff.data.is_active;
   return <div className="flex min-h-screen bg-background">
     <aside className={cn("no-print sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar p-3 transition-all duration-200 lg:flex", collapsed ? "w-0 border-r-0 p-0 opacity-0" : "w-64 opacity-100")}>
