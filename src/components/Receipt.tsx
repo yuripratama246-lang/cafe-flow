@@ -72,6 +72,7 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
       <div className="no-print flex gap-2"><Button variant="outline" className="flex-1" onClick={() => window.print()}>
         <Printer className="size-4" /> Cetak struk
       </Button>{onClose ? <Button variant="ghost" onClick={onClose}>Tutup</Button> : null}</div>
+    </div>
   );
 }
 
