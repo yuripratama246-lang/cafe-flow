@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, CreditCard, Receipt, Percent, Save, Store, BellRing, Calculator, Printer } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,7 +35,17 @@ function PengaturanPage() {
   const query = useQuery({ queryKey: ["outlet-settings"], queryFn: async () => { const ownerId = await getOwnerId(); const { data, error } = await supabase.from("outlet_settings").select("*").eq("owner_id", ownerId).maybeSingle(); if (error) throw error; if (data) return data as Settings; const { data: created, error: createError } = await supabase.from("outlet_settings").upsert({ owner_id: ownerId, ...DEFAULTS }, { onConflict: "owner_id" }).select("*").single(); if (createError) throw createError; return created as Settings; }, retry: 1 });
   const [form, setForm] = useState<Settings | null>(null);
   const [activeTheme, setActiveTheme] = useState<ThemeId>("charcoal-espresso");
-  useEffect(() => { if (query.data) { setForm(query.data); const saved = THEME_PRESETS.some((theme) => theme.id === query.data.global_theme) ? query.data.global_theme as ThemeId : "charcoal-espresso"; setActiveTheme(saved); document.documentElement.setAttribute("data-theme", saved); } }, [query.data]);
+  const settingsInitialized = useRef(false);
+  // Hydrate persisted settings only once. Background query refreshes must not
+  // overwrite a theme the user has just selected locally.
+  useEffect(() => {
+    if (!query.data || settingsInitialized.current) return;
+    settingsInitialized.current = true;
+    setForm(query.data);
+    const saved = THEME_PRESETS.some((theme) => theme.id === query.data.global_theme) ? query.data.global_theme as ThemeId : "charcoal-espresso";
+    setActiveTheme(saved);
+    document.documentElement.setAttribute("data-theme", saved);
+  }, [query.data]);
 
   const chooseTheme = async (themeName: ThemeId) => {
     const previous = activeTheme;
