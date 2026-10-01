@@ -39,7 +39,82 @@ export async function fetchOrders(opts?: { from?: string; to?: string; limit?: n
 export async function fetchOrder(id: string): Promise<OrderWithItems | null> { const { data, error } = await supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").eq("id", id).maybeSingle(); if (error) throw error; return (data ?? null) as unknown as OrderWithItems | null; }
 
 export type NewOrderInput = { idempotency_key?: string; promotion_id?: string | null; source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: "cash" | "card" | "qris" | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: "cash" | "card" | "qris"; amount: number; cash_received?: number | null; change_amount?: number | null } };
-export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> { const { items, payment, ...orderData } = input; if (input.source === "qr") { const { data, error } = await supabase.rpc("create_qr_order", { p_order: { ...orderData, source: "qr", status: "new", is_paid: false }, p_items: items }); if (error) throw new Error(error.message || "Gagal membuat pesanan"); const created = (data as { order?: Order } | null)?.order; if (!created?.id) throw new Error("Pesanan dibuat tetapi respons order tidak valid"); const full = await fetchOrder(created.id); if (!full) throw new Error("Pesanan tersimpan tetapi gagal memuat detail"); return full; } const { data: sessionData } = await supabase.auth.getSession(); if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang."); const { data, error } = await supabase.rpc("create_pos_order", { p_order: { ...orderData, idempotency_key: orderData.idempotency_key ?? crypto.randomUUID() }, p_items: items, p_payment: payment ?? null }); if (error) throw new Error(error.message || "Gagal menyimpan transaksi"); const created = (data as { order?: Order } | null)?.order; if (!created?.id) throw new Error("Transaksi dibuat tetapi respons order tidak valid"); const full = await fetchOrder(created.id); if (!full) throw new Error("Transaksi tersimpan tetapi gagal memuat detail order"); return full; }
+export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> {
+  const { items, payment, ...orderData } = input;
+
+  if (input.source === "qr") {
+    const { data, error } = await supabase.rpc("create_qr_order", {
+      p_order: { ...orderData, source: "qr", status: "new", is_paid: false },
+      p_items: items,
+    });
+    if (error) {
+      console.error("[create_qr_order] RPC error", {
+        message: error.message, code: error.code, details: error.details, hint: error.hint,
+      });
+      throw new Error(error.message || "Gagal membuat pesanan");
+    }
+    const created = (data as { order?: Order } | null)?.order;
+    if (!created?.id) throw new Error("Pesanan dibuat tetapi respons order tidak valid");
+    const full = await fetchOrder(created.id);
+    if (!full) throw new Error("Pesanan tersimpan tetapi gagal memuat detail");
+    return full;
+  }
+
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+  if (sessionError) throw new Error(`Gagal memeriksa sesi: ${sessionError.message}`);
+  if (!sessionData.session) throw new Error("Sesi login tidak ditemukan. Silakan login ulang.");
+
+  const payload = {
+    p_order: {
+      ...orderData,
+      idempotency_key: orderData.idempotency_key ?? crypto.randomUUID(),
+      subtotal: Number(orderData.subtotal),
+      discount: Number(orderData.discount),
+      tax: Number(orderData.tax),
+      total: Number(orderData.total),
+    },
+    p_items: items.map((item) => ({
+      product_id: String(item.product_id),
+      quantity: Number(item.quantity),
+      note: item.note ?? null,
+    })),
+    p_payment: payment
+      ? {
+          method: payment.method,
+          cash_received: payment.cash_received == null ? null : Number(payment.cash_received),
+        }
+      : null,
+  };
+
+  // Diagnostic payload: keep this immediately before the RPC call.
+  console.log("[create_pos_order] payload", payload);
+
+  try {
+    const { data, error } = await supabase.rpc("create_pos_order", payload);
+    if (error) {
+      console.error("[create_pos_order] Supabase RPC error", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+        payload,
+      });
+      throw new Error(`RPC create_pos_order [${error.code ?? "unknown"}]: ${error.message}${error.details ? ` | ${error.details}` : ""}${error.hint ? ` | Hint: ${error.hint}` : ""}`);
+    }
+
+    const created = (data as { order?: Order } | null)?.order;
+    if (!created?.id) {
+      console.error("[create_pos_order] Unexpected RPC response", data);
+      throw new Error("Transaksi dibuat tetapi respons order tidak valid");
+    }
+    const full = await fetchOrder(created.id);
+    if (!full) throw new Error("Transaksi tersimpan tetapi gagal memuat detail order");
+    return full;
+  } catch (error) {
+    console.error("[create_pos_order] Checkout failed", error);
+    throw error;
+  }
+}
 export async function updateOrderStatus(id: string, status: OrderStatus) { const { error } = await supabase.from("orders").update({ status }).eq("id", id); if (error) throw error; }
 export async function approveQrOrder(id: string, cashReceived?: number | null): Promise<Order> { const { data, error } = await supabase.rpc("approve_qr_order", { p_order_id: id, p_cash_received: cashReceived ?? null }); if (error) throw new Error(error.message || "Gagal mengonfirmasi pembayaran"); return data as Order; }
 export async function rejectQrOrder(id: string): Promise<Order> { const { data, error } = await supabase.rpc("reject_qr_order", { p_order_id: id }); if (error) throw new Error(error.message || "Gagal menolak pesanan"); return data as Order; }
