@@ -22,7 +22,7 @@ export async function fetchAvailablePromotions(): Promise<Promotion[]> {
 }
 export type OrderStatus = "new" | "preparing" | "ready" | "completed" | "cancelled";
 export type PaymentStatus = "unpaid" | "awaiting_confirmation" | "paid" | "rejected";
-export type OrderItem = { id: string; order_id: string; product_id: string | null; product_name: string; unit_price: number; quantity: number; note: string | null; line_total: number };
+export type OrderItem = { id: string; order_id: string; product_id: string | null; product_name: string; unit_price: number; quantity: number; note: string | null; line_total: number; cost_price_snapshot?: number | null };
 export type Order = { id: string; order_no: number; source: "pos" | "qr"; status: OrderStatus; table_id: string | null; customer_name: string | null; notes: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method: "cash" | "card" | "qris" | null; payment_status: PaymentStatus; created_at: string; updated_at: string };
 export type OrderWithItems = Order & { order_items: OrderItem[]; payments?: { method: string; amount: number; cash_received: number | null; change_amount: number | null }[]; restaurant_tables?: { name: string } | null };
 export type RestaurantTable = { id: string; name: string; code: string };
