@@ -40,15 +40,24 @@ function PengaturanPage() {
   const chooseTheme = async (themeName: ThemeId) => {
     const previous = activeTheme;
     setActiveTheme(themeName);
+    setForm((current) => current ? { ...current, global_theme: themeName } : current);
     document.documentElement.setAttribute("data-theme", themeName);
     try {
       const ownerId = await getOwnerId();
-      const { error } = await supabase.from("outlet_settings").update({ global_theme: themeName }).eq("owner_id", ownerId);
+      // Upsert ensures the preference is persisted even if the outlet row was not
+      // present yet; selecting the saved row also confirms the write succeeded.
+      const { data, error } = await supabase
+        .from("outlet_settings")
+        .upsert({ owner_id: ownerId, global_theme: themeName }, { onConflict: "owner_id" })
+        .select("*")
+        .single();
       if (error) throw error;
-      void qc.invalidateQueries({ queryKey: ["outlet-settings"] });
+      qc.setQueryData(["outlet-settings"], data as Settings);
+      setForm((current) => current ? { ...current, ...data, global_theme: themeName } : data as Settings);
       toast.success("Tema aplikasi diperbarui");
     } catch (error) {
       setActiveTheme(previous);
+      setForm((current) => current ? { ...current, global_theme: previous } : current);
       document.documentElement.setAttribute("data-theme", previous);
       toast.error(error instanceof Error ? error.message : "Gagal menyimpan tema");
     }
