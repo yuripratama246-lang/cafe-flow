@@ -11,6 +11,8 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
+import { KitchenNotification } from "@/components/KitchenNotification";
+import { registerOfflineSync } from "@/services/offlineSync";
 
 function NotFoundComponent() {
   return (
@@ -117,6 +119,8 @@ function RootShell({ children }: { children: ReactNode }) {
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
 
+  useEffect(() => registerOfflineSync(), []);
+
   useEffect(() => {
     let cancelled = false;
     void (async () => {
@@ -132,6 +136,7 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <KitchenNotification />
       <Outlet />
     </QueryClientProvider>
   );
