@@ -39,7 +39,7 @@ export function AppShell({ title, description, actions, children }: { title: str
   function toggleSidebar() { setCollapsed((value) => { const next = !value; window.localStorage.setItem("cafe-flow-sidebar-collapsed", next ? "1" : "0"); return next; }); }
   async function handleSignOut() { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data: profile } = await supabase.from("staff_profiles").select("owner_id").eq("user_id", user.id).maybeSingle(); await supabase.from("audit_logs").insert({ owner_id: profile?.owner_id ?? user.id, actor_user_id: user.id, action: "auth.logout", entity_type: "auth", entity_id: user.id, details: { method: "password" } }); } await queryClient.cancelQueries(); queryClient.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }
   const blocked = !!staff.data && !staff.data.is_active;
-  return <div className="flex min-h-screen bg-background">
+  return <div className="flex min-h-screen bg-[#090D11] text-slate-100">
     <aside className={cn("no-print sticky top-0 hidden h-screen shrink-0 flex-col overflow-hidden border-r border-sidebar-border bg-sidebar p-3 transition-all duration-200 lg:flex", collapsed ? "w-0 border-r-0 p-0 opacity-0" : "w-64 opacity-100")}>
       <div className="flex-1 space-y-5 overflow-y-auto pr-1"><div className="flex justify-between"><Brand /> <Button variant="ghost" size="icon" title="Sembunyikan menu" className="shrink-0" onClick={toggleSidebar}><PanelLeftClose className="size-4.5" /></Button></div>{blocked ? <Blocked /> : <NavList profile={staff.data} incomingCount={incomingCount} />}</div>
       <LogoutButton onClick={handleSignOut} />
@@ -51,7 +51,7 @@ export function AppShell({ title, description, actions, children }: { title: str
         <div className="min-w-0 flex-1"><h1 className="truncate text-lg font-semibold md:text-xl">{title}</h1>{description ? <p className="truncate text-xs text-muted-foreground md:text-sm">{description}</p> : null}</div>
         {staff.data?.role !== "super_admin" ? <OutletSwitcher /> : null}{actions}
       </header>
-      {blocked ? <div className="m-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center"><ShieldAlert className="mx-auto mb-3 size-8 text-destructive" /><h2 className="font-semibold">Akun dinonaktifkan</h2><p className="mt-1 text-sm text-muted-foreground">Akses akun ini sudah dimatikan oleh owner. Hubungi owner untuk mengaktifkannya kembali.</p></div> : <main className="flex-1 p-4 md:p-6">{children}</main>}
+      {blocked ? <div className="m-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center"><ShieldAlert className="mx-auto mb-3 size-8 text-destructive" /><h2 className="font-semibold">Akun dinonaktifkan</h2><p className="mt-1 text-sm text-muted-foreground">Akses akun ini sudah dimatikan oleh owner. Hubungi owner untuk mengaktifkannya kembali.</p></div> : <main className="min-h-0 flex-1 bg-[#090D11] p-4 text-slate-100 md:p-6">{children}</main>}
     </div>
   </div>;
 }
