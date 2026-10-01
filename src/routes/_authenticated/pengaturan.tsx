@@ -17,14 +17,14 @@ type Settings = { id?: string; owner_id: string; global_theme?: string; name: st
 const DEFAULTS = { global_theme: "premium-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
 
 const THEME_PRESETS = [
-  { id: "premium-espresso", name: "Premium Espresso", bg: "8 12 16", card: "17 22 29", accent: "245 158 11", mood: "Dark · Amber" },
+  { id: "premium-espresso", name: "Premium Espresso", bg: "9 13 17", card: "18 24 31", accent: "245 158 11", mood: "Dark · Amber" },
   { id: "emerald-matcha", name: "Emerald Matcha", bg: "5 11 10", card: "12 20 18", accent: "16 185 129", mood: "Dark · Emerald" },
-  { id: "burgundy-roastery", name: "Burgundy Roastery", bg: "12 6 9", card: "21 13 17", accent: "225 29 72", mood: "Dark · Burgundy" },
+  { id: "burgundy-roastery", name: "Burgundy Roastery", bg: "15 5 8", card: "25 13 18", accent: "225 29 72", mood: "Dark · Burgundy" },
   { id: "smoked-oakwood", name: "Smoked Oakwood", bg: "12 10 9", card: "23 20 18", accent: "180 83 9", mood: "Dark · Oak" },
   { id: "midnight-cyber", name: "Midnight Cyber", bg: "2 6 23", card: "15 23 42", accent: "56 189 248", mood: "Dark · Cyan" },
   { id: "lavender-haze", name: "Lavender Haze", bg: "15 10 28", card: "26 19 44", accent: "168 85 247", mood: "Dark · Violet" },
   { id: "matte-carbon", name: "Matte Carbon", bg: "18 18 18", card: "30 30 30", accent: "243 244 246", mood: "Dark · Monochrome" },
-  { id: "scandinavian-clean", name: "Scandinavian Clean", bg: "248 250 252", card: "255 255 255", accent: "51 65 85", mood: "Light · Slate" },
+  { id: "scandinavian-clean", name: "Scandinavian Clean", bg: "248 250 252", card: "255 255 255", accent: "71 85 105", mood: "Light · Slate" },
   { id: "sakura-bakery", name: "Sakura Bakery", bg: "255 247 247", card: "255 255 255", accent: "251 113 133", mood: "Light · Rose" },
   { id: "citrus-juice", name: "Citrus Juice", bg: "254 252 232", card: "255 255 255", accent: "202 138 4", mood: "Light · Citrus" },
 ] as const;
