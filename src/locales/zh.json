@@ -1,0 +1,82 @@
+{
+  "common": {
+    "dashboard": "仪表板",
+    "cashier": "收银台",
+    "orders": "订单",
+    "history": "历史记录",
+    "openingClosing": "交接班",
+    "activityLog": "操作日志",
+    "productsStock": "商品与库存",
+    "tablesQr": "桌台与二维码菜单",
+    "inventory": "库存管理",
+    "customersLoyalty": "客户与会员",
+    "promotionsDiscounts": "促销与折扣",
+    "expensesProfit": "支出与损益",
+    "salesReports": "销售报表",
+    "staffShifts": "员工与班次",
+    "outletSettings": "门店设置",
+    "apiIntegrations": "API 与集成",
+    "main": "主要",
+    "transactions": "交易",
+    "productOutlet": "商品与门店",
+    "customers": "客户",
+    "marketing": "营销",
+    "management": "管理",
+    "language": "应用语言",
+    "save": "保存",
+    "cancel": "取消",
+    "loading": "加载中…",
+    "retry": "重试"
+  },
+  "dashboard": {
+    "title": "仪表板",
+    "summary": "门店销售与运营概览",
+    "todaySales": "今日销售额",
+    "transactions": "交易笔数",
+    "averageOrder": "平均订单金额",
+    "recentOrders": "最近订单",
+    "salesSummary": "销售汇总"
+  },
+  "reports": {
+    "summary": "报表摘要",
+    "daily": "每日销售",
+    "product": "商品销售",
+    "hourly": "每小时销售",
+    "payment": "支付报表",
+    "channel": "渠道报表",
+    "orderDetail": "订单详情"
+  },
+  "cashier": {
+    "title": "收银台",
+    "pay": "支付",
+    "completePayment": "完成支付",
+    "cash": "现金",
+    "card": "银行卡",
+    "qris": "二维码支付",
+    "total": "总计",
+    "subtotal": "小计",
+    "discount": "折扣",
+    "addToCart": "加入购物车"
+  },
+  "staff": {
+    "title": "员工与班次",
+    "active": "启用",
+    "inactive": "停用",
+    "add": "添加员工",
+    "edit": "编辑",
+    "delete": "删除",
+    "role": "角色",
+    "fullName": "姓名",
+    "email": "电子邮箱",
+    "saveChanges": "保存更改"
+  },
+  "settings": {
+    "title": "门店设置",
+    "language": "应用语言",
+    "profile": "门店资料",
+    "taxService": "税费与服务费",
+    "paymentMethods": "支付方式",
+    "receipt": "收据与交易",
+    "saved": "设置已保存"
+  }
+}
