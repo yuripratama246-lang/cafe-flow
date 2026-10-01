@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Building2, CreditCard, Receipt, Percent, Save, Store, BellRing, Calculator, Printer } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,18 +15,8 @@ import { useTranslation } from "react-i18next";
 import i18n, { languageOptions, type LanguageCode } from "@/locales/i18n";
 
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: PengaturanPage });
-type Settings = { id?: string; owner_id: string; global_theme?: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean; app_language?: LanguageCode };
-const DEFAULTS = { app_language: "id" as LanguageCode, global_theme: "charcoal-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
-
-const THEME_PRESETS = [
-  { id: "charcoal-espresso", name: "Charcoal Espresso", bg: "11 15 18", card: "20 27 33", accent: "198 154 115", mood: "Dark · Espresso" },
-  { id: "forest-matcha", name: "Forest Matcha", bg: "6 10 8", card: "13 20 16", accent: "110 158 133", mood: "Dark · Matcha" },
-  { id: "midnight-indigo", name: "Midnight Indigo", bg: "7 10 18", card: "16 22 38", accent: "96 165 250", mood: "Dark · Indigo" },
-  { id: "scandinavian-chalk", name: "Scandinavian Chalk", bg: "244 246 248", card: "255 255 255", accent: "71 85 105", mood: "Light · Chalk" },
-  { id: "warm-oatmilk", name: "Warm Oatmilk", bg: "248 245 240", card: "255 255 255", accent: "160 140 125", mood: "Light · Oatmilk" },
-  { id: "sage-mint", name: "Sage Mint", bg: "242 245 243", card: "255 255 255", accent: "77 124 102", mood: "Light · Sage" },
-] as const;
-type ThemeId = typeof THEME_PRESETS[number]["id"];
+type Settings = { id?: string; owner_id: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean; app_language?: LanguageCode };
+const DEFAULTS = { app_language: "id" as LanguageCode, name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
 
 async function getOwnerId() { const { data, error } = await supabase.auth.getUser(); if (error || !data.user) throw new Error("Belum login"); return data.user.id; }
 function PengaturanPage() {
@@ -34,44 +24,7 @@ function PengaturanPage() {
   const qc = useQueryClient();
   const query = useQuery({ queryKey: ["outlet-settings"], queryFn: async () => { const ownerId = await getOwnerId(); const { data, error } = await supabase.from("outlet_settings").select("*").eq("owner_id", ownerId).maybeSingle(); if (error) throw error; if (data) return data as Settings; const { data: created, error: createError } = await supabase.from("outlet_settings").upsert({ owner_id: ownerId, ...DEFAULTS }, { onConflict: "owner_id" }).select("*").single(); if (createError) throw createError; return created as Settings; }, retry: 1 });
   const [form, setForm] = useState<Settings | null>(null);
-  const [activeTheme, setActiveTheme] = useState<ThemeId>("charcoal-espresso");
-  const settingsInitialized = useRef(false);
-  // Hydrate persisted settings only once. Background query refreshes must not
-  // overwrite a theme the user has just selected locally.
-  useEffect(() => {
-    if (!query.data || settingsInitialized.current) return;
-    settingsInitialized.current = true;
-    setForm(query.data);
-    const saved = THEME_PRESETS.some((theme) => theme.id === query.data.global_theme) ? query.data.global_theme as ThemeId : "charcoal-espresso";
-    setActiveTheme(saved);
-    document.documentElement.setAttribute("data-theme", saved);
-  }, [query.data]);
-
-  const chooseTheme = async (themeName: ThemeId) => {
-    const previous = activeTheme;
-    setActiveTheme(themeName);
-    setForm((current) => current ? { ...current, global_theme: themeName } : current);
-    document.documentElement.setAttribute("data-theme", themeName);
-    try {
-      const ownerId = await getOwnerId();
-      // Upsert ensures the preference is persisted even if the outlet row was not
-      // present yet; selecting the saved row also confirms the write succeeded.
-      const { data, error } = await supabase
-        .from("outlet_settings")
-        .upsert({ owner_id: ownerId, global_theme: themeName }, { onConflict: "owner_id" })
-        .select("*")
-        .single();
-      if (error) throw error;
-      qc.setQueryData(["outlet-settings"], data as Settings);
-      setForm((current) => current ? { ...current, ...data, global_theme: themeName } : data as Settings);
-      toast.success("Tema aplikasi diperbarui");
-    } catch (error) {
-      setActiveTheme(previous);
-      setForm((current) => current ? { ...current, global_theme: previous } : current);
-      document.documentElement.setAttribute("data-theme", previous);
-      toast.error(error instanceof Error ? error.message : "Gagal menyimpan tema");
-    }
-  };
+  useEffect(() => { if (query.data) setForm(query.data); }, [query.data]);
   const save = useMutation({ mutationFn: async () => { if (!form) return; const clean = { ...form, tax_rate: Math.min(Math.max(Number(form.tax_rate) || 0, 0), 100), service_rate: Math.min(Math.max(Number(form.service_rate) || 0, 0), 100), tax_enabled: Number(form.tax_rate) > 0, service_enabled: Number(form.service_rate) > 0, rounding: Math.max(Number(form.rounding) || 0, 0) }; const { error } = await supabase.from("outlet_settings").upsert(clean, { onConflict: "owner_id" }); if (error) throw error; }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["outlet-settings"] }); toast.success("Pengaturan outlet tersimpan"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal menyimpan pengaturan") });
   if (query.isError) return <AppShell title="Pengaturan Outlet" description="Atur identitas, pajak, service, pembayaran, dan struk"><Card><CardContent className="py-12 text-center"><p className="font-medium">Pengaturan gagal dimuat</p><p className="mt-2 text-sm text-muted-foreground">{query.error instanceof Error ? query.error.message : "Terjadi kesalahan."}</p><Button className="mt-4" onClick={() => query.refetch()}>Coba lagi</Button></CardContent></Card></AppShell>;
   if (!form) return <AppShell title="Pengaturan Outlet" description="Atur identitas, pajak, service, pembayaran, dan struk"><Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Memuat pengaturan outlet…</CardContent></Card></AppShell>;
@@ -80,54 +33,6 @@ function PengaturanPage() {
   return <AppShell title="Pengaturan Outlet" description="Atur identitas, pajak, service, pembayaran, dan struk" actions={<Button onClick={() => save.mutate()} disabled={save.isPending}><Save className="mr-2 size-4" />{save.isPending ? "Menyimpan…" : "Simpan perubahan"}</Button>}>
     <div className="grid gap-4 md:grid-cols-4"><Stat icon={Store} label="Outlet" value="1" note="Outlet aktif" /><Stat icon={Percent} label="PPN" value={taxOn ? `${form.tax_rate}%` : "OFF"} note={taxOn ? "Aktif di checkout" : "Tidak dikenakan"} /><Stat icon={Calculator} label="Service" value={serviceOn ? `${form.service_rate}%` : "OFF"} note={serviceOn ? "Aktif di checkout" : "Tidak dikenakan"} /><Stat icon={CreditCard} label="Payment" value={String([form.cash_enabled, form.card_enabled, form.qris_enabled].filter(Boolean).length)} note="Metode aktif" /></div>
 
-    <Card className="mt-4">
-      <CardHeader><CardTitle>{t("settings.language")}</CardTitle><p className="text-sm text-muted-foreground">Select the language used across Cafe Flow.</p></CardHeader>
-      <CardContent><label htmlFor="app-language" className="mb-2 block text-sm font-medium">{t("common.language")}</label>
-        <select id="app-language" value={(i18n.language || "id").slice(0, 2)} onChange={async (event) => {
-          const lang = event.target.value as LanguageCode;
-          const previous = (i18n.language || "id").slice(0, 2);
-          await i18n.changeLanguage(lang);
-          document.documentElement.lang = lang;
-          try {
-            const ownerId = await getOwnerId();
-            const { error } = await supabase.from("outlet_settings").update({ app_language: lang }).eq("owner_id", ownerId);
-            if (error) throw error;
-            set("app_language", lang);
-            void qc.invalidateQueries({ queryKey: ["outlet-settings"] });
-            toast.success(t("settings.saved"));
-          } catch (error) {
-            await i18n.changeLanguage(previous);
-            document.documentElement.lang = previous;
-            toast.error(error instanceof Error ? error.message : "Unable to save language");
-          }
-        }} className="w-full max-w-sm rounded-lg border border-input bg-card px-3 py-2 text-sm">
-          {languageOptions.map((language) => <option key={language.code} value={language.code}>{language.flag} {language.label}</option>)}
-        </select>
-      </CardContent>
-    </Card>
-
-    <Card className="mt-4">
-      <CardHeader><CardTitle>Tema aplikasi · 6 Master Preset</CardTitle><p className="text-sm text-muted-foreground">Pilih palet global. Perubahan langsung diterapkan dan disimpan ke pengaturan outlet.</p></CardHeader>
-      <CardContent className="space-y-6">
-        {(["dark", "light"] as const).map((mode) => {
-          const themes = THEME_PRESETS.filter((theme) => mode === "dark" ? ["charcoal-espresso", "forest-matcha", "midnight-indigo"].includes(theme.id) : ["scandinavian-chalk", "warm-oatmilk", "sage-mint"].includes(theme.id));
-          return <section key={mode} aria-label={mode === "dark" ? "Tema Gelap" : "Tema Terang"}>
-            <h3 className="mb-3 text-sm font-semibold">{mode === "dark" ? "Tema Gelap (Dark Mode)" : "Tema Terang (Light Mode)"}</h3>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
-              {themes.map((theme) => <button key={theme.id} type="button" onClick={() => void chooseTheme(theme.id)} aria-pressed={activeTheme === theme.id} className={["rounded-xl border p-4 text-left transition-all hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTheme === theme.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"].join(" ")}>
-                <div className="mb-3 flex items-center gap-2" aria-label="Background, Card, Accent">
-                  <span title="Background" className="size-7 rounded-full border border-black/15" style={{ backgroundColor: "rgb(" + theme.bg + ")" }} />
-                  <span title="Card" className="size-7 rounded-full border border-black/15" style={{ backgroundColor: "rgb(" + theme.card + ")" }} />
-                  <span title="Accent" className="size-7 rounded-full border border-black/15" style={{ backgroundColor: "rgb(" + theme.accent + ")" }} />
-                </div>
-                <p className="text-sm font-semibold">{theme.name}</p><p className="mt-1 text-xs text-muted-foreground">{theme.mood}</p>
-                {activeTheme === theme.id && <p className="mt-2 text-xs font-semibold text-primary">✓ Aktif</p>}
-              </button>)}
-            </div>
-          </section>;
-        })}
-      </CardContent>
-    </Card>
     <div className="mt-4 grid gap-4 xl:grid-cols-2">
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="size-5" />Profil outlet</CardTitle></CardHeader><CardContent className="space-y-4"><div className="space-y-2"><Label>Nama outlet</Label><Input value={form.name} onChange={(e) => set("name", e.target.value)} /></div><div className="space-y-2"><Label>Alamat</Label><Textarea value={form.address} onChange={(e) => set("address", e.target.value)} rows={3} /></div><div className="space-y-2"><Label>No. WhatsApp / Telepon</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div></CardContent></Card>
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><Percent className="size-5" />PPN & Service</CardTitle></CardHeader><CardContent className="space-y-4"><SettingToggle label="Gunakan PPN" description="PPN ditambahkan otomatis pada checkout kasir dan menu pelanggan." checked={taxOn} onChange={(v) => set("tax_rate", v ? (form.tax_rate || 11) : 0)} /><div className="space-y-2"><Label>Persentase PPN</Label><Input type="number" min="0" max="100" step="0.1" disabled={!taxOn} value={form.tax_rate} onChange={(e) => set("tax_rate", Number(e.target.value))} /><p className="text-xs text-muted-foreground">Bisa diubah, misalnya 11%, 10%, atau 0%.</p></div><div className="border-t pt-4" /><SettingToggle label="Gunakan service charge" description="Service charge ditambahkan setelah diskon dan sebelum PPN." checked={serviceOn} onChange={(v) => set("service_rate", v ? (form.service_rate || 5) : 0)} /><div className="space-y-2"><Label>Persentase service</Label><Input type="number" min="0" max="100" step="0.1" disabled={!serviceOn} value={form.service_rate} onChange={(e) => set("service_rate", Number(e.target.value))} /><p className="text-xs text-muted-foreground">Contoh umum 5% atau sesuai kebijakan outlet.</p></div><div className="border-t pt-4 space-y-2"><Label>Pembulatan</Label><Input type="number" min="0" value={form.rounding} onChange={(e) => set("rounding", Number(e.target.value))} /><p className="text-xs text-muted-foreground">Masukkan 100/500/1000 jika ingin pembulatan nominal.</p></div></CardContent></Card>
