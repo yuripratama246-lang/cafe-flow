@@ -70,6 +70,11 @@
 }
 
 /* Global theme tokens: RGB triplets keep alpha utilities compatible. */
+:root[data-theme="soft-sage"] { color-scheme: dark; --color-bg: 11 15 13; --color-card: 19 26 23; --color-text: 241 245 243; --color-accent: 135 169 156; }
+:root[data-theme="minimalist-oatmilk"] { color-scheme: light; --color-bg: 249 246 240; --color-card: 255 255 255; --color-text: 40 35 30; --color-accent: 194 178 159; }
+:root[data-theme="roasted-hojicha"] { color-scheme: dark; --color-bg: 15 12 10; --color-card: 26 21 18; --color-text: 245 242 240; --color-accent: 212 178 149; }
+:root[data-theme="dusk-taro"] { color-scheme: light; --color-bg: 247 245 250; --color-card: 255 255 255; --color-text: 45 40 55; --color-accent: 188 167 232; }
+
 :root[data-theme="premium-espresso"] {
   color-scheme: dark;
   --color-bg: 9 13 17; --color-card: 18 24 31; --color-text: 248 250 252; --color-accent: 245 158 11;
@@ -541,4 +546,67 @@ body { margin: 0; }
   .no-print {
     display: none !important;
   }
+}
+
+
+/* Soft Tone presets: explicit semantic colors and accessible light-theme subtitles. */
+:root[data-theme="soft-sage"],
+:root[data-theme="roasted-hojicha"] {
+  --background: rgb(var(--color-bg));
+  --foreground: rgb(var(--color-text));
+  --card: rgb(var(--color-card));
+  --card-foreground: rgb(var(--color-text));
+  --popover: rgb(var(--color-card));
+  --popover-foreground: rgb(var(--color-text));
+  --primary: rgb(var(--color-accent));
+  --accent: rgb(var(--color-accent));
+  --primary-foreground: #11110f;
+  --accent-foreground: #11110f;
+  --secondary: rgb(var(--color-card));
+  --secondary-foreground: rgb(var(--color-text));
+  --muted: color-mix(in srgb, rgb(var(--color-card)) 84%, rgb(var(--color-text)) 16%);
+  --muted-foreground: color-mix(in srgb, rgb(var(--color-text)) 78%, transparent);
+  --border: color-mix(in srgb, rgb(var(--color-text)) 18%, transparent);
+  --input: color-mix(in srgb, rgb(var(--color-text)) 24%, transparent);
+  --ring: rgb(var(--color-accent));
+  --sidebar: rgb(var(--color-bg));
+  --sidebar-foreground: rgb(var(--color-text));
+  --sidebar-primary: rgb(var(--color-accent));
+  --sidebar-primary-foreground: #11110f;
+  --sidebar-accent: rgb(var(--color-card));
+  --sidebar-accent-foreground: rgb(var(--color-text));
+  --sidebar-border: var(--border);
+  --sidebar-ring: rgb(var(--color-accent));
+}
+:root[data-theme="minimalist-oatmilk"],
+:root[data-theme="dusk-taro"] {
+  --background: rgb(var(--color-bg));
+  --foreground: rgb(var(--color-text));
+  --card: rgb(var(--color-card));
+  --card-foreground: rgb(var(--color-text));
+  --popover: rgb(var(--color-card));
+  --popover-foreground: rgb(var(--color-text));
+  --primary: rgb(var(--color-accent));
+  --accent: rgb(var(--color-accent));
+  --primary-foreground: #28231e;
+  --accent-foreground: #28231e;
+  --secondary: rgb(var(--color-card));
+  --secondary-foreground: rgb(var(--color-text));
+  --muted: color-mix(in srgb, rgb(var(--color-card)) 92%, rgb(var(--color-text)) 8%);
+  --muted-foreground: rgb(var(--color-text) / 88%);
+  --border: color-mix(in srgb, rgb(var(--color-text)) 18%, transparent);
+  --input: color-mix(in srgb, rgb(var(--color-text)) 25%, transparent);
+  --ring: rgb(var(--color-accent));
+  --sidebar: rgb(var(--color-bg));
+  --sidebar-foreground: rgb(var(--color-text));
+  --sidebar-primary: rgb(var(--color-accent));
+  --sidebar-primary-foreground: #28231e;
+  --sidebar-accent: rgb(var(--color-card));
+  --sidebar-accent-foreground: rgb(var(--color-text));
+  --sidebar-border: var(--border);
+  --sidebar-ring: rgb(var(--color-accent));
+}
+:root[data-theme="minimalist-oatmilk"] .text-subtitle,
+:root[data-theme="dusk-taro"] .text-subtitle {
+  color: rgb(var(--color-text) / 88%);
 }
