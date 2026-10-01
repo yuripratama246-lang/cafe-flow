@@ -82,14 +82,14 @@
   --chart-3: 45 212 191;
   --chart-4: 100 116 139;
   --chart-5: 20 184 166;
-  --sidebar: 15 118 110;
-  --sidebar-foreground: 255 255 255;
-  --sidebar-primary: 255 255 255;
-  --sidebar-primary-foreground: 15 118 110;
-  --sidebar-accent: 13 148 136;
-  --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 13 148 136;
-  --sidebar-ring: 255 255 255;
+  --sidebar: 255 255 255;
+  --sidebar-foreground: 15 23 42;
+  --sidebar-primary: 13 148 136;
+  --sidebar-primary-foreground: 255 255 255;
+  --sidebar-accent: 204 251 241;
+  --sidebar-accent-foreground: 15 23 42;
+  --sidebar-border: 226 232 240;
+  --sidebar-ring: 13 148 136;
 }
 
 .dark {
@@ -123,14 +123,14 @@
   --chart-3: 45 212 191;
   --chart-4: 100 116 139;
   --chart-5: 20 184 166;
-  --sidebar: 15 118 110;
-  --sidebar-foreground: 255 255 255;
-  --sidebar-primary: 255 255 255;
-  --sidebar-primary-foreground: 15 118 110;
-  --sidebar-accent: 13 148 136;
-  --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 13 148 136;
-  --sidebar-ring: 255 255 255;
+  --sidebar: 255 255 255;
+  --sidebar-foreground: 15 23 42;
+  --sidebar-primary: 13 148 136;
+  --sidebar-primary-foreground: 255 255 255;
+  --sidebar-accent: 204 251 241;
+  --sidebar-accent-foreground: 15 23 42;
+  --sidebar-border: 226 232 240;
+  --sidebar-ring: 13 148 136;
 }
 
 @layer base {
