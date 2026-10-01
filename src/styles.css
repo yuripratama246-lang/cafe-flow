@@ -154,8 +154,25 @@
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    min-height: 100vh;
+    background-color: #090D11;
+    color: #f1f5f9;
+  }
+
+  input, select, textarea {
+    background-color: #12181F;
+    color: #f8fafc;
+    border-color: rgb(30 41 59);
+  }
+
+  input::placeholder, textarea::placeholder {
+    color: #64748b;
+    opacity: 1;
+  }
+
+  table {
+    background-color: #12181F;
+    color: #e2e8f0;
   }
 }
 
