@@ -31,7 +31,7 @@ function Table({headers,children}:{headers:string[];children:React.ReactNode}){r
 function ReportsPage(){
  const [endDate,setEndDate]=useState(toDateInput(new Date()));
  const [filter,setFilter]=useState<Filter>("today");
- const [tab,setTab]=useState<Tab>("summary");
+ const [tab,setTab]=useState<Tab>(()=>{const requested=new URLSearchParams(window.location.search).get("tab");return TABS.some(t=>t.id===requested)?requested as Tab:"summary"});
  const range=rangeFor(endDate,filter);
  const days=Math.max(1,Math.round((new Date(range.to+"T00:00:00").getTime()-new Date(range.from+"T00:00:00").getTime())/86400000)+1);
  const prevFrom=shift(range.from,-days),prevTo=shift(range.from,-1),trendFrom=shift(endDate,-6);
