@@ -134,7 +134,7 @@ function RootComponent() {
         document.documentElement.lang = language;
       }
       const theme = data?.global_theme;
-      const allowed = ["premium-espresso", "emerald-matcha", "burgundy-roastery", "smoked-oakwood", "midnight-cyber", "lavender-haze", "matte-carbon", "scandinavian-clean", "sakura-bakery", "citrus-juice", "soft-sage", "minimalist-oatmilk", "roasted-hojicha", "dusk-taro"];
+      const allowed = ["premium-espresso", "emerald-matcha", "burgundy-roastery", "smoked-oakwood", "midnight-cyber", "lavender-haze", "matte-carbon", "scandinavian-clean", "sakura-bakery", "citrus-juice", "soft-sage", "minimalist-oatmilk", "roasted-hojicha", "dusk-taro", "esb-light-corporate"];
       if (!cancelled && typeof theme === "string" && allowed.includes(theme)) document.documentElement.setAttribute("data-theme", theme);
     })().catch((error) => console.error("Unable to load saved app theme", error));
     return () => { cancelled = true; };
