@@ -1,0 +1,82 @@
+{
+  "common": {
+    "dashboard": "Dashboard",
+    "cashier": "Cashier",
+    "orders": "Orders",
+    "history": "History",
+    "openingClosing": "Opening & Closing",
+    "activityLog": "Activity Log",
+    "productsStock": "Products & Stock",
+    "tablesQr": "Tables & QR Menu",
+    "inventory": "Inventory",
+    "customersLoyalty": "Customers & Loyalty",
+    "promotionsDiscounts": "Promotions & Discounts",
+    "expensesProfit": "Expenses & Profit/Loss",
+    "salesReports": "Sales Reports",
+    "staffShifts": "Staff & Shifts",
+    "outletSettings": "Outlet Settings",
+    "apiIntegrations": "API & Integrations",
+    "main": "Main",
+    "transactions": "Transactions",
+    "productOutlet": "Products & Outlet",
+    "customers": "Customers",
+    "marketing": "Marketing",
+    "management": "Management",
+    "language": "Application language",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading…",
+    "retry": "Try again"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "summary": "Outlet sales and operations overview",
+    "todaySales": "Today's Sales",
+    "transactions": "Transactions",
+    "averageOrder": "Average Order",
+    "recentOrders": "Recent Orders",
+    "salesSummary": "Sales Summary"
+  },
+  "reports": {
+    "summary": "Report Summary",
+    "daily": "Daily Sales",
+    "product": "Product Sales",
+    "hourly": "Hourly Sales",
+    "payment": "Payment Report",
+    "channel": "Channel Report",
+    "orderDetail": "Order Detail"
+  },
+  "cashier": {
+    "title": "Cashier",
+    "pay": "Pay",
+    "completePayment": "Complete Payment",
+    "cash": "Cash",
+    "card": "Card",
+    "qris": "QRIS",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "addToCart": "Add to Cart"
+  },
+  "staff": {
+    "title": "Staff & Shifts",
+    "active": "Active",
+    "inactive": "Inactive",
+    "add": "Add Staff",
+    "edit": "Edit",
+    "delete": "Delete",
+    "role": "Role",
+    "fullName": "Full Name",
+    "email": "Email",
+    "saveChanges": "Save Changes"
+  },
+  "settings": {
+    "title": "Outlet Settings",
+    "language": "Application language",
+    "profile": "Outlet Profile",
+    "taxService": "Tax & Service",
+    "paymentMethods": "Payment Methods",
+    "receipt": "Receipt & Transactions",
+    "saved": "Settings saved successfully"
+  }
+}
