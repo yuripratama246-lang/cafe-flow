@@ -610,3 +610,41 @@ body { margin: 0; }
 :root[data-theme="dusk-taro"] .text-subtitle {
   color: rgb(var(--color-text) / 88%);
 }
+
+
+/* ESB Light Corporate theme */
+:root[data-theme="esb-light-corporate"] {
+  color-scheme: light;
+  --color-bg: 243 244 246;
+  --color-card: 255 255 255;
+  --color-text: 31 41 55;
+  --color-text-muted: 107 114 128;
+  --color-accent: 2 132 199;
+  --color-accent-orange: 234 88 12;
+  --color-border: 229 231 235;
+  --background: rgb(var(--color-bg));
+  --foreground: rgb(var(--color-text));
+  --card: rgb(var(--color-card));
+  --card-foreground: rgb(var(--color-text));
+  --popover: rgb(var(--color-card));
+  --popover-foreground: rgb(var(--color-text));
+  --primary: rgb(var(--color-accent));
+  --primary-foreground: #ffffff;
+  --accent: rgb(var(--color-accent));
+  --accent-foreground: #ffffff;
+  --secondary: rgb(var(--color-card));
+  --secondary-foreground: rgb(var(--color-text));
+  --muted: rgb(243 244 246);
+  --muted-foreground: rgb(var(--color-text-muted));
+  --border: rgb(var(--color-border));
+  --input: rgb(var(--color-border));
+  --ring: rgb(var(--color-accent));
+  --sidebar: rgb(var(--color-card));
+  --sidebar-foreground: rgb(var(--color-text));
+  --sidebar-primary: rgb(var(--color-accent));
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: rgb(243 244 246);
+  --sidebar-accent-foreground: rgb(var(--color-text));
+  --sidebar-border: rgb(var(--color-border));
+  --sidebar-ring: rgb(var(--color-accent));
+}
