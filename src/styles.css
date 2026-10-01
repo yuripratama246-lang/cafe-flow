@@ -55,14 +55,14 @@
 .dark {
   color-scheme: dark;
   --radius: 0.875rem;
-  --background: 7 10 14;
+  --background: 8 12 16;
   --foreground: 248 250 252;
   --card: 17 22 29;
   --card-foreground: 248 250 252;
   --popover: 17 22 29;
   --popover-foreground: 248 250 252;
-  --primary: 245 158 11;
-  --primary-foreground: 7 10 14;
+  --primary: 135 169 156;
+  --primary-foreground: 17 22 29;
   --secondary: 30 41 59;
   --secondary-foreground: 248 250 252;
   --muted: 30 41 59;
@@ -77,20 +77,20 @@
   --warning-foreground: 7 10 14;
   --border: 30 41 59;
   --input: 30 41 59;
-  --ring: 245 158 11;
-  --chart-1: 245 158 11;
-  --chart-2: 217 119 6;
-  --chart-3: 251 191 36;
+  --ring: 135 169 156;
+  --chart-1: 135 169 156;
+  --chart-2: 106 137 125;
+  --chart-3: 176 198 188;
   --chart-4: 148 163 184;
-  --chart-5: 180 83 9;
+  --chart-5: 83 110 100;
   --sidebar: 17 22 29;
   --sidebar-foreground: 248 250 252;
-  --sidebar-primary: 245 158 11;
-  --sidebar-primary-foreground: 7 10 14;
+  --sidebar-primary: 135 169 156;
+  --sidebar-primary-foreground: 17 22 29;
   --sidebar-accent: 30 41 59;
   --sidebar-accent-foreground: 248 250 252;
   --sidebar-border: 30 41 59;
-  --sidebar-ring: 245 158 11;
+  --sidebar-ring: 135 169 156;
 }
 
 @layer base {
