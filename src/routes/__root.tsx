@@ -10,6 +10,7 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { supabase } from "@/integrations/supabase/client";
 
 function NotFoundComponent() {
   return (
@@ -115,6 +116,19 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user) return;
+      const { data } = await supabase.from("outlet_settings").select("global_theme").eq("owner_id", auth.user.id).maybeSingle();
+      const theme = data?.global_theme;
+      const allowed = ["premium-espresso", "emerald-matcha", "burgundy-roastery", "smoked-oakwood", "midnight-cyber", "lavender-haze", "matte-carbon", "scandinavian-clean", "sakura-bakery", "citrus-juice"];
+      if (!cancelled && typeof theme === "string" && allowed.includes(theme)) document.documentElement.setAttribute("data-theme", theme);
+    })().catch((error) => console.error("Unable to load saved app theme", error));
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
