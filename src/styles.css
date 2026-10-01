@@ -403,6 +403,18 @@ html, body {
   transition: background-color 200ms ease, color 200ms ease;
 }
 body { margin: 0; }
+
+/* Neutral utility colors follow the active theme rather than retaining Espresso shades. */
+[class~="text-slate-50"], [class~="text-slate-100"], [class~="text-slate-200"], [class~="text-slate-300"] {
+  color: rgb(var(--color-text, 248 250 252)) !important;
+}
+[class~="text-slate-400"], [class~="text-slate-500"] {
+  color: rgb(var(--color-text, 248 250 252) / 72%) !important;
+}
+[class~="bg-slate-950"], [class~="bg-slate-900"], [class~="bg-slate-800"], [class~="bg-slate-800/30"], [class~="bg-slate-800/40"] {
+  background-color: rgb(var(--color-card, 18 24 31)) !important;
+}
+
 .global-card {
   background-color: rgb(var(--color-card, 18 24 31));
   color: rgb(var(--color-text, 248 250 252));
