@@ -39,6 +39,7 @@
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-accent: var(--accent);
+}
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
@@ -73,42 +74,52 @@
 :root[data-theme="premium-espresso"] {
   color-scheme: dark;
   --color-bg: 9 13 17; --color-card: 18 24 31; --color-text: 248 250 252; --color-accent: 245 158 11;
+}
 
 :root[data-theme="emerald-matcha"] {
   color-scheme: dark;
   --color-bg: 5 11 10; --color-card: 12 20 18; --color-text: 240 253 250; --color-accent: 16 185 129;
+}
 
 :root[data-theme="burgundy-roastery"] {
   color-scheme: dark;
   --color-bg: 15 5 8; --color-card: 25 13 18; --color-text: 248 250 252; --color-accent: 225 29 72;
+}
 
 :root[data-theme="smoked-oakwood"] {
   color-scheme: dark;
   --color-bg: 12 10 9; --color-card: 23 20 18; --color-text: 255 247 237; --color-accent: 180 83 9;
+}
 
 :root[data-theme="midnight-cyber"] {
   color-scheme: dark;
   --color-bg: 2 6 23; --color-card: 15 23 42; --color-text: 241 245 249; --color-accent: 56 189 248;
+}
 
 :root[data-theme="lavender-haze"] {
   color-scheme: dark;
   --color-bg: 15 10 28; --color-card: 26 19 44; --color-text: 250 245 255; --color-accent: 168 85 247;
+}
 
 :root[data-theme="matte-carbon"] {
   color-scheme: dark;
   --color-bg: 18 18 18; --color-card: 30 30 30; --color-text: 250 250 250; --color-accent: 243 244 246;
+}
 
 :root[data-theme="scandinavian-clean"] {
   color-scheme: light;
   --color-bg: 248 250 252; --color-card: 255 255 255; --color-text: 15 23 42; --color-accent: 71 85 105;
+}
 
 :root[data-theme="sakura-bakery"] {
   color-scheme: light;
   --color-bg: 255 247 247; --color-card: 255 255 255; --color-text: 76 29 42; --color-accent: 251 113 133;
+}
 
 :root[data-theme="citrus-juice"] {
   color-scheme: light;
   --color-bg: 254 252 232; --color-card: 255 255 255; --color-text: 66 32 6; --color-accent: 202 138 4;
+}
 :root {
   --background: rgb(var(--color-bg, 8 12 16)); --foreground: rgb(var(--color-text, 248 250 252));
   --card: rgb(var(--color-card, 17 22 29)); --card-foreground: var(--foreground);
