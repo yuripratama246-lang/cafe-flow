@@ -11,10 +11,12 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
+import i18n, { languageOptions, type LanguageCode } from "@/locales/i18n";
 
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: PengaturanPage });
-type Settings = { id?: string; owner_id: string; global_theme?: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
-const DEFAULTS = { global_theme: "premium-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
+type Settings = { id?: string; owner_id: string; global_theme?: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean; app_language?: LanguageCode };
+const DEFAULTS = { app_language: "id" as LanguageCode, global_theme: "premium-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
 
 const THEME_PRESETS = [
   { id: "premium-espresso", name: "Premium Espresso", bg: "9 13 17", card: "18 24 31", accent: "245 158 11", mood: "Dark · Amber" },
