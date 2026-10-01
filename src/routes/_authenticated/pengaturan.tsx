@@ -71,6 +71,32 @@ function PengaturanPage() {
     <div className="grid gap-4 md:grid-cols-4"><Stat icon={Store} label="Outlet" value="1" note="Outlet aktif" /><Stat icon={Percent} label="PPN" value={taxOn ? `${form.tax_rate}%` : "OFF"} note={taxOn ? "Aktif di checkout" : "Tidak dikenakan"} /><Stat icon={Calculator} label="Service" value={serviceOn ? `${form.service_rate}%` : "OFF"} note={serviceOn ? "Aktif di checkout" : "Tidak dikenakan"} /><Stat icon={CreditCard} label="Payment" value={String([form.cash_enabled, form.card_enabled, form.qris_enabled].filter(Boolean).length)} note="Metode aktif" /></div>
 
     <Card className="mt-4">
+      <CardHeader><CardTitle>{t("settings.language")}</CardTitle><p className="text-sm text-muted-foreground">Select the language used across Cafe Flow.</p></CardHeader>
+      <CardContent><label htmlFor="app-language" className="mb-2 block text-sm font-medium">{t("common.language")}</label>
+        <select id="app-language" value={(i18n.language || "id").slice(0, 2)} onChange={async (event) => {
+          const lang = event.target.value as LanguageCode;
+          const previous = (i18n.language || "id").slice(0, 2);
+          await i18n.changeLanguage(lang);
+          document.documentElement.lang = lang;
+          try {
+            const ownerId = await getOwnerId();
+            const { error } = await supabase.from("outlet_settings").update({ app_language: lang }).eq("owner_id", ownerId);
+            if (error) throw error;
+            set("app_language", lang);
+            void qc.invalidateQueries({ queryKey: ["outlet-settings"] });
+            toast.success(t("settings.saved"));
+          } catch (error) {
+            await i18n.changeLanguage(previous);
+            document.documentElement.lang = previous;
+            toast.error(error instanceof Error ? error.message : "Unable to save language");
+          }
+        }} className="w-full max-w-sm rounded-lg border border-input bg-card px-3 py-2 text-sm">
+          {languageOptions.map((language) => <option key={language.code} value={language.code}>{language.flag} {language.label}</option>)}
+        </select>
+      </CardContent>
+    </Card>
+
+    <Card className="mt-4">
       <CardHeader><CardTitle className="flex items-center gap-2">Tema aplikasi <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">15 Presets · 4 Soft Tone</span></CardTitle><p className="text-sm text-muted-foreground">Pilih palet global untuk seluruh tampilan Cafe Flow. Pilihan diterapkan langsung dan disimpan ke outlet.</p></CardHeader>
       <CardContent><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
         {THEME_PRESETS.map((theme) => <button key={theme.id} type="button" onClick={() => void chooseTheme(theme.id)} aria-pressed={activeTheme === theme.id} className={["rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTheme === theme.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"].join(" ")}>
