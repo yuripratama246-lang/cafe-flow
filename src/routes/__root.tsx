@@ -13,6 +13,7 @@ import appCss from "../styles.css?url";
 import { supabase } from "@/integrations/supabase/client";
 import { KitchenNotification } from "@/components/KitchenNotification";
 import { registerOfflineSync } from "@/services/offlineSync";
+import i18n, { supportedLanguages } from "@/locales/i18n";
 
 function NotFoundComponent() {
   return (
@@ -126,7 +127,12 @@ function RootComponent() {
     void (async () => {
       const { data: auth } = await supabase.auth.getUser();
       if (!auth.user) return;
-      const { data } = await supabase.from("outlet_settings").select("global_theme").eq("owner_id", auth.user.id).maybeSingle();
+      const { data } = await supabase.from("outlet_settings").select("global_theme, app_language").eq("owner_id", auth.user.id).maybeSingle();
+      const language = data?.app_language;
+      if (!cancelled && typeof language === "string" && supportedLanguages.includes(language as typeof supportedLanguages[number])) {
+        await i18n.changeLanguage(language);
+        document.documentElement.lang = language;
+      }
       const theme = data?.global_theme;
       const allowed = ["premium-espresso", "emerald-matcha", "burgundy-roastery", "smoked-oakwood", "midnight-cyber", "lavender-haze", "matte-carbon", "scandinavian-clean", "sakura-bakery", "citrus-juice", "soft-sage", "minimalist-oatmilk", "roasted-hojicha", "dusk-taro"];
       if (!cancelled && typeof theme === "string" && allowed.includes(theme)) document.documentElement.setAttribute("data-theme", theme);
