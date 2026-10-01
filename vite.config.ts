@@ -13,7 +13,6 @@ export default defineConfig({
     build: {
       target: "chrome101",
     },
-    cssTarget: "chrome101",
   },
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
