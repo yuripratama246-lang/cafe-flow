@@ -42,8 +42,8 @@ create or replace function public.add_loyalty_points_on_checkout()
 returns trigger language plpgsql security definer set search_path=public as $$
 declare earned integer;
 begin
- if new.status='SUCCESS' and new.customer_id is not null
- and (tg_op='INSERT' or old.status is distinct from 'SUCCESS') then
+ if (new.status='SUCCESS' or (new.status='completed' and coalesce(new.is_paid,false))) and new.customer_id is not null
+ and (tg_op='INSERT' or old.status is distinct from new.status or old.is_paid is distinct from new.is_paid) then
   earned:=floor(coalesce(new.total,0)/10000)::integer;
   if earned>0 then
    insert into public.loyalty_point_earnings(order_id,customer_id,points) values(new.id,new.customer_id,earned)
@@ -100,3 +100,32 @@ begin
  update public.stock_transfers set status='COMPLETED',completed_at=now(),received_by=auth.uid() where id=p_transfer_id;
 end; $$;
 grant execute on function public.complete_stock_transfer(uuid) to authenticated;
+
+-- Extend the existing checkout RPC to persist an optional customer/outlet selected by the cashier.
+do $patch$
+declare v_def text;
+begin
+ v_def := pg_get_functiondef('public.create_pos_order(jsonb,jsonb,jsonb)'::regprocedure);
+ v_def := replace(v_def,
+ $old$  INSERT INTO public.orders(
+    idempotency_key,source,status,table_id,customer_name,notes,subtotal,discount,tax,total,
+    is_paid,payment_method,payment_status,promotion_id
+  ) VALUES (
+    v_key,'pos','new',nullif(p_order->>'table_id','')::uuid,
+    nullif(p_order->>'customer_name',''),nullif(p_order->>'notes',''),
+    v_subtotal,v_discount,v_service+v_tax,v_total,false,
+    nullif(p_order->>'payment_method',''),'paid',v_promotion_id
+  ) RETURNING * INTO v_order;$old$,
+ $new$  INSERT INTO public.orders(
+    idempotency_key,source,status,table_id,customer_id,outlet_id,customer_name,notes,subtotal,discount,tax,total,
+    is_paid,payment_method,payment_status,promotion_id
+  ) VALUES (
+    v_key,'pos','new',nullif(p_order->>'table_id','')::uuid,
+    nullif(p_order->>'customer_id','')::uuid,nullif(p_order->>'outlet_id','')::uuid,
+    nullif(p_order->>'customer_name',''),nullif(p_order->>'notes',''),
+    v_subtotal,v_discount,v_service+v_tax,v_total,false,
+    nullif(p_order->>'payment_method',''),'paid',v_promotion_id
+  ) RETURNING * INTO v_order;$new$);
+ if position('customer_id,outlet_id' in v_def)=0 then raise exception 'Could not patch create_pos_order order insert safely'; end if;
+ execute v_def;
+end $patch$;
