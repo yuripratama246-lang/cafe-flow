@@ -116,7 +116,7 @@ function PrinterSettings() {
         <SettingToggle label="Auto-print struk pembayaran" description="Aktifkan sebagai preferensi. Perlu konektor printer untuk cetak otomatis tanpa dialog." checked={config.receiptAutoPrint} onChange={(v) => update("receiptAutoPrint", v)} />
         <SettingToggle label="Auto-print tiket dapur" description="Preferensi tiket order QR masuk. Perlu konektor printer dan pengaturan routing dapur." checked={config.kitchenAutoPrint} onChange={(v) => update("kitchenAutoPrint", v)} />
       </div>
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 text-sm"><p className="font-medium">Status perangkat: Belum terhubung</p><p className="mt-1 text-muted-foreground">Saat ini konfigurasi dan template test print sudah dapat disiapkan. Pemilihan printer fisik dan cetak otomatis langsung memerlukan printer serta konektor/bridge yang sesuai dengan perangkat kasir.</p></div>
+      <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm"><p className="font-medium">Status perangkat: Belum terhubung</p><p className="mt-1 text-muted-foreground">Saat ini konfigurasi dan template test print sudah dapat disiapkan. Pemilihan printer fisik dan cetak otomatis langsung memerlukan printer serta konektor/bridge yang sesuai dengan perangkat kasir.</p></div>
       <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={testPrint}><Printer className="mr-2 size-4" />Test print template</Button><Button onClick={saveConfig} disabled={!loaded}><Save className="mr-2 size-4" />Simpan konfigurasi printer</Button></div>
     </CardContent>
   </Card>;
