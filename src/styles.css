@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-/* Cafe Flow — fixed light palette. Raw RGB triplets are wrapped by Tailwind theme mappings. */
+/* Cafe Flow — The Black Gold Roastery. Semantic tokens use raw RGB triplets for Tailwind/shadcn. */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -51,86 +51,46 @@
   --color-sidebar-ring: rgb(var(--sidebar-ring));
 }
 
-:root {
-  color-scheme: light;
-  --radius: 0.875rem;
-  --background: 248 250 252;
-  --card: 255 255 255;
-  --foreground: 15 23 42;
-  --card-foreground: 15 23 42;
-  --popover: 255 255 255;
-  --popover-foreground: 15 23 42;
-  --primary: 13 148 136;
-  --primary-foreground: 255 255 255;
-  --secondary: 241 245 249;
-  --secondary-foreground: 15 23 42;
-  --muted: 241 245 249;
-  --muted-foreground: 100 116 139;
-  --accent: 204 251 241;
-  --accent-foreground: 15 23 42;
-  --destructive: 220 38 38;
-  --destructive-foreground: 255 255 255;
-  --success: 13 148 136;
-  --success-foreground: 255 255 255;
-  --warning: 13 148 136;
-  --warning-foreground: 15 23 42;
-  --border: 226 232 240;
-  --input: 226 232 240;
-  --ring: 13 148 136;
-  --chart-1: 13 148 136;
-  --chart-2: 15 118 110;
-  --chart-3: 45 212 191;
-  --chart-4: 100 116 139;
-  --chart-5: 20 184 166;
-  --sidebar: 255 255 255;
-  --sidebar-foreground: 15 23 42;
-  --sidebar-primary: 13 148 136;
-  --sidebar-primary-foreground: 255 255 255;
-  --sidebar-accent: 204 251 241;
-  --sidebar-accent-foreground: 15 23 42;
-  --sidebar-border: 226 232 240;
-  --sidebar-ring: 13 148 136;
-}
-
+:root,
 .dark {
-  color-scheme: light;
+  color-scheme: dark;
   --radius: 0.875rem;
-  --background: 248 250 252;
-  --card: 255 255 255;
-  --foreground: 15 23 42;
-  --card-foreground: 15 23 42;
-  --popover: 255 255 255;
-  --popover-foreground: 15 23 42;
-  --primary: 13 148 136;
-  --primary-foreground: 255 255 255;
-  --secondary: 241 245 249;
-  --secondary-foreground: 15 23 42;
-  --muted: 241 245 249;
-  --muted-foreground: 100 116 139;
-  --accent: 204 251 241;
-  --accent-foreground: 15 23 42;
-  --destructive: 220 38 38;
-  --destructive-foreground: 255 255 255;
-  --success: 13 148 136;
-  --success-foreground: 255 255 255;
-  --warning: 13 148 136;
-  --warning-foreground: 15 23 42;
-  --border: 226 232 240;
-  --input: 226 232 240;
-  --ring: 13 148 136;
-  --chart-1: 13 148 136;
-  --chart-2: 15 118 110;
-  --chart-3: 45 212 191;
-  --chart-4: 100 116 139;
-  --chart-5: 20 184 166;
-  --sidebar: 255 255 255;
-  --sidebar-foreground: 15 23 42;
-  --sidebar-primary: 13 148 136;
-  --sidebar-primary-foreground: 255 255 255;
-  --sidebar-accent: 204 251 241;
-  --sidebar-accent-foreground: 15 23 42;
-  --sidebar-border: 226 232 240;
-  --sidebar-ring: 13 148 136;
+  --background: 7 10 14;
+  --foreground: 248 250 252;
+  --card: 17 22 29;
+  --card-foreground: 248 250 252;
+  --popover: 17 22 29;
+  --popover-foreground: 248 250 252;
+  --primary: 245 158 11;
+  --primary-foreground: 7 10 14;
+  --secondary: 30 41 59;
+  --secondary-foreground: 248 250 252;
+  --muted: 30 41 59;
+  --muted-foreground: 148 163 184;
+  --accent: 30 41 59;
+  --accent-foreground: 248 250 252;
+  --destructive: 239 68 68;
+  --destructive-foreground: 248 250 252;
+  --success: 34 197 94;
+  --success-foreground: 7 10 14;
+  --warning: 245 158 11;
+  --warning-foreground: 7 10 14;
+  --border: 30 41 59;
+  --input: 30 41 59;
+  --ring: 245 158 11;
+  --chart-1: 245 158 11;
+  --chart-2: 217 119 6;
+  --chart-3: 251 191 36;
+  --chart-4: 148 163 184;
+  --chart-5: 180 83 9;
+  --sidebar: 17 22 29;
+  --sidebar-foreground: 248 250 252;
+  --sidebar-primary: 245 158 11;
+  --sidebar-primary-foreground: 7 10 14;
+  --sidebar-accent: 30 41 59;
+  --sidebar-accent-foreground: 248 250 252;
+  --sidebar-border: 30 41 59;
+  --sidebar-ring: 245 158 11;
 }
 
 @layer base {
@@ -214,4 +174,41 @@
     -webkit-print-color-adjust: exact;
   }
   .no-print { display: none !important; }
+}
+
+/* Compatibility guard: legacy hardcoded utility colors are normalized to the global palette. */
+html.dark [class~="bg-white"],
+html.dark [class*="bg-gray-"],
+html.dark [class*="bg-slate-"],
+html.dark [class*="bg-zinc-"],
+html.dark [class*="bg-neutral-"],
+html.dark [class*="bg-[#"],
+html.dark [class*="bg-[rgb("] {
+  background-color: rgb(var(--card)) !important;
+  color: rgb(var(--foreground));
+}
+html.dark [class~="text-black"],
+html.dark [class~="text-gray-900"],
+html.dark [class~="text-gray-800"],
+html.dark [class~="text-gray-700"],
+html.dark [class~="text-slate-900"],
+html.dark [class~="text-slate-800"],
+html.dark [class~="text-slate-700"],
+html.dark [class~="text-zinc-900"],
+html.dark [class~="text-neutral-900"] {
+  color: rgb(var(--foreground)) !important;
+}
+html.dark [class~="text-gray-500"],
+html.dark [class~="text-gray-400"],
+html.dark [class~="text-slate-500"],
+html.dark [class~="text-slate-400"],
+html.dark [class~="text-zinc-500"],
+html.dark [class~="text-neutral-500"] {
+  color: rgb(var(--muted-foreground)) !important;
+}
+html.dark [class*="border-gray-"],
+html.dark [class*="border-slate-"],
+html.dark [class*="border-zinc-"],
+html.dark [class*="border-neutral-"] {
+  border-color: rgb(var(--border)) !important;
 }
