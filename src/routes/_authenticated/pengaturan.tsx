@@ -13,14 +13,47 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: PengaturanPage });
-type Settings = { id?: string; owner_id: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
-const DEFAULTS = { name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
+type Settings = { id?: string; owner_id: string; global_theme?: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
+const DEFAULTS = { global_theme: "premium-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
+
+const THEME_PRESETS = [
+  { id: "premium-espresso", name: "Premium Espresso", bg: "8 12 16", card: "17 22 29", accent: "245 158 11", mood: "Dark · Amber" },
+  { id: "emerald-matcha", name: "Emerald Matcha", bg: "5 11 10", card: "12 20 18", accent: "16 185 129", mood: "Dark · Emerald" },
+  { id: "burgundy-roastery", name: "Burgundy Roastery", bg: "12 6 9", card: "21 13 17", accent: "225 29 72", mood: "Dark · Burgundy" },
+  { id: "smoked-oakwood", name: "Smoked Oakwood", bg: "12 10 9", card: "23 20 18", accent: "180 83 9", mood: "Dark · Oak" },
+  { id: "midnight-cyber", name: "Midnight Cyber", bg: "2 6 23", card: "15 23 42", accent: "56 189 248", mood: "Dark · Cyan" },
+  { id: "lavender-haze", name: "Lavender Haze", bg: "15 10 28", card: "26 19 44", accent: "168 85 247", mood: "Dark · Violet" },
+  { id: "matte-carbon", name: "Matte Carbon", bg: "18 18 18", card: "30 30 30", accent: "243 244 246", mood: "Dark · Monochrome" },
+  { id: "scandinavian-clean", name: "Scandinavian Clean", bg: "248 250 252", card: "255 255 255", accent: "51 65 85", mood: "Light · Slate" },
+  { id: "sakura-bakery", name: "Sakura Bakery", bg: "255 247 247", card: "255 255 255", accent: "251 113 133", mood: "Light · Rose" },
+  { id: "citrus-juice", name: "Citrus Juice", bg: "254 252 232", card: "255 255 255", accent: "202 138 4", mood: "Light · Citrus" },
+] as const;
+type ThemeId = typeof THEME_PRESETS[number]["id"];
+
 async function getOwnerId() { const { data, error } = await supabase.auth.getUser(); if (error || !data.user) throw new Error("Belum login"); return data.user.id; }
 function PengaturanPage() {
   const qc = useQueryClient();
   const query = useQuery({ queryKey: ["outlet-settings"], queryFn: async () => { const ownerId = await getOwnerId(); const { data, error } = await supabase.from("outlet_settings").select("*").eq("owner_id", ownerId).maybeSingle(); if (error) throw error; if (data) return data as Settings; const { data: created, error: createError } = await supabase.from("outlet_settings").upsert({ owner_id: ownerId, ...DEFAULTS }, { onConflict: "owner_id" }).select("*").single(); if (createError) throw createError; return created as Settings; }, retry: 1 });
   const [form, setForm] = useState<Settings | null>(null);
-  useEffect(() => { if (query.data) setForm(query.data); }, [query.data]);
+  const [activeTheme, setActiveTheme] = useState<ThemeId>("premium-espresso");
+  useEffect(() => { if (query.data) { setForm(query.data); const saved = THEME_PRESETS.some((theme) => theme.id === query.data.global_theme) ? query.data.global_theme as ThemeId : "premium-espresso"; setActiveTheme(saved); document.documentElement.setAttribute("data-theme", saved); } }, [query.data]);
+
+  const chooseTheme = async (themeName: ThemeId) => {
+    const previous = activeTheme;
+    setActiveTheme(themeName);
+    document.documentElement.setAttribute("data-theme", themeName);
+    try {
+      const ownerId = await getOwnerId();
+      const { error } = await supabase.from("outlet_settings").update({ global_theme: themeName }).eq("owner_id", ownerId);
+      if (error) throw error;
+      void qc.invalidateQueries({ queryKey: ["outlet-settings"] });
+      toast.success("Tema aplikasi diperbarui");
+    } catch (error) {
+      setActiveTheme(previous);
+      document.documentElement.setAttribute("data-theme", previous);
+      toast.error(error instanceof Error ? error.message : "Gagal menyimpan tema");
+    }
+  };
   const save = useMutation({ mutationFn: async () => { if (!form) return; const clean = { ...form, tax_rate: Math.max(Number(form.tax_rate) || 0, 0), service_rate: Math.max(Number(form.service_rate) || 0, 0), rounding: Math.max(Number(form.rounding) || 0, 0) }; const { error } = await supabase.from("outlet_settings").upsert(clean, { onConflict: "owner_id" }); if (error) throw error; }, onSuccess: () => { void qc.invalidateQueries({ queryKey: ["outlet-settings"] }); toast.success("Pengaturan outlet tersimpan"); }, onError: (e) => toast.error(e instanceof Error ? e.message : "Gagal menyimpan pengaturan") });
   if (query.isError) return <AppShell title="Pengaturan Outlet" description="Atur identitas, pajak, service, pembayaran, dan struk"><Card><CardContent className="py-12 text-center"><p className="font-medium">Pengaturan gagal dimuat</p><p className="mt-2 text-sm text-muted-foreground">{query.error instanceof Error ? query.error.message : "Terjadi kesalahan."}</p><Button className="mt-4" onClick={() => query.refetch()}>Coba lagi</Button></CardContent></Card></AppShell>;
   if (!form) return <AppShell title="Pengaturan Outlet" description="Atur identitas, pajak, service, pembayaran, dan struk"><Card><CardContent className="p-8 text-center text-sm text-muted-foreground">Memuat pengaturan outlet…</CardContent></Card></AppShell>;
@@ -28,6 +61,17 @@ function PengaturanPage() {
   const taxOn = form.tax_rate > 0; const serviceOn = form.service_rate > 0;
   return <AppShell title="Pengaturan Outlet" description="Atur identitas, pajak, service, pembayaran, dan struk" actions={<Button onClick={() => save.mutate()} disabled={save.isPending}><Save className="mr-2 size-4" />{save.isPending ? "Menyimpan…" : "Simpan perubahan"}</Button>}>
     <div className="grid gap-4 md:grid-cols-4"><Stat icon={Store} label="Outlet" value="1" note="Outlet aktif" /><Stat icon={Percent} label="PPN" value={taxOn ? `${form.tax_rate}%` : "OFF"} note={taxOn ? "Aktif di checkout" : "Tidak dikenakan"} /><Stat icon={Calculator} label="Service" value={serviceOn ? `${form.service_rate}%` : "OFF"} note={serviceOn ? "Aktif di checkout" : "Tidak dikenakan"} /><Stat icon={CreditCard} label="Payment" value={String([form.cash_enabled, form.card_enabled, form.qris_enabled].filter(Boolean).length)} note="Metode aktif" /></div>
+
+    <Card className="mt-4">
+      <CardHeader><CardTitle className="flex items-center gap-2">Tema aplikasi <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">10 Premium Presets</span></CardTitle><p className="text-sm text-muted-foreground">Pilih palet global untuk seluruh tampilan Cafe Flow. Pilihan diterapkan langsung dan disimpan ke outlet.</p></CardHeader>
+      <CardContent><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
+        {THEME_PRESETS.map((theme) => <button key={theme.id} type="button" onClick={() => void chooseTheme(theme.id)} aria-pressed={activeTheme === theme.id} className={["rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTheme === theme.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"].join(" ")}>
+          <div className="mb-3 flex items-center gap-2"><span className="size-5 rounded-full border border-black/10" style={{ backgroundColor: "rgb(" + theme.bg + ")" }} /><span className="size-5 rounded-full border border-black/10" style={{ backgroundColor: "rgb(" + theme.card + ")" }} /><span className="size-5 rounded-full border border-black/10" style={{ backgroundColor: "rgb(" + theme.accent + ")" }} /></div>
+          <p className="text-sm font-semibold">{theme.name}</p><p className="mt-1 text-xs text-muted-foreground">{theme.mood}</p>
+          {activeTheme === theme.id && <p className="mt-2 text-xs font-semibold text-primary">✓ Aktif</p>}
+        </button>)}
+      </div></CardContent>
+    </Card>
     <div className="mt-4 grid gap-4 xl:grid-cols-2">
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="size-5" />Profil outlet</CardTitle></CardHeader><CardContent className="space-y-4"><div className="space-y-2"><Label>Nama outlet</Label><Input value={form.name} onChange={(e) => set("name", e.target.value)} /></div><div className="space-y-2"><Label>Alamat</Label><Textarea value={form.address} onChange={(e) => set("address", e.target.value)} rows={3} /></div><div className="space-y-2"><Label>No. WhatsApp / Telepon</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div></CardContent></Card>
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><Percent className="size-5" />PPN & Service</CardTitle></CardHeader><CardContent className="space-y-4"><SettingToggle label="Gunakan PPN" description="PPN ditambahkan otomatis pada checkout kasir dan menu pelanggan." checked={taxOn} onChange={(v) => set("tax_rate", v ? (form.tax_rate || 11) : 0)} /><div className="space-y-2"><Label>Persentase PPN</Label><Input type="number" min="0" max="100" step="0.1" disabled={!taxOn} value={form.tax_rate} onChange={(e) => set("tax_rate", Number(e.target.value))} /><p className="text-xs text-muted-foreground">Bisa diubah, misalnya 11%, 10%, atau 0%.</p></div><div className="border-t pt-4" /><SettingToggle label="Gunakan service charge" description="Service charge ditambahkan setelah diskon dan sebelum PPN." checked={serviceOn} onChange={(v) => set("service_rate", v ? (form.service_rate || 5) : 0)} /><div className="space-y-2"><Label>Persentase service</Label><Input type="number" min="0" max="100" step="0.1" disabled={!serviceOn} value={form.service_rate} onChange={(e) => set("service_rate", Number(e.target.value))} /><p className="text-xs text-muted-foreground">Contoh umum 5% atau sesuai kebijakan outlet.</p></div><div className="border-t pt-4 space-y-2"><Label>Pembulatan</Label><Input type="number" min="0" value={form.rounding} onChange={(e) => set("rounding", Number(e.target.value))} /><p className="text-xs text-muted-foreground">Masukkan 100/500/1000 jika ingin pembulatan nominal.</p></div></CardContent></Card>
