@@ -69,39 +69,21 @@
   --color-sidebar-ring: var(--sidebar-ring);
 }
 
-/* Global theme tokens: RGB triplets keep alpha utilities compatible. */
-:root {
-  --background: rgb(var(--color-bg, 8 12 16)); --foreground: rgb(var(--color-text, 248 250 252));
-  --card: rgb(var(--color-card, 17 22 29)); --card-foreground: var(--foreground);
-  --popover: var(--card); --popover-foreground: var(--foreground);
-  --primary: rgb(var(--color-accent, 245 158 11)); --primary-foreground: #090d11;
-  --accent: var(--primary); --accent-foreground: var(--primary-foreground);
-  --muted: color-mix(in srgb, var(--card) 82%, var(--foreground) 18%);
-  --muted-foreground: color-mix(in srgb, var(--foreground) 65%, transparent);
-  --secondary: var(--card); --secondary-foreground: var(--foreground);
-  --border: color-mix(in srgb, var(--foreground) 14%, transparent);
-  --input: color-mix(in srgb, var(--foreground) 22%, transparent); --ring: var(--primary);
-  --sidebar: var(--background); --sidebar-foreground: var(--foreground);
-  --sidebar-primary: var(--primary); --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--card); --sidebar-accent-foreground: var(--foreground);
-  --sidebar-border: var(--border); --sidebar-ring: var(--primary);
-}
-
 :root {
   --radius: 0.875rem;
-  --background: rgb(var(--color-bg, 9 13 17));
-  --foreground: rgb(var(--color-text, 248 250 252));
-  --card: rgb(var(--color-card, 18 24 31));
-  --card-foreground: rgb(var(--color-text, 248 250 252));
-  --popover: rgb(var(--color-card, 18 24 31));
-  --popover-foreground: rgb(var(--color-text, 248 250 252));
-  --primary: rgb(var(--color-accent, 245 158 11));
+  --background: oklch(0.12 0.015 245);
+  --foreground: oklch(0.97 0.01 240);
+  --card: oklch(0.19 0.02 245);
+  --card-foreground: oklch(0.97 0.01 240);
+  --popover: oklch(0.19 0.02 245);
+  --popover-foreground: oklch(0.97 0.01 240);
+  --primary: oklch(0.52 0.1 190);
   --primary-foreground: oklch(0.99 0.01 180);
   --secondary: oklch(0.955 0.012 190);
   --secondary-foreground: oklch(0.3 0.04 200);
   --muted: oklch(0.24 0.02 245);
   --muted-foreground: oklch(0.72 0.02 245);
-  --accent: rgb(var(--color-accent, 245 158 11));
+  --accent: oklch(0.83 0.15 82);
   --accent-foreground: oklch(0.26 0.05 70);
   --destructive: oklch(0.58 0.2 25);
   --destructive-foreground: oklch(0.99 0.01 180);
@@ -117,14 +99,14 @@
   --chart-3: oklch(0.62 0.14 155);
   --chart-4: oklch(0.6 0.12 250);
   --chart-5: oklch(0.65 0.18 20);
-  --sidebar: rgb(var(--color-bg, 9 13 17));
-  --sidebar-foreground: rgb(var(--color-text, 248 250 252));
-  --sidebar-primary: rgb(var(--color-accent, 245 158 11));
+  --sidebar: oklch(0.16 0.01 250);
+  --sidebar-foreground: oklch(0.95 0.01 250);
+  --sidebar-primary: oklch(0.75 0.15 75);
   --sidebar-primary-foreground: oklch(0.18 0.02 75);
-  --sidebar-accent: rgb(var(--color-card, 18 24 31));
-  --sidebar-accent-foreground: rgb(var(--color-text, 248 250 252));
+  --sidebar-accent: oklch(0.25 0.015 250);
+  --sidebar-accent-foreground: oklch(0.98 0.005 250);
   --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: rgb(var(--color-accent, 245 158 11));
+  --sidebar-ring: oklch(0.75 0.15 75);
 }
 
 .dark {
@@ -167,58 +149,30 @@
 }
 
 @layer base {
-html, body {
-  min-height: 100%;
-  background-color: rgb(var(--color-bg, 9 13 17));
-  color: rgb(var(--color-text, 248 250 252));
-  transition: background-color 200ms ease, color 200ms ease;
-}
-body { margin: 0; }
-
-/* Neutral utility colors follow the active theme rather than retaining Espresso shades. */
-[class~="text-slate-50"], [class~="text-slate-100"], [class~="text-slate-200"], [class~="text-slate-300"] {
-  color: rgb(var(--color-text, 248 250 252)) !important;
-}
-[class~="text-slate-400"], [class~="text-slate-500"] {
-  color: rgb(var(--color-text, 248 250 252) / 72%) !important;
-}
-[class~="bg-slate-950"], [class~="bg-slate-900"], [class~="bg-slate-800"], [class~="bg-slate-800/30"], [class~="bg-slate-800/40"] {
-  background-color: rgb(var(--color-card, 18 24 31)) !important;
-}
-
-.global-card {
-  background-color: rgb(var(--color-card, 18 24 31));
-  color: rgb(var(--color-text, 248 250 252));
-  border: 1px solid rgb(var(--color-text, 248 250 252) / 10%);
-}
-.text-title { color: rgb(var(--color-text, 248 250 252)); }
-.text-subtitle { color: rgb(var(--color-text, 248 250 252) / 70%); }
-
-
   * {
     border-color: var(--color-border);
   }
 
   body {
     min-height: 100vh;
-    background-color: var(--background);
-    color: var(--foreground);
+    background-color: #090D11;
+    color: #f1f5f9;
   }
 
   input, select, textarea {
-    background-color: var(--card);
-    color: var(--foreground);
-    border-color: var(--border);
+    background-color: #12181F;
+    color: #f8fafc;
+    border-color: rgb(30 41 59);
   }
 
   input::placeholder, textarea::placeholder {
-    color: var(--muted-foreground);
+    color: #64748b;
     opacity: 1;
   }
 
   table {
-    background-color: var(--card);
-    color: var(--foreground);
+    background-color: #12181F;
+    color: #e2e8f0;
   }
 }
 
@@ -302,49 +256,4 @@ body { margin: 0; }
   .no-print {
     display: none !important;
   }
-}
-
-
-/* Soft Tone presets: explicit semantic colors and accessible light-theme subtitles. */
-:root[data-theme="soft-sage"],
-:root[data-theme="minimalist-oatmilk"],
-:root[data-theme="minimalist-oatmilk"] .text-subtitle,
-:root[data-theme="dusk-taro"] .text-subtitle {
-  color: rgb(var(--color-text) / 88%);
-}
-
-
-/* ESB Light Corporate theme */
-
-
-/* Cafe Flow master F&B themes: RGB triplets are shared across all components. */
-@layer base {
-  :root[data-theme="charcoal-espresso"] { color-scheme: dark; --color-bg: 11 15 18; --color-card: 20 27 33; --color-text: 248 250 252; --color-muted: 148 163 184; --color-accent: 198 154 115; }
-  :root[data-theme="forest-matcha"] { color-scheme: dark; --color-bg: 6 10 8; --color-card: 13 20 16; --color-text: 242 247 244; --color-muted: 139 163 150; --color-accent: 110 158 133; }
-  :root[data-theme="midnight-indigo"] { color-scheme: dark; --color-bg: 7 10 18; --color-card: 16 22 38; --color-text: 241 245 249; --color-muted: 130 147 180; --color-accent: 96 165 250; }
-  :root[data-theme="scandinavian-chalk"] { color-scheme: light; --color-bg: 244 246 248; --color-card: 255 255 255; --color-text: 30 41 59; --color-muted: 100 116 139; --color-accent: 71 85 105; }
-  :root[data-theme="warm-oatmilk"] { color-scheme: light; --color-bg: 248 245 240; --color-card: 255 255 255; --color-text: 44 37 32; --color-muted: 120 111 102; --color-accent: 160 140 125; }
-  :root[data-theme="sage-mint"] { color-scheme: light; --color-bg: 242 245 243; --color-card: 255 255 255; --color-text: 31 41 37; --color-muted: 94 112 104; --color-accent: 77 124 102; }
-  html, body { background-color: rgb(var(--color-bg, 11 15 18)); color: rgb(var(--color-text, 248 250 252)); transition: background-color 200ms, color 200ms; }
-  .card-bg { background-color: rgb(var(--color-card)); border: 1px solid rgb(var(--color-text) / 8%); }
-  .text-main { color: rgb(var(--color-text)); }
-  .text-desc { color: rgb(var(--color-muted)); }
-  .btn-accent { background-color: rgb(var(--color-accent)); color: rgb(var(--color-bg)); }
-}
-
-/* Map theme tokens into the existing semantic design system. */
-:root[data-theme] {
-  --background: rgb(var(--color-bg)); --foreground: rgb(var(--color-text));
-  --card: rgb(var(--color-card)); --card-foreground: rgb(var(--color-text));
-  --popover: rgb(var(--color-card)); --popover-foreground: rgb(var(--color-text));
-  --primary: rgb(var(--color-accent)); --primary-foreground: rgb(var(--color-bg));
-  --accent: rgb(var(--color-accent)); --accent-foreground: rgb(var(--color-bg));
-  --secondary: rgb(var(--color-card)); --secondary-foreground: rgb(var(--color-text));
-  --muted: rgb(var(--color-card)); --muted-foreground: rgb(var(--color-muted));
-  --border: rgb(var(--color-text) / 14%); --input: rgb(var(--color-text) / 22%);
-  --ring: rgb(var(--color-accent));
-  --sidebar: rgb(var(--color-bg)); --sidebar-foreground: rgb(var(--color-text));
-  --sidebar-primary: rgb(var(--color-accent)); --sidebar-primary-foreground: rgb(var(--color-bg));
-  --sidebar-accent: rgb(var(--color-card)); --sidebar-accent-foreground: rgb(var(--color-text));
-  --sidebar-border: rgb(var(--color-text) / 14%); --sidebar-ring: rgb(var(--color-accent));
 }
