@@ -37,9 +37,10 @@ export function KitchenNotification() {
   useEffect(() => {
     const channel = supabase.channel("kitchen-qr-order-listener")
       .on("postgres_changes", {
-        event: "INSERT", schema: "public", table: "orders", filter: "source=eq.QR_ORDER",
+        event: "INSERT", schema: "public", table: "orders",
       }, (payload) => {
         const order = payload.new as IncomingQrOrder;
+        if (!["qr", "QR_ORDER"].includes(String(order.source ?? ""))) return;
         playNotificationBeep();
         const table = order.table_id ? `Meja ${order.table_id.slice(0, 8)}` : "Meja belum ditentukan";
         toast.success("Pesanan QR baru", {
