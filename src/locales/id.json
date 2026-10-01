@@ -1,0 +1,82 @@
+{
+  "common": {
+    "dashboard": "Dasbor",
+    "cashier": "Kasir",
+    "orders": "Pesanan",
+    "history": "Riwayat",
+    "openingClosing": "Buka & Tutup Shift",
+    "activityLog": "Log Aktivitas",
+    "productsStock": "Produk & Stok",
+    "tablesQr": "Meja & Menu QR",
+    "inventory": "Inventaris",
+    "customersLoyalty": "Pelanggan & Loyalitas",
+    "promotionsDiscounts": "Promosi & Diskon",
+    "expensesProfit": "Pengeluaran & Laba Rugi",
+    "salesReports": "Laporan Penjualan",
+    "staffShifts": "Pegawai & Shift",
+    "outletSettings": "Pengaturan Outlet",
+    "apiIntegrations": "API & Integrasi",
+    "main": "Utama",
+    "transactions": "Transaksi",
+    "productOutlet": "Produk & Outlet",
+    "customers": "Pelanggan",
+    "marketing": "Pemasaran",
+    "management": "Manajemen",
+    "language": "Bahasa aplikasi",
+    "save": "Simpan",
+    "cancel": "Batal",
+    "loading": "Memuat…",
+    "retry": "Coba lagi"
+  },
+  "dashboard": {
+    "title": "Dasbor",
+    "summary": "Ringkasan penjualan dan operasional outlet",
+    "todaySales": "Penjualan Hari Ini",
+    "transactions": "Transaksi",
+    "averageOrder": "Rata-rata Pesanan",
+    "recentOrders": "Pesanan Terbaru",
+    "salesSummary": "Ringkasan Penjualan"
+  },
+  "reports": {
+    "summary": "Ringkasan Laporan",
+    "daily": "Penjualan Harian",
+    "product": "Penjualan Produk",
+    "hourly": "Penjualan per Jam",
+    "payment": "Laporan Pembayaran",
+    "channel": "Laporan Kanal",
+    "orderDetail": "Detail Pesanan"
+  },
+  "cashier": {
+    "title": "Kasir",
+    "pay": "Bayar",
+    "completePayment": "Selesaikan Pembayaran",
+    "cash": "Tunai",
+    "card": "Kartu",
+    "qris": "QRIS",
+    "total": "Total",
+    "subtotal": "Subtotal",
+    "discount": "Diskon",
+    "addToCart": "Tambah ke Keranjang"
+  },
+  "staff": {
+    "title": "Pegawai & Shift",
+    "active": "Aktif",
+    "inactive": "Nonaktif",
+    "add": "Tambah Pegawai",
+    "edit": "Edit",
+    "delete": "Hapus",
+    "role": "Peran",
+    "fullName": "Nama Lengkap",
+    "email": "Email",
+    "saveChanges": "Simpan Perubahan"
+  },
+  "settings": {
+    "title": "Pengaturan Outlet",
+    "language": "Bahasa aplikasi",
+    "profile": "Profil Outlet",
+    "taxService": "Pajak & Layanan",
+    "paymentMethods": "Metode Pembayaran",
+    "receipt": "Struk & Transaksi",
+    "saved": "Pengaturan berhasil disimpan"
+  }
+}
