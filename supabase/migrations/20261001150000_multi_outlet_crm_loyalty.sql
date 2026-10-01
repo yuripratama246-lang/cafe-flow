@@ -80,3 +80,23 @@ drop policy if exists point_redemptions_customer_owner on public.point_redemptio
 create policy point_redemptions_customer_owner on public.point_redemptions for all to authenticated using(exists(select 1 from public.customers c where c.id=customer_id and c.owner_id=auth.uid())) with check(exists(select 1 from public.customers c where c.id=customer_id and c.owner_id=auth.uid()));
 drop policy if exists loyalty_earnings_customer_owner on public.loyalty_point_earnings;
 create policy loyalty_earnings_customer_owner on public.loyalty_point_earnings for select to authenticated using(exists(select 1 from public.customers c where c.id=customer_id and c.owner_id=auth.uid()));
+
+grant select, insert, update, delete on public.outlets, public.warehouses, public.warehouse_stocks, public.stock_transfers, public.point_redemptions to authenticated;
+grant select on public.loyalty_point_earnings to authenticated;
+create or replace function public.complete_stock_transfer(p_transfer_id uuid)
+returns void language plpgsql security invoker set search_path=public as $$
+declare t public.stock_transfers%rowtype; source_stock public.warehouse_stocks%rowtype;
+begin
+ select * into t from public.stock_transfers where id=p_transfer_id for update;
+ if not found then raise exception 'Transfer not found'; end if;
+ if t.status <> 'IN_TRANSIT' then raise exception 'Transfer must be IN_TRANSIT'; end if;
+ select * into source_stock from public.warehouse_stocks where warehouse_id=t.from_warehouse_id and item_id=t.item_id for update;
+ if not found or source_stock.quantity<t.quantity then raise exception 'Insufficient source stock'; end if;
+ update public.warehouse_stocks set quantity=quantity-t.quantity,updated_at=now() where id=source_stock.id;
+ insert into public.warehouse_stocks(warehouse_id,item_id,item_name,quantity,unit)
+ values(t.to_warehouse_id,t.item_id,t.item_name,t.quantity,source_stock.unit)
+ on conflict(warehouse_id,item_id) do update set quantity=public.warehouse_stocks.quantity+excluded.quantity,
+ item_name=excluded.item_name,updated_at=now();
+ update public.stock_transfers set status='COMPLETED',completed_at=now(),received_by=auth.uid() where id=p_transfer_id;
+end; $$;
+grant execute on function public.complete_stock_transfer(uuid) to authenticated;
