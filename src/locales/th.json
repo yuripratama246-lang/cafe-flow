@@ -1,0 +1,82 @@
+{
+  "common": {
+    "dashboard": "แผงควบคุม",
+    "cashier": "แคชเชียร์",
+    "orders": "คำสั่งซื้อ",
+    "history": "ประวัติ",
+    "openingClosing": "เปิดและปิดกะ",
+    "activityLog": "บันทึกกิจกรรม",
+    "productsStock": "สินค้าและสต็อก",
+    "tablesQr": "โต๊ะและเมนู QR",
+    "inventory": "คลังสินค้า",
+    "customersLoyalty": "ลูกค้าและสมาชิก",
+    "promotionsDiscounts": "โปรโมชันและส่วนลด",
+    "expensesProfit": "ค่าใช้จ่ายและกำไรขาดทุน",
+    "salesReports": "รายงานยอดขาย",
+    "staffShifts": "พนักงานและกะ",
+    "outletSettings": "ตั้งค่าร้าน",
+    "apiIntegrations": "API และการเชื่อมต่อ",
+    "main": "หลัก",
+    "transactions": "ธุรกรรม",
+    "productOutlet": "สินค้าและร้าน",
+    "customers": "ลูกค้า",
+    "marketing": "การตลาด",
+    "management": "การจัดการ",
+    "language": "ภาษาของแอป",
+    "save": "บันทึก",
+    "cancel": "ยกเลิก",
+    "loading": "กำลังโหลด…",
+    "retry": "ลองอีกครั้ง"
+  },
+  "dashboard": {
+    "title": "แผงควบคุม",
+    "summary": "ภาพรวมยอดขายและการดำเนินงานของร้าน",
+    "todaySales": "ยอดขายวันนี้",
+    "transactions": "รายการธุรกรรม",
+    "averageOrder": "ยอดเฉลี่ยต่อคำสั่งซื้อ",
+    "recentOrders": "คำสั่งซื้อล่าสุด",
+    "salesSummary": "สรุปยอดขาย"
+  },
+  "reports": {
+    "summary": "สรุปรายงาน",
+    "daily": "ยอดขายรายวัน",
+    "product": "ยอดขายตามสินค้า",
+    "hourly": "ยอดขายรายชั่วโมง",
+    "payment": "รายงานการชำระเงิน",
+    "channel": "รายงานช่องทาง",
+    "orderDetail": "รายละเอียดคำสั่งซื้อ"
+  },
+  "cashier": {
+    "title": "แคชเชียร์",
+    "pay": "ชำระเงิน",
+    "completePayment": "ยืนยันการชำระเงิน",
+    "cash": "เงินสด",
+    "card": "บัตร",
+    "qris": "คิวอาร์ไอเอส",
+    "total": "ยอดรวม",
+    "subtotal": "ยอดรวมย่อย",
+    "discount": "ส่วนลด",
+    "addToCart": "เพิ่มลงตะกร้า"
+  },
+  "staff": {
+    "title": "พนักงานและกะ",
+    "active": "ใช้งาน",
+    "inactive": "ปิดใช้งาน",
+    "add": "เพิ่มพนักงาน",
+    "edit": "แก้ไข",
+    "delete": "ลบ",
+    "role": "บทบาท",
+    "fullName": "ชื่อเต็ม",
+    "email": "อีเมล",
+    "saveChanges": "บันทึกการเปลี่ยนแปลง"
+  },
+  "settings": {
+    "title": "ตั้งค่าร้าน",
+    "language": "ภาษาของแอป",
+    "profile": "ข้อมูลร้าน",
+    "taxService": "ภาษีและค่าบริการ",
+    "paymentMethods": "วิธีชำระเงิน",
+    "receipt": "ใบเสร็จและธุรกรรม",
+    "saved": "บันทึกการตั้งค่าแล้ว"
+  }
+}
