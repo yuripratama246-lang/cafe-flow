@@ -16,24 +16,15 @@ import i18n, { languageOptions, type LanguageCode } from "@/locales/i18n";
 
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: PengaturanPage });
 type Settings = { id?: string; owner_id: string; global_theme?: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean; app_language?: LanguageCode };
-const DEFAULTS = { app_language: "id" as LanguageCode, global_theme: "premium-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
+const DEFAULTS = { app_language: "id" as LanguageCode, global_theme: "charcoal-espresso", name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
 
 const THEME_PRESETS = [
-  { id: "premium-espresso", name: "Premium Espresso", bg: "9 13 17", card: "18 24 31", accent: "245 158 11", mood: "Dark · Amber" },
-  { id: "emerald-matcha", name: "Emerald Matcha", bg: "5 11 10", card: "12 20 18", accent: "16 185 129", mood: "Dark · Emerald" },
-  { id: "burgundy-roastery", name: "Burgundy Roastery", bg: "15 5 8", card: "25 13 18", accent: "225 29 72", mood: "Dark · Burgundy" },
-  { id: "smoked-oakwood", name: "Smoked Oakwood", bg: "12 10 9", card: "23 20 18", accent: "180 83 9", mood: "Dark · Oak" },
-  { id: "midnight-cyber", name: "Midnight Cyber", bg: "2 6 23", card: "15 23 42", accent: "56 189 248", mood: "Dark · Cyan" },
-  { id: "lavender-haze", name: "Lavender Haze", bg: "15 10 28", card: "26 19 44", accent: "168 85 247", mood: "Dark · Violet" },
-  { id: "matte-carbon", name: "Matte Carbon", bg: "18 18 18", card: "30 30 30", accent: "243 244 246", mood: "Dark · Monochrome" },
-  { id: "scandinavian-clean", name: "Scandinavian Clean", bg: "248 250 252", card: "255 255 255", accent: "71 85 105", mood: "Light · Slate" },
-  { id: "sakura-bakery", name: "Sakura Bakery", bg: "255 247 247", card: "255 255 255", accent: "251 113 133", mood: "Light · Rose" },
-  { id: "citrus-juice", name: "Citrus Juice", bg: "254 252 232", card: "255 255 255", accent: "202 138 4", mood: "Light · Citrus" },
-  { id: "esb-light-corporate", name: "Corporate Light", bg: "243 244 246", card: "255 255 255", accent: "2 132 199", mood: "Light · Corporate" },
-  { id: "soft-sage", name: "Soft Sage", bg: "11 15 13", card: "19 26 23", text: "241 245 243", accent: "135 169 156", mood: "Dark · Soft Tone" },
-  { id: "minimalist-oatmilk", name: "Minimalist Oatmilk", bg: "249 246 240", card: "255 255 255", text: "40 35 30", accent: "194 178 159", mood: "Light · Soft Tone" },
-  { id: "roasted-hojicha", name: "Roasted Hojicha", bg: "15 12 10", card: "26 21 18", text: "245 242 240", accent: "212 178 149", mood: "Dark · Soft Tone" },
-  { id: "dusk-taro", name: "Dusk Taro", bg: "247 245 250", card: "255 255 255", text: "45 40 55", accent: "188 167 232", mood: "Light · Soft Tone" },
+  { id: "charcoal-espresso", name: "Charcoal Espresso", bg: "11 15 18", card: "20 27 33", accent: "198 154 115", mood: "Dark · Espresso" },
+  { id: "forest-matcha", name: "Forest Matcha", bg: "6 10 8", card: "13 20 16", accent: "110 158 133", mood: "Dark · Matcha" },
+  { id: "midnight-indigo", name: "Midnight Indigo", bg: "7 10 18", card: "16 22 38", accent: "96 165 250", mood: "Dark · Indigo" },
+  { id: "scandinavian-chalk", name: "Scandinavian Chalk", bg: "244 246 248", card: "255 255 255", accent: "71 85 105", mood: "Light · Chalk" },
+  { id: "warm-oatmilk", name: "Warm Oatmilk", bg: "248 245 240", card: "255 255 255", accent: "160 140 125", mood: "Light · Oatmilk" },
+  { id: "sage-mint", name: "Sage Mint", bg: "242 245 243", card: "255 255 255", accent: "77 124 102", mood: "Light · Sage" },
 ] as const;
 type ThemeId = typeof THEME_PRESETS[number]["id"];
 
@@ -43,8 +34,8 @@ function PengaturanPage() {
   const qc = useQueryClient();
   const query = useQuery({ queryKey: ["outlet-settings"], queryFn: async () => { const ownerId = await getOwnerId(); const { data, error } = await supabase.from("outlet_settings").select("*").eq("owner_id", ownerId).maybeSingle(); if (error) throw error; if (data) return data as Settings; const { data: created, error: createError } = await supabase.from("outlet_settings").upsert({ owner_id: ownerId, ...DEFAULTS }, { onConflict: "owner_id" }).select("*").single(); if (createError) throw createError; return created as Settings; }, retry: 1 });
   const [form, setForm] = useState<Settings | null>(null);
-  const [activeTheme, setActiveTheme] = useState<ThemeId>("premium-espresso");
-  useEffect(() => { if (query.data) { setForm(query.data); const saved = THEME_PRESETS.some((theme) => theme.id === query.data.global_theme) ? query.data.global_theme as ThemeId : "premium-espresso"; setActiveTheme(saved); document.documentElement.setAttribute("data-theme", saved); } }, [query.data]);
+  const [activeTheme, setActiveTheme] = useState<ThemeId>("charcoal-espresso");
+  useEffect(() => { if (query.data) { setForm(query.data); const saved = THEME_PRESETS.some((theme) => theme.id === query.data.global_theme) ? query.data.global_theme as ThemeId : "charcoal-espresso"; setActiveTheme(saved); document.documentElement.setAttribute("data-theme", saved); } }, [query.data]);
 
   const chooseTheme = async (themeName: ThemeId) => {
     const previous = activeTheme;
@@ -97,14 +88,26 @@ function PengaturanPage() {
     </Card>
 
     <Card className="mt-4">
-      <CardHeader><CardTitle className="flex items-center gap-2">Tema aplikasi <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary">15 Presets · 4 Soft Tone</span></CardTitle><p className="text-sm text-muted-foreground">Pilih palet global untuk seluruh tampilan Cafe Flow. Pilihan diterapkan langsung dan disimpan ke outlet.</p></CardHeader>
-      <CardContent><div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
-        {THEME_PRESETS.map((theme) => <button key={theme.id} type="button" onClick={() => void chooseTheme(theme.id)} aria-pressed={activeTheme === theme.id} className={["rounded-xl border p-3 text-left transition-all hover:-translate-y-0.5 hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTheme === theme.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"].join(" ")}>
-          <div className="mb-3 flex items-center gap-2"><span className="size-5 rounded-full border border-black/10" style={{ backgroundColor: "rgb(" + theme.bg + ")" }} /><span className="size-5 rounded-full border border-black/10" style={{ backgroundColor: "rgb(" + theme.card + ")" }} /><span className="size-5 rounded-full border border-black/10" style={{ backgroundColor: "rgb(" + theme.accent + ")" }} /></div>
-          <div className="flex items-center justify-between gap-2"><p className="text-sm font-semibold">{theme.name}</p>{theme.id.startsWith("soft-") || theme.id === "minimalist-oatmilk" || theme.id === "roasted-hojicha" || theme.id === "dusk-taro" ? <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Soft Tone</span> : null}</div><p className="mt-1 text-xs text-muted-foreground">{theme.mood}</p>
-          {activeTheme === theme.id && <p className="mt-2 text-xs font-semibold text-primary">✓ Aktif</p>}
-        </button>)}
-      </div></CardContent>
+      <CardHeader><CardTitle>Tema aplikasi · 6 Master Preset</CardTitle><p className="text-sm text-muted-foreground">Pilih palet global. Perubahan langsung diterapkan dan disimpan ke pengaturan outlet.</p></CardHeader>
+      <CardContent className="space-y-6">
+        {(["dark", "light"] as const).map((mode) => {
+          const themes = THEME_PRESETS.filter((theme) => mode === "dark" ? ["charcoal-espresso", "forest-matcha", "midnight-indigo"].includes(theme.id) : ["scandinavian-chalk", "warm-oatmilk", "sage-mint"].includes(theme.id));
+          return <section key={mode} aria-label={mode === "dark" ? "Tema Gelap" : "Tema Terang"}>
+            <h3 className="mb-3 text-sm font-semibold">{mode === "dark" ? "Tema Gelap (Dark Mode)" : "Tema Terang (Light Mode)"}</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {themes.map((theme) => <button key={theme.id} type="button" onClick={() => void chooseTheme(theme.id)} aria-pressed={activeTheme === theme.id} className={["rounded-xl border p-4 text-left transition-all hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", activeTheme === theme.id ? "border-primary bg-primary/5 ring-1 ring-primary" : "border-border"].join(" ")}>
+                <div className="mb-3 flex items-center gap-2" aria-label="Background, Card, Accent">
+                  <span title="Background" className="size-7 rounded-full border border-black/15" style={{ backgroundColor: "rgb(" + theme.bg + ")" }} />
+                  <span title="Card" className="size-7 rounded-full border border-black/15" style={{ backgroundColor: "rgb(" + theme.card + ")" }} />
+                  <span title="Accent" className="size-7 rounded-full border border-black/15" style={{ backgroundColor: "rgb(" + theme.accent + ")" }} />
+                </div>
+                <p className="text-sm font-semibold">{theme.name}</p><p className="mt-1 text-xs text-muted-foreground">{theme.mood}</p>
+                {activeTheme === theme.id && <p className="mt-2 text-xs font-semibold text-primary">✓ Aktif</p>}
+              </button>)}
+            </div>
+          </section>;
+        })}
+      </CardContent>
     </Card>
     <div className="mt-4 grid gap-4 xl:grid-cols-2">
       <Card><CardHeader><CardTitle className="flex items-center gap-2"><Building2 className="size-5" />Profil outlet</CardTitle></CardHeader><CardContent className="space-y-4"><div className="space-y-2"><Label>Nama outlet</Label><Input value={form.name} onChange={(e) => set("name", e.target.value)} /></div><div className="space-y-2"><Label>Alamat</Label><Textarea value={form.address} onChange={(e) => set("address", e.target.value)} rows={3} /></div><div className="space-y-2"><Label>No. WhatsApp / Telepon</Label><Input value={form.phone} onChange={(e) => set("phone", e.target.value)} /></div></CardContent></Card>
