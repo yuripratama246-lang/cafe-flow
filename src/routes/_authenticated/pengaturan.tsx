@@ -69,6 +69,7 @@ const DEFAULT_PRINTER_CONFIG: PrinterConfig = {
 };
 
 function PrinterSettings() {
+  const { t } = useTranslation();
   const [config, setConfig] = useState<PrinterConfig>(DEFAULT_PRINTER_CONFIG);
   const [loaded, setLoaded] = useState(false);
   useEffect(() => {
@@ -108,10 +109,10 @@ function PrinterSettings() {
     <CardHeader><CardTitle className="flex items-center gap-2"><Printer className="size-5" />{t("settings.printerTitle")}</CardTitle><p className="text-sm text-muted-foreground">{t("settings.printerReady")}</p></CardHeader>
     <CardContent className="space-y-5">
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2"><Label htmlFor="printer-name">Nama printer kasir</Label><Input id="printer-name" placeholder={t("settings.printerName")} value={config.printerName} onChange={(e) => update("printerName", e.target.value)} /></div>
-        <div className="space-y-2"><Label htmlFor="printer-connection">Jenis koneksi</Label><select id="printer-connection" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.connection} onChange={(e) => update("connection", e.target.value as PrinterConfig["connection"])}><option value="usb">{t("settings.usb")}</option><option value="lan">{t("settings.lan")}</option><option value="wifi">{t("settings.wifi")}</option><option value="bluetooth">{t("settings.bluetooth")}</option></select></div>
-        <div className="space-y-2"><Label htmlFor="printer-width">Lebar kertas</Label><select id="printer-width" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.paperWidth} onChange={(e) => update("paperWidth", e.target.value as PrinterConfig["paperWidth"])}><option value="58">58 mm</option><option value="80">80 mm</option></select></div>
-        <div className="space-y-2"><Label htmlFor="kitchen-printer">Nama printer dapur (opsional)</Label><Input id="kitchen-printer" placeholder={t("settings.kitchenPrinter")} value={config.kitchenPrinterName} onChange={(e) => update("kitchenPrinterName", e.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="printer-name">{t("settings.printerName")}</Label><Input id="printer-name" placeholder={t("settings.printerName")} value={config.printerName} onChange={(e) => update("printerName", e.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="printer-connection">{t("settings.printerConnection")}</Label><select id="printer-connection" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.connection} onChange={(e) => update("connection", e.target.value as PrinterConfig["connection"])}><option value="usb">{t("settings.usb")}</option><option value="lan">{t("settings.lan")}</option><option value="wifi">{t("settings.wifi")}</option><option value="bluetooth">{t("settings.bluetooth")}</option></select></div>
+        <div className="space-y-2"><Label htmlFor="printer-width">{t("settings.paperWidth")}</Label><select id="printer-width" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.paperWidth} onChange={(e) => update("paperWidth", e.target.value as PrinterConfig["paperWidth"])}><option value="58">58 mm</option><option value="80">80 mm</option></select></div>
+        <div className="space-y-2"><Label htmlFor="kitchen-printer">{t("settings.kitchenPrinter")}</Label><Input id="kitchen-printer" placeholder={t("settings.kitchenPrinter")} value={config.kitchenPrinterName} onChange={(e) => update("kitchenPrinterName", e.target.value)} /></div>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         <SettingToggle label={t("settings.autoReceipt")} description={t("settings.autoReceiptDesc")} checked={config.receiptAutoPrint} onChange={(v) => update("receiptAutoPrint", v)} />
