@@ -100,6 +100,9 @@ jobs:
 
       - name: Start production server from generated Nitro entrypoint and smoke-test locally
         shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
         run: |
           set -euo pipefail
           entrypoint="$GITHUB_WORKSPACE/.output/server/index.mjs"
