@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { canAccess, useStaffProfile, type PermissionKey } from "@/lib/access";
 import { useTranslation } from "react-i18next";
-import { globalChineseText } from "@/locales/global-zh";
+import { globalChineseText, globalEnglishText, globalThaiText } from "@/locales/global-zh";
 
 const GROUPS: { label: string; items: { to: string; label: string; icon: typeof LayoutDashboard; permission: PermissionKey }[] }[] = [
   { label: "main", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" }] },
@@ -37,7 +37,9 @@ function OutletSwitcher() { return <div className="hidden items-center gap-2 rou
 export function AppShell({ title, description, actions, children }: { title: string; description?: string; actions?: ReactNode; children: ReactNode }) {
   const { i18n } = useTranslation();
   useEffect(() => {
-    const reverse = new Map(Object.entries(globalChineseText).map(([source, translated]) => [translated, source]));
+    const dictionaries = { zh: globalChineseText, en: globalEnglishText, th: globalThaiText } as const;
+    const reverse = new Map(Object.entries({ ...globalChineseText, ...globalEnglishText, ...globalThaiText }).map(([source, translated]) => [translated, source]));
+    const dictionary = () => dictionaries[i18n.language.split("-")[0] as keyof typeof dictionaries];
     const originals = new WeakMap<Text, string>();
     const rendered = new WeakMap<Text, string>();
     const attrOriginals = new WeakMap<Element, Map<string, string>>();
@@ -50,9 +52,10 @@ export function AppShell({ title, description, actions, children }: { title: str
       if (!originals.has(node)) originals.set(node, reverse.get(current.trim()) ?? current);
       const original = originals.get(node) ?? current;
       const trimmed = original.trim();
-      let translated = i18n.language === "zh" ? globalChineseText[trimmed] : undefined;
-      if (i18n.language === "zh" && translated === undefined && trimmed.length < 180) {
-        translated = [...Object.entries(globalChineseText)].sort((a, b) => b[0].length - a[0].length).reduce((value, [source, target]) => value.includes(source) ? value.split(source).join(target) : value, trimmed);
+      const activeDictionary = dictionary();
+      let translated = activeDictionary?.[trimmed];
+      if (activeDictionary && translated === undefined && trimmed.length < 180) {
+        translated = Object.entries(activeDictionary).sort((a, b) => b[0].length - a[0].length).reduce((value, [source, target]) => value.includes(source) ? value.split(source).join(target) : value, trimmed);
         if (translated === trimmed) translated = undefined;
       }
       const next = translated === undefined ? original : original.replace(trimmed, translated);
@@ -72,7 +75,7 @@ export function AppShell({ title, description, actions, children }: { title: str
         if (last !== undefined && current !== last) originalsForElement.set(attr, current);
         if (!originalsForElement.has(attr)) originalsForElement.set(attr, reverse.get(current) ?? current);
         const original = originalsForElement.get(attr) ?? current;
-        const next = i18n.language === "zh" ? globalChineseText[original] ?? original : original;
+        const next = dictionary()?.[original] ?? original;
         if (current !== next) el.setAttribute(attr, next);
         renderedForElement.set(attr, next);
       }
