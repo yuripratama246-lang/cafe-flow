@@ -54,19 +54,19 @@
 :root, .light {
   color-scheme: light;
   --radius: 0.5rem;
-  /* Scandinavian Chalk Minimalist — cool, clean, high-contrast light mode */
-  --background: 243 244 246;
+  /* Soft Studio White — calm, low-glare light mode with crisp typography */
+  --background: 243 245 247;
   --foreground: 15 23 42;
   --card: 255 255 255;
   --card-foreground: 15 23 42;
   --popover: 255 255 255;
   --popover-foreground: 15 23 42;
-  --primary: 51 65 85;
+  --primary: 71 85 105;
   --primary-foreground: 255 255 255;
   --secondary: 241 245 249;
   --secondary-foreground: 15 23 42;
   --muted: 241 245 249;
-  --muted-foreground: 100 116 139;
+  --muted-foreground: 71 85 105;
   --accent: 241 245 249;
   --accent-foreground: 15 23 42;
   --destructive: 190 65 58;
@@ -77,20 +77,20 @@
   --warning-foreground: 255 255 255;
   --border: 226 232 240;
   --input: 226 232 240;
-  --ring: 51 65 85;
-  --chart-1: 51 65 85;
+  --ring: 71 85 105;
+  --chart-1: 71 85 105;
   --chart-2: 100 116 139;
   --chart-3: 148 163 184;
-  --chart-4: 71 85 105;
+  --chart-4: 51 65 85;
   --chart-5: 203 213 225;
   --sidebar: 255 255 255;
   --sidebar-foreground: 15 23 42;
-  --sidebar-primary: 51 65 85;
+  --sidebar-primary: 71 85 105;
   --sidebar-primary-foreground: 255 255 255;
   --sidebar-accent: 241 245 249;
   --sidebar-accent-foreground: 15 23 42;
   --sidebar-border: 226 232 240;
-  --sidebar-ring: 51 65 85;
+  --sidebar-ring: 71 85 105;
 }
 .dark {
   color-scheme: dark; --radius: 0.875rem;
@@ -299,7 +299,7 @@ html.light [class~="text-white"] {
 }
 
 
-/* Scandinavian light mode: quiet, borderless cards with restrained elevation. */
+/* Soft Studio White: clean cards with subtle elevation instead of hard outlines. */
 html.light [data-slot="card"] {
   border-color: transparent !important;
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
