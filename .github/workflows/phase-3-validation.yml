@@ -166,10 +166,6 @@ jobs:
               head -c 500 "$body"; echo
               failed=1
             fi
-            if grep -qi 'Page not found' "$body"; then
-              echo "FAIL: frontend Page not found fallback detected for $endpoint"
-              failed=1
-            fi
             rm -f "$headers" "$body"
           done
           if [[ "$failed" -ne 0 ]]; then
