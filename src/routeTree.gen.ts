@@ -33,6 +33,14 @@ import { Route as AuthenticatedPesananRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProdukRouteImport } from './routes/_authenticated/produk'
 import { Route as AuthenticatedPromosiRouteImport } from './routes/_authenticated/promosi'
 import { Route as AuthenticatedShiftKasirRouteImport } from './routes/_authenticated/shift-kasir'
+import { Route as AuthenticatedWebsiteManagementRouteImport } from './routes/_authenticated/website-management'
+import { Route as AuthenticatedWebsiteManagementIndexRouteImport } from './routes/_authenticated/website-management.index'
+import { Route as AuthenticatedWebsiteManagementPagesRouteImport } from './routes/_authenticated/website-management.pages'
+import { Route as AuthenticatedWebsiteManagementGalleryRouteImport } from './routes/_authenticated/website-management.gallery'
+import { Route as AuthenticatedWebsiteManagementLocationsRouteImport } from './routes/_authenticated/website-management.locations'
+import { Route as AuthenticatedWebsiteManagementContactRouteImport } from './routes/_authenticated/website-management.contact'
+import { Route as AuthenticatedWebsiteManagementCareersRouteImport } from './routes/_authenticated/website-management.careers'
+import { Route as AuthenticatedWebsiteManagementSettingsRouteImport } from './routes/_authenticated/website-management.settings'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -231,6 +239,13 @@ export interface FileRoutesById {
   '/_authenticated/produk': typeof AuthenticatedProdukRoute
   '/_authenticated/promosi': typeof AuthenticatedPromosiRoute
   '/_authenticated/shift-kasir': typeof AuthenticatedShiftKasirRoute
+  '/website-management': typeof AuthenticatedWebsiteManagementIndexRoute
+  '/website-management/pages': typeof AuthenticatedWebsiteManagementPagesRoute
+  '/website-management/gallery': typeof AuthenticatedWebsiteManagementGalleryRoute
+  '/website-management/locations': typeof AuthenticatedWebsiteManagementLocationsRoute
+  '/website-management/contact': typeof AuthenticatedWebsiteManagementContactRoute
+  '/website-management/careers': typeof AuthenticatedWebsiteManagementCareersRoute
+  '/website-management/settings': typeof AuthenticatedWebsiteManagementSettingsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -512,6 +527,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProdukRoute: typeof AuthenticatedProdukRoute
   AuthenticatedPromosiRoute: typeof AuthenticatedPromosiRoute
   AuthenticatedShiftKasirRoute: typeof AuthenticatedShiftKasirRoute
+  AuthenticatedWebsiteManagementRoute: typeof AuthenticatedWebsiteManagementRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -534,8 +550,59 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProdukRoute: AuthenticatedProdukRoute,
   AuthenticatedPromosiRoute: AuthenticatedPromosiRoute,
   AuthenticatedShiftKasirRoute: AuthenticatedShiftKasirRoute,
+  AuthenticatedWebsiteManagementRoute: AuthenticatedWebsiteManagementRouteWithChildren,
 }
 
+
+const AuthenticatedWebsiteManagementRoute = AuthenticatedWebsiteManagementRouteImport.update({
+  id: '/website-management',
+  path: '/website-management',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedWebsiteManagementIndexRoute = AuthenticatedWebsiteManagementIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementPagesRoute = AuthenticatedWebsiteManagementPagesRouteImport.update({
+  id: '/pages',
+  path: 'pages',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementGalleryRoute = AuthenticatedWebsiteManagementGalleryRouteImport.update({
+  id: '/gallery',
+  path: 'gallery',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementLocationsRoute = AuthenticatedWebsiteManagementLocationsRouteImport.update({
+  id: '/locations',
+  path: 'locations',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementContactRoute = AuthenticatedWebsiteManagementContactRouteImport.update({
+  id: '/contact',
+  path: 'contact',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementCareersRoute = AuthenticatedWebsiteManagementCareersRouteImport.update({
+  id: '/careers',
+  path: 'careers',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementSettingsRoute = AuthenticatedWebsiteManagementSettingsRouteImport.update({
+  id: '/settings',
+  path: 'settings',
+  getParentRoute: () => AuthenticatedWebsiteManagementRoute,
+} as any)
+const AuthenticatedWebsiteManagementRouteWithChildren = AuthenticatedWebsiteManagementRoute._addFileChildren({
+  AuthenticatedWebsiteManagementIndexRoute,
+  AuthenticatedWebsiteManagementPagesRoute,
+  AuthenticatedWebsiteManagementGalleryRoute,
+  AuthenticatedWebsiteManagementLocationsRoute,
+  AuthenticatedWebsiteManagementContactRoute,
+  AuthenticatedWebsiteManagementCareersRoute,
+  AuthenticatedWebsiteManagementSettingsRoute,
+})
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
