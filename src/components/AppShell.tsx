@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/s
 import { cn } from "@/lib/utils";
 import { canAccess, useStaffProfile, type PermissionKey } from "@/lib/access";
 import { useTranslation } from "react-i18next";
+import { globalChineseText } from "@/locales/global-zh";
 
 const GROUPS: { label: string; items: { to: string; label: string; icon: typeof LayoutDashboard; permission: PermissionKey }[] }[] = [
   { label: "main", items: [{ to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, permission: "dashboard" }] },
@@ -34,6 +35,63 @@ function LogoutButton({ onClick, className = "", collapsed = false }: { onClick:
 function OutletSwitcher() { return <div className="hidden items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-left text-xs shadow-sm md:flex"><span className="size-2 rounded-full bg-emerald-500" /><span className="max-w-32 truncate font-medium">Outlet Utama</span><ChevronDown className="size-3.5 text-muted-foreground" /></div>; }
 
 export function AppShell({ title, description, actions, children }: { title: string; description?: string; actions?: ReactNode; children: ReactNode }) {
+  const { i18n } = useTranslation();
+  useEffect(() => {
+    const reverse = new Map(Object.entries(globalChineseText).map(([source, translated]) => [translated, source]));
+    const originals = new WeakMap<Text, string>();
+    const rendered = new WeakMap<Text, string>();
+    const attrOriginals = new WeakMap<Element, Map<string, string>>();
+    const attrRendered = new WeakMap<Element, Map<string, string>>();
+    let applying = false;
+    const translateText = (node: Text) => {
+      const current = node.nodeValue ?? "";
+      const last = rendered.get(node);
+      if (last !== undefined && current !== last) originals.set(node, current);
+      if (!originals.has(node)) originals.set(node, reverse.get(current.trim()) ?? current);
+      const original = originals.get(node) ?? current;
+      const trimmed = original.trim();
+      const translated = i18n.language === "zh" ? globalChineseText[trimmed] : undefined;
+      const next = translated === undefined ? original : original.replace(trimmed, translated);
+      if (current !== next) { applying = true; node.nodeValue = next; applying = false; }
+      rendered.set(node, next);
+    };
+    const attributes = ["placeholder", "title", "aria-label", "alt"];
+    const translateElement = (el: Element) => {
+      let originalsForElement = attrOriginals.get(el);
+      if (!originalsForElement) { originalsForElement = new Map(); attrOriginals.set(el, originalsForElement); }
+      let renderedForElement = attrRendered.get(el);
+      if (!renderedForElement) { renderedForElement = new Map(); attrRendered.set(el, renderedForElement); }
+      for (const attr of attributes) {
+        const current = el.getAttribute(attr);
+        if (current === null) continue;
+        const last = renderedForElement.get(attr);
+        if (last !== undefined && current !== last) originalsForElement.set(attr, current);
+        if (!originalsForElement.has(attr)) originalsForElement.set(attr, reverse.get(current) ?? current);
+        const original = originalsForElement.get(attr) ?? current;
+        const next = i18n.language === "zh" ? globalChineseText[original] ?? original : original;
+        if (current !== next) el.setAttribute(attr, next);
+        renderedForElement.set(attr, next);
+      }
+    };
+    const scan = (root: Node) => {
+      if (root.nodeType === Node.TEXT_NODE) translateText(root as Text);
+      if (root instanceof Element) translateElement(root);
+      root.childNodes.forEach(scan);
+    };
+    scan(document.body);
+    const observer = new MutationObserver((records) => {
+      if (applying) return;
+      for (const record of records) {
+        if (record.type === "characterData" && record.target instanceof Text) translateText(record.target);
+        record.addedNodes.forEach(scan);
+        if (record.type === "attributes" && record.target instanceof Element) translateElement(record.target);
+      }
+    });
+    observer.observe(document.body, { subtree: true, childList: true, characterData: true, attributes: true, attributeFilter: attributes });
+    const onLanguageChanged = () => scan(document.body);
+    i18n.on("languageChanged", onLanguageChanged);
+    return () => { observer.disconnect(); i18n.off("languageChanged", onLanguageChanged); };
+  }, [i18n]);
   const navigate = useNavigate(); const queryClient = useQueryClient(); const [open, setOpen] = useState(false); const [collapsed, setCollapsed] = useState(false); const [theme, setTheme] = useState<"light" | "dark">("light"); const staff = useStaffProfile();
   const incomingQuery = useQuery({ queryKey: ["orders", "incoming-count"], queryFn: async () => { const { count, error } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("source", "qr").eq("status", "new").eq("is_paid", false); if (error) throw error; return count ?? 0; }, enabled: !!staff.data && staff.data.role !== "super_admin" && staff.data.is_active, refetchInterval: 3000, staleTime: 1000 });
   const incomingCount = incomingQuery.data ?? 0;
