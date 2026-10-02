@@ -209,13 +209,17 @@ html.dark [class*="border-neutral-"] {
 }
 
 
-/* Soft ambient background; lightweight and responsive, with reduced-motion support. */
-body { position: relative; isolation: isolate; background: radial-gradient(ellipse at 12% 8%, rgb(90 160 235 / 10%), transparent 34%), radial-gradient(ellipse at 88% 18%, rgb(91 195 174 / 9%), transparent 32%), rgb(var(--background)); }
-body::before { content:""; position:fixed; inset:-18%; z-index:-1; pointer-events:none; background:radial-gradient(ellipse at 18% 24%,rgb(86 156 235 / 10%),transparent 28%),radial-gradient(ellipse at 78% 68%,rgb(91 195 174 / 9%),transparent 30%),radial-gradient(ellipse at 58% 8%,rgb(161 139 250 / 6%),transparent 24%); filter:blur(34px); opacity:.9; transform:translate3d(0,0,0); animation:cafe-flow-ambient 26s ease-in-out infinite alternate; }
-.dark body::before { background:radial-gradient(ellipse at 18% 24%,rgb(60 124 202 / 13%),transparent 28%),radial-gradient(ellipse at 78% 68%,rgb(63 155 135 / 12%),transparent 30%),radial-gradient(ellipse at 58% 8%,rgb(112 93 184 / 8%),transparent 24%); opacity:.75; }
-@keyframes cafe-flow-ambient { 0%{transform:translate3d(-1.5%,-1%,0) scale(1)} 50%{transform:translate3d(1.5%,1%,0) scale(1.035)} 100%{transform:translate3d(-.5%,1.5%,0) scale(1.015)} }
-@media(prefers-reduced-motion:reduce){body::before{animation:none}*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
-
+/* Flat application canvas: keep visual emphasis on cards, not decorative page-wide gradients. */
+body {
+  background: rgb(var(--background));
+}
+body::before {
+  content: none !important;
+  animation: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+}
 
 /* Light mode: soften legacy hard-coded dark panels (notably chat) and improve legibility. */
 html.light [class~="bg-black"],
