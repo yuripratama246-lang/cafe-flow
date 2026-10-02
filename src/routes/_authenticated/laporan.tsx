@@ -59,7 +59,7 @@ function ReportsPage(){
  const setQuick=(next:Filter)=>{setEndDate(toDateInput(new Date()));setFilter(next)};
  const period=range.from===range.to?range.from:range.from+" – "+range.to;
  const exportReport=()=>{
-  const csvCell=(value:unknown)=>{const raw=String(value??"");const safe=/^[=+@\\-\\t\\r]/.test(raw)?"'"+raw:raw;return '"'+safe.replace(/"/g,'""')+'"';};
+  const csvCell=(value:unknown)=>{const raw=String(value??"");const safe=/^[=+\-\t\r]/.test(raw)?"'"+raw:raw;return '"'+safe.replace(/"/g,'""')+'"';};
   const rows:unknown[][]=[];
   const filename="laporan-"+tab+"-"+range.from+"-sampai-"+range.to+".csv";
   if(tab==="summary"){rows.push(["Metrik","Nilai"],["Periode",period],["Penjualan kotor",gross],["Penjualan bersih",sales],["Transaksi lunas",paid.length],["Item terjual",items],["Rata-rata transaksi",avg]);}
@@ -69,7 +69,7 @@ function ReportsPage(){
   if(tab==="payment"){rows.push(["Metode Pembayaran","Nominal"],...payment.map(p=>[p.name,p.value]));}
   if(tab==="channel"){rows.push(["Kanal","Jumlah Transaksi","Net Sales","Rata-rata Order"],...channels.map(([name,x])=>[name,x.orders,x.sales,x.orders?x.sales/x.orders:0]));}
   if(tab==="orders"){rows.push(["Waktu","Order #","Customer / Meja","Kanal","Status","Pembayaran","Gross","Diskon","Net"],...day.map(o=>[new Date(o.created_at).toLocaleString("id-ID"),o.order_no,o.customer_name||o.restaurant_tables?.name||"Walk-in",o.source==="qr"?"QR Order":"Kasir",o.status,o.is_paid?(PAYMENT_LABEL[o.payment_method??""]??"Lunas"):"Belum lunas",o.subtotal,o.discount,o.total]));}
-  const csv="\\uFEFF"+rows.map(row=>row.map(csvCell).join(",")).join("\\r\\n");
+  const csv="\uFEFF"+rows.map(row=>row.map(csvCell).join(",")).join("\r\n");
   const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
   const link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
  };
