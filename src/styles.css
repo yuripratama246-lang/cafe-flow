@@ -53,7 +53,7 @@
 
 :root, .light {
   color-scheme: light;
-  --radius: 0.5rem;
+  --radius: 0.625rem;
   /* Soft Studio White — calm, low-glare light mode with crisp typography */
   --background: 243 245 247;
   --foreground: 15 23 42;
