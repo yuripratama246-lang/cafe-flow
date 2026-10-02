@@ -134,6 +134,23 @@
     "testPrint": "Cafe Flow Test Print",
     "printerNotNamed": "Unnamed",
     "testPrintBody": "If this text prints clearly, the test print template is working.",
-    "printerReady": "Configure a printer profile before purchasing hardware. Settings are saved in this browser."
+    "printerReady": "Configure a printer profile before purchasing hardware. Settings are saved in this browser.",
+    "description": "Manage outlet identity, tax, service, payments, and receipts.",
+    "printerName": "Cashier printer name",
+    "printerConnection": "Connection type",
+    "paperWidth": "Paper width",
+    "kitchenPrinter": "Kitchen printer name (optional)",
+    "autoReceipt": "Auto-print payment receipt",
+    "autoReceiptDesc": "Enable as a preference. A printer connector is required to print automatically without a dialog.",
+    "autoKitchen": "Auto-print kitchen ticket",
+    "autoKitchenDesc": "Preference for incoming QR order tickets. Requires a printer connector and kitchen routing setup.",
+    "deviceStatus": "Device status: Not connected",
+    "deviceStatusDesc": "Printer configuration and test-print template can be prepared. Physical printer selection and automatic printing require a compatible printer and connector.",
+    "testPrintButton": "Test print template",
+    "savePrinter": "Save printer configuration",
+    "usb": "USB (cashier PC)",
+    "lan": "LAN / Ethernet",
+    "wifi": "Wi-Fi",
+    "bluetooth": "Bluetooth"
   }
 }
