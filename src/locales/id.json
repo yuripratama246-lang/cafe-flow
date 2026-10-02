@@ -134,6 +134,23 @@
     "testPrint": "Test Print Cafe Flow",
     "printerNotNamed": "Belum diberi nama",
     "testPrintBody": "Jika teks ini tercetak dengan jelas, template test print berhasil.",
-    "printerReady": "Siapkan profil printer sebelum perangkat dibeli. Pengaturan disimpan di browser ini."
+    "printerReady": "Siapkan profil printer sebelum perangkat dibeli. Pengaturan disimpan di browser ini.",
+    "description": "Atur identitas, pajak, layanan, pembayaran, dan struk.",
+    "printerName": "Nama printer kasir",
+    "printerConnection": "Jenis koneksi",
+    "paperWidth": "Lebar kertas",
+    "kitchenPrinter": "Nama printer dapur (opsional)",
+    "autoReceipt": "Cetak otomatis struk pembayaran",
+    "autoReceiptDesc": "Aktifkan sebagai preferensi. Perlu konektor printer untuk mencetak otomatis tanpa dialog.",
+    "autoKitchen": "Cetak otomatis tiket dapur",
+    "autoKitchenDesc": "Preferensi tiket pesanan QR masuk. Memerlukan konektor printer dan pengaturan routing dapur.",
+    "deviceStatus": "Status perangkat: Belum terhubung",
+    "deviceStatusDesc": "Konfigurasi dan template tes cetak dapat disiapkan. Pemilihan printer fisik dan cetak otomatis memerlukan printer serta konektor yang sesuai.",
+    "testPrintButton": "Tes template cetak",
+    "savePrinter": "Simpan konfigurasi printer",
+    "usb": "USB (PC kasir)",
+    "lan": "LAN / Ethernet",
+    "wifi": "Wi-Fi",
+    "bluetooth": "Bluetooth"
   }
 }
