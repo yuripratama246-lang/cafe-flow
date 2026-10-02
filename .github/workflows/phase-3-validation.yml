@@ -1,0 +1,57 @@
+name: Phase 3 Public Website API Validation
+
+on:
+  push:
+    branches:
+      - phase-3-public-website-api
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-3-public-website-api
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build production bundle
+        run: npm run build
+      - name: Verify seven API route files and GET handlers
+        shell: bash
+        run: |
+          set -euo pipefail
+          routes=(
+            "src/routes/api.website.v1.pages.home.ts"
+            "src/routes/api.website.v1.pages.about.ts"
+            "src/routes/api.website.v1.careers.ts"
+            "src/routes/api.website.v1.gallery.ts"
+            "src/routes/api.website.v1.locations.ts"
+            "src/routes/api.website.v1.contact.ts"
+            "src/routes/api.website.v1.settings.ts"
+          )
+          for route in "${routes[@]}"; do
+            test -f "$route"
+            grep -q 'GET' "$route"
+            echo "PASS route: $route"
+          done
+      - name: Scan browser bundle for server-only Supabase material
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d dist/client || { echo "FAIL: dist/client missing; inspect build output layout"; exit 1; }
+          if grep -R -n -E 'SUPABASE_SERVICE_ROLE_KEY|website-public-api\.server|client\.server' dist/client --include='*.js' --include='*.mjs' --include='*.map'; then
+            echo "FAIL: server-only marker found in browser bundle"
+            exit 1
+          fi
+          echo "PASS: no server-only markers in dist/client JS or source maps"
