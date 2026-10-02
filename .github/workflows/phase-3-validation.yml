@@ -44,13 +44,54 @@ jobs:
             grep -q 'GET' "$route"
             echo "PASS route: $route"
           done
-      - name: Scan browser bundle for server-only Supabase material
+      - name: Scan built browser bundle for secrets and server-only material
         shell: bash
         run: |
           set -euo pipefail
-          test -d dist/client || { echo "FAIL: dist/client missing; inspect build output layout"; exit 1; }
-          if grep -R -n -E 'SUPABASE_SERVICE_ROLE_KEY|website-public-api\.server|client\.server' dist/client --include='*.js' --include='*.mjs' --include='*.map'; then
-            echo "FAIL: server-only marker found in browser bundle"
+          bundle_dir=".output/public"
+          test -d "$bundle_dir" || { echo "FAIL: $bundle_dir missing"; exit 1; }
+          mapfile -t bundle_files < <(find "$bundle_dir" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.map' \) -print)
+          if [ "${#bundle_files[@]}" -eq 0 ]; then
+            echo "FAIL: no JS/MJS/source-map files found to scan in $bundle_dir"
             exit 1
           fi
-          echo "PASS: no server-only markers in dist/client JS or source maps"
+          echo "Scanning ${#bundle_files[@]} built browser files under $bundle_dir"
+          if grep -n -E 'SUPABASE_SERVICE_ROLE_KEY|service_role|website-public-api\.server|client\.server|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' "${bundle_files[@]}"; then
+            echo "FAIL: secret/server-only marker found in built browser bundle"
+            exit 1
+          fi
+          echo "PASS: scanned ${#bundle_files[@]} built browser files; no configured secret/server-only markers found"
+      - name: Runtime GET smoke tests for public website API
+        shell: bash
+        env:
+          API_BASE_URL: https://cafeflow.alpana1project.workers.dev
+        run: |
+          set -euo pipefail
+          endpoints=(
+            "/api/website/v1/pages/home"
+            "/api/website/v1/pages/about"
+            "/api/website/v1/careers"
+            "/api/website/v1/gallery"
+            "/api/website/v1/locations"
+            "/api/website/v1/contact"
+            "/api/website/v1/settings"
+          )
+          for endpoint in "${endpoints[@]}"; do
+            response_file="$(mktemp)"
+            status="$(curl --silent --show-error --location --max-time 20 -o "$response_file" -w '%{http_code}' "$API_BASE_URL$endpoint")"
+            echo "GET $endpoint -> HTTP $status"
+            if [[ "$status" != "200" && "$status" != "404" ]]; then
+              cat "$response_file"
+              rm -f "$response_file"
+              echo "FAIL: unexpected HTTP status for $endpoint"
+              exit 1
+            fi
+            if ! node -e 'const fs=require("fs"); JSON.parse(fs.readFileSync(process.argv[1],"utf8"))' "$response_file"; then
+              cat "$response_file"
+              rm -f "$response_file"
+              echo "FAIL: response is not valid JSON for $endpoint"
+              exit 1
+            fi
+            rm -f "$response_file"
+          done
+          echo "PASS: all seven GET endpoints returned JSON with HTTP 200 or 404"
