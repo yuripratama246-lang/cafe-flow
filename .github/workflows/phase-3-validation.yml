@@ -1,0 +1,185 @@
+name: Phase 3 Public Website API Validation
+
+on:
+  push:
+    branches:
+      - phase-3-public-website-api
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout validation branch
+        uses: actions/checkout@v4
+        with:
+          ref: phase-3-public-website-api
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Build production bundle
+        run: npm run build
+
+      - name: Inspect generated route tree and production server bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d .output/server || { echo "FAIL: .output/server missing"; exit 1; }
+          echo "=== Generated route-tree candidates ==="
+          find . -type f \( -name '*routeTree*' -o -name '*route-tree*' \) -not -path './node_modules/*' -not -path './.git/*' -print
+          route_tree_files="$(find . -type f \( -name '*routeTree*' -o -name '*route-tree*' \) -not -path './node_modules/*' -not -path './.git/*' -print)"
+          if [[ -z "$route_tree_files" ]]; then
+            echo "No generated route tree file located."
+          else
+            while IFS= read -r file; do
+              if grep -Fq '/api/website/v1/pages/home' "$file"; then
+                echo "ROUTE_TREE_FOUND path in $file"
+              fi
+              if grep -Fq 'api.website.v1.pages.home' "$file"; then
+                echo "ROUTE_TREE_MODULE_FOUND in $file"
+              fi
+            done <<< "$route_tree_files"
+          fi
+          echo "=== Server output inventory ==="
+          find .output/server -type f -maxdepth 5 -print | sort
+          echo "=== Route/module markers in server output ==="
+          markers=(
+            '/api/website/v1/pages/home'
+            '/api/website/v1/pages/about'
+            '/api/website/v1/careers'
+            '/api/website/v1/gallery'
+            '/api/website/v1/locations'
+            '/api/website/v1/contact'
+            '/api/website/v1/settings'
+            'api.website.v1.pages.home'
+            'api.website.v1.pages.about'
+            'api.website.v1.careers'
+            'api.website.v1.gallery'
+            'api.website.v1.locations'
+            'api.website.v1.contact'
+            'api.website.v1.settings'
+          )
+          for marker in "${markers[@]}"; do
+            if grep -R -F -l -- "$marker" .output/server; then
+              echo "SERVER_MARKER_FOUND: $marker"
+            else
+              echo "SERVER_MARKER_NOT_FOUND: $marker"
+            fi
+          done
+          echo "=== Nitro/server metadata ==="
+          find .output -maxdepth 4 -type f \( -name 'nitro.json' -o -name 'package.json' -o -name '*manifest*' -o -name 'wrangler.toml' -o -name 'wrangler.json' -o -name 'wrangler.jsonc' \) -print
+          for f in $(find .output -maxdepth 4 -type f \( -name 'nitro.json' -o -name 'package.json' -o -name '*manifest*' \)); do
+            echo "--- $f"
+            sed -n '1,200p' "$f"
+          done
+
+      - name: Scan built browser bundle for secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          bundle_dir=".output/public"
+          test -d "$bundle_dir" || { echo "FAIL: $bundle_dir missing"; exit 1; }
+          mapfile -t bundle_files < <(find "$bundle_dir" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.map' \) -print)
+          if [[ "${#bundle_files[@]}" -eq 0 ]]; then
+            echo "FAIL: no JS/MJS/source-map files found to scan in $bundle_dir"
+            exit 1
+          fi
+          echo "Scanning ${#bundle_files[@]} browser files under $bundle_dir"
+          if grep -n -E 'SUPABASE_SERVICE_ROLE_KEY|service_role|service-role|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' "${bundle_files[@]}"; then
+            echo "FAIL: server-only secret marker found in browser bundle"
+            exit 1
+          fi
+          echo "PASS: browser bundle secret scan"
+
+      - name: Start production server from generated Nitro entrypoint and smoke-test locally
+        shell: bash
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -euo pipefail
+          entrypoint="$GITHUB_WORKSPACE/.output/server/index.mjs"
+          test -f "$entrypoint" || { echo "FAIL: Nitro entrypoint missing: $entrypoint"; exit 1; }
+          echo "NITRO_ENTRYPOINT_FOUND: $entrypoint"
+          # Run the generated Cloudflare-compatible Nitro worker through Wrangler's local runtime.
+          npx --yes wrangler dev --config "$GITHUB_WORKSPACE/.output/server/wrangler.json" --local --var "SUPABASE_URL:$SUPABASE_URL" --var "SUPABASE_SERVICE_ROLE_KEY:$SUPABASE_SERVICE_ROLE_KEY" --ip 127.0.0.1 --port 4179 --log-level error > "$RUNNER_TEMP/cafe-flow-wrangler.log" 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          ready=0
+          for attempt in $(seq 1 60); do
+            if ! kill -0 "$server_pid" 2>/dev/null; then
+              cat "$RUNNER_TEMP/cafe-flow-wrangler.log"
+              echo "FAIL: Wrangler/Nitro production runtime exited before listening"
+              exit 1
+            fi
+            if curl --silent --output /dev/null --connect-timeout 1 --max-time 2 http://127.0.0.1:4179/; then
+              ready=1
+              break
+            fi
+            sleep 1
+          done
+          cat "$RUNNER_TEMP/cafe-flow-wrangler.log"
+          if [[ "$ready" -ne 1 ]]; then
+            echo "FAIL: local production server did not become ready"
+            exit 1
+          fi
+          echo "LOCAL_PRODUCTION_SERVER_READY http://127.0.0.1:4179"
+          endpoints=(
+            "/api/website/v1/pages/home"
+            "/api/website/v1/pages/about"
+            "/api/website/v1/careers"
+            "/api/website/v1/gallery"
+            "/api/website/v1/locations"
+            "/api/website/v1/contact"
+            "/api/website/v1/settings"
+          )
+          failed=0
+          for endpoint in "${endpoints[@]}"; do
+            headers="$(mktemp)"
+            body="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 20 -D "$headers" -o "$body" -w '%{http_code}' "http://127.0.0.1:4179$endpoint")"
+            content_type="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/ {sub(/^[^:]*:[[:space:]]*/, ""); gsub(/\r/, ""); print; exit}' "$headers")"
+            kind="OTHER"
+            if [[ "$content_type" == application/json* ]]; then
+              kind="JSON"
+              if ! node -e 'const fs=require("fs"); JSON.parse(fs.readFileSync(process.argv[1],"utf8"))' "$body"; then
+                echo "FAIL: invalid JSON response for $endpoint"
+                failed=1
+              fi
+            elif [[ "$content_type" == text/html* ]]; then
+              kind="HTML"
+            fi
+            printf 'GET %s -> HTTP %s | Content-Type: %s | Body: %s\n' "$endpoint" "$status" "${content_type:-<missing>}" "$kind"
+            if [[ "$status" != "200" && "$status" != "404" ]]; then
+              echo "FAIL: unexpected HTTP status $status for $endpoint"
+              failed=1
+            fi
+            if [[ "$kind" != "JSON" ]]; then
+              echo "FAIL: expected JSON, received $kind for $endpoint"
+              head -c 500 "$body"; echo
+              failed=1
+            fi
+            rm -f "$headers" "$body"
+          done
+          if [[ "$failed" -ne 0 ]]; then
+            cat "$RUNNER_TEMP/cafe-flow-wrangler.log"
+            exit 1
+          fi
+          echo "PASS: all seven local production endpoint checks"
+
+      - name: Upload production build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cafe-flow-phase-3-output-${{ github.run_id }}
+          path: ${{ github.workspace }}/.output/**
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 14
