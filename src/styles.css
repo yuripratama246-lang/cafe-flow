@@ -53,21 +53,21 @@
 
 :root, .light {
   color-scheme: light; --radius: 0.875rem;
-  --background: 238 242 247; --foreground: 35 47 63;
-  --card: 247 249 251; --card-foreground: 35 47 63;
-  --popover: 247 249 251; --popover-foreground: 35 47 63;
+  --background: 222 229 238; --foreground: 31 43 59;
+  --card: 234 239 246; --card-foreground: 31 43 59;
+  --popover: 234 239 246; --popover-foreground: 31 43 59;
   --primary: 59 130 246; --primary-foreground: 255 255 255;
-  --secondary: 226 232 240; --secondary-foreground: 43 56 73;
-  --muted: 230 235 241; --muted-foreground: 83 99 119;
-  --accent: 224 234 246; --accent-foreground: 35 70 115;
+  --secondary: 211 220 231; --secondary-foreground: 37 51 69;
+  --muted: 215 223 233; --muted-foreground: 69 85 105;
+  --accent: 207 224 244; --accent-foreground: 30 67 112;
   --destructive: 220 65 65; --destructive-foreground: 255 255 255;
   --success: 22 163 104; --success-foreground: 255 255 255;
   --warning: 217 119 6; --warning-foreground: 255 255 255;
-  --border: 207 216 227; --input: 205 215 226; --ring: 59 130 246;
+  --border: 190 202 217; --input: 190 202 217; --ring: 59 130 246;
   --chart-1: 59 130 246; --chart-2: 20 184 166; --chart-3: 245 158 11; --chart-4: 139 92 246; --chart-5: 236 102 130;
-  --sidebar: 246 248 250; --sidebar-foreground: 39 52 70; --sidebar-primary: 59 130 246;
+  --sidebar: 231 237 245; --sidebar-foreground: 35 49 67; --sidebar-primary: 59 130 246;
   --sidebar-primary-foreground: 255 255 255; --sidebar-accent: 235 243 253; --sidebar-accent-foreground: 31 70 125;
-  --sidebar-border: 218 225 234; --sidebar-ring: 59 130 246;
+  --sidebar-border: 201 211 224; --sidebar-ring: 59 130 246;
 }
 .dark {
   color-scheme: dark; --radius: 0.875rem;
@@ -248,5 +248,25 @@ html.light [class~="text-gray-100"],
 html.light [class~="text-gray-200"],
 html.light [class~="text-slate-100"],
 html.light [class~="text-slate-200"] {
+  color: rgb(var(--foreground)) !important;
+}
+
+
+/* Keep light mode intentionally muted: no paper-white panels against the slate canvas. */
+html.light [class~="bg-white"],
+html.light [class~="bg-gray-50"],
+html.light [class~="bg-slate-50"],
+html.light [class~="bg-zinc-50"],
+html.light [class~="bg-neutral-50"] {
+  background-color: rgb(var(--card)) !important;
+  color: rgb(var(--card-foreground));
+}
+html.light [class~="bg-gray-100"],
+html.light [class~="bg-slate-100"],
+html.light [class~="bg-zinc-100"],
+html.light [class~="bg-neutral-100"] {
+  background-color: rgb(var(--muted)) !important;
+}
+html.light [class~="text-white"] {
   color: rgb(var(--foreground)) !important;
 }
