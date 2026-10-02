@@ -507,53 +507,6 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedActivityLogRoute: typeof AuthenticatedActivityLogRoute
-  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
-  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
-  AuthenticatedApiRoute: typeof AuthenticatedApiRoute
-  AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
-  AuthenticatedDapurRoute: typeof AuthenticatedDapurRoute
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
-  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
-  AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
-  AuthenticatedKasirRoute: typeof AuthenticatedKasirRoute
-  AuthenticatedKeuanganRoute: typeof AuthenticatedKeuanganRoute
-  AuthenticatedLaporanRoute: typeof AuthenticatedLaporanRoute
-  AuthenticatedMejaRoute: typeof AuthenticatedMejaRoute
-  AuthenticatedPegawaiRoute: typeof AuthenticatedPegawaiRoute
-  AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
-  AuthenticatedPesananRoute: typeof AuthenticatedPesananRoute
-  AuthenticatedProdukRoute: typeof AuthenticatedProdukRoute
-  AuthenticatedPromosiRoute: typeof AuthenticatedPromosiRoute
-  AuthenticatedShiftKasirRoute: typeof AuthenticatedShiftKasirRoute
-  AuthenticatedWebsiteManagementRoute: typeof AuthenticatedWebsiteManagementRouteWithChildren
-}
-
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedActivityLogRoute: AuthenticatedActivityLogRoute,
-  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
-  AuthenticatedAiRoute: AuthenticatedAiRoute,
-  AuthenticatedApiRoute: AuthenticatedApiRoute,
-  AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
-  AuthenticatedDapurRoute: AuthenticatedDapurRoute,
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
-  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
-  AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
-  AuthenticatedKasirRoute: AuthenticatedKasirRoute,
-  AuthenticatedKeuanganRoute: AuthenticatedKeuanganRoute,
-  AuthenticatedLaporanRoute: AuthenticatedLaporanRoute,
-  AuthenticatedMejaRoute: AuthenticatedMejaRoute,
-  AuthenticatedPegawaiRoute: AuthenticatedPegawaiRoute,
-  AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
-  AuthenticatedPesananRoute: AuthenticatedPesananRoute,
-  AuthenticatedProdukRoute: AuthenticatedProdukRoute,
-  AuthenticatedPromosiRoute: AuthenticatedPromosiRoute,
-  AuthenticatedShiftKasirRoute: AuthenticatedShiftKasirRoute,
-  AuthenticatedWebsiteManagementRoute: AuthenticatedWebsiteManagementRouteWithChildren,
-}
-
-
 const AuthenticatedWebsiteManagementRoute = AuthenticatedWebsiteManagementRouteImport.update({
   id: '/website-management',
   path: '/website-management',
@@ -603,6 +556,53 @@ const AuthenticatedWebsiteManagementRouteWithChildren = AuthenticatedWebsiteMana
   AuthenticatedWebsiteManagementCareersRoute,
   AuthenticatedWebsiteManagementSettingsRoute,
 })
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedActivityLogRoute: typeof AuthenticatedActivityLogRoute
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
+  AuthenticatedAiRoute: typeof AuthenticatedAiRoute
+  AuthenticatedApiRoute: typeof AuthenticatedApiRoute
+  AuthenticatedCustomersRoute: typeof AuthenticatedCustomersRoute
+  AuthenticatedDapurRoute: typeof AuthenticatedDapurRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedInventoryRoute: typeof AuthenticatedInventoryRoute
+  AuthenticatedKasirRoute: typeof AuthenticatedKasirRoute
+  AuthenticatedKeuanganRoute: typeof AuthenticatedKeuanganRoute
+  AuthenticatedLaporanRoute: typeof AuthenticatedLaporanRoute
+  AuthenticatedMejaRoute: typeof AuthenticatedMejaRoute
+  AuthenticatedPegawaiRoute: typeof AuthenticatedPegawaiRoute
+  AuthenticatedPengaturanRoute: typeof AuthenticatedPengaturanRoute
+  AuthenticatedPesananRoute: typeof AuthenticatedPesananRoute
+  AuthenticatedProdukRoute: typeof AuthenticatedProdukRoute
+  AuthenticatedPromosiRoute: typeof AuthenticatedPromosiRoute
+  AuthenticatedShiftKasirRoute: typeof AuthenticatedShiftKasirRoute
+  AuthenticatedWebsiteManagementRoute: typeof AuthenticatedWebsiteManagementRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedActivityLogRoute: AuthenticatedActivityLogRoute,
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
+  AuthenticatedAiRoute: AuthenticatedAiRoute,
+  AuthenticatedApiRoute: AuthenticatedApiRoute,
+  AuthenticatedCustomersRoute: AuthenticatedCustomersRoute,
+  AuthenticatedDapurRoute: AuthenticatedDapurRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedInventoryRoute: AuthenticatedInventoryRoute,
+  AuthenticatedKasirRoute: AuthenticatedKasirRoute,
+  AuthenticatedKeuanganRoute: AuthenticatedKeuanganRoute,
+  AuthenticatedLaporanRoute: AuthenticatedLaporanRoute,
+  AuthenticatedMejaRoute: AuthenticatedMejaRoute,
+  AuthenticatedPegawaiRoute: AuthenticatedPegawaiRoute,
+  AuthenticatedPengaturanRoute: AuthenticatedPengaturanRoute,
+  AuthenticatedPesananRoute: AuthenticatedPesananRoute,
+  AuthenticatedProdukRoute: AuthenticatedProdukRoute,
+  AuthenticatedPromosiRoute: AuthenticatedPromosiRoute,
+  AuthenticatedShiftKasirRoute: AuthenticatedShiftKasirRoute,
+  AuthenticatedWebsiteManagementRoute: AuthenticatedWebsiteManagementRouteWithChildren,
+}
+
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
