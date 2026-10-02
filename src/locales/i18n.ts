@@ -16,7 +16,7 @@ export const languageOptions: { code: LanguageCode; label: string; flag: string 
 
 void i18n.use(initReactI18next).init({
   resources: { en: { translation: en }, id: { translation: id }, zh: { translation: zh }, th: { translation: th } },
-  lng: "id", fallbackLng: "en", supportedLngs: [...supportedLanguages], interpolation: { escapeValue: false },
+  lng: (typeof window !== "undefined" && window.localStorage.getItem("cafe-flow-language")) || "id", fallbackLng: "en", supportedLngs: [...supportedLanguages], interpolation: { escapeValue: false },
   returnNull: false,
 });
 export default i18n;
