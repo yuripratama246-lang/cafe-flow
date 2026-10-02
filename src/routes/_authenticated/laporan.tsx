@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BarChart3, CalendarDays, CreditCard, RefreshCw, ShoppingCart, Wallet, FileText, Store, Clock3, Package, ListOrdered } from "lucide-react";
+import { BarChart3, CalendarDays, CreditCard, RefreshCw, ShoppingCart, Wallet, FileText, Store, Clock3, Package, ListOrdered, Download } from "lucide-react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,22 @@ function ReportsPage(){
  const cards=[{label:"Penjualan kotor",value:money(gross),icon:Wallet,current:gross,previous:prevGross},{label:"Penjualan bersih",value:money(sales),icon:CreditCard,current:sales,previous:prevSales},{label:"Transaksi lunas",value:String(paid.length),icon:ShoppingCart,current:paid.length,previous:previous.length},{label:"Rata-rata transaksi",value:money(avg),icon:BarChart3,current:avg,previous:prevAvg}];
  const setQuick=(next:Filter)=>{setEndDate(toDateInput(new Date()));setFilter(next)};
  const period=range.from===range.to?range.from:range.from+" – "+range.to;
- return <AppShell title="Laporan Penjualan" description="Analitik penjualan, jam ramai, produk, dan pembayaran" actions={<div className="flex flex-wrap items-center gap-2"><div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">{FILTERS.map(f=><button key={f.id} onClick={()=>setQuick(f.id)} className={"rounded-md px-2.5 py-1.5 text-xs "+(filter===f.id?"bg-primary text-primary-foreground":"text-muted-foreground hover:bg-muted")}>{f.label}</button>)}</div><label className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs"><CalendarDays className="size-4 text-muted-foreground"/><input aria-label="Tanggal akhir" type="date" value={endDate} onChange={e=>{setEndDate(e.target.value);setFilter("custom")}} className="w-[125px] bg-transparent outline-none"/></label><Button variant="outline" size="sm" onClick={()=>query.refetch()}><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>}>
+ const exportReport=()=>{
+  const csvCell=(value:unknown)=>{const raw=String(value??"");const safe=/^[=+@\\-\\t\\r]/.test(raw)?"'"+raw:raw;return '"'+safe.replace(/"/g,'""')+'"';};
+  const rows:unknown[][]=[];
+  const filename="laporan-"+tab+"-"+range.from+"-sampai-"+range.to+".csv";
+  if(tab==="summary"){rows.push(["Metrik","Nilai"],["Periode",period],["Penjualan kotor",gross],["Penjualan bersih",sales],["Transaksi lunas",paid.length],["Item terjual",items],["Rata-rata transaksi",avg]);}
+  if(tab==="daily"){rows.push(["Tanggal","Transaksi","Item Terjual","Gross Sales","Net Sales"],...daily.map(([date,x])=>[date,x.orders,x.items,x.gross,x.net]));}
+  if(tab==="product"){rows.push(["No","Nama Produk","Qty Terjual","Penjualan"],...products.map((p,i)=>[i+1,p.name,p.qty,p.revenue]));}
+  if(tab==="hourly"){rows.push(["Jam","Penjualan","Jumlah Transaksi"],...hours.map(h=>[h.hour,h.sales,h.count]));}
+  if(tab==="payment"){rows.push(["Metode Pembayaran","Nominal"],...payment.map(p=>[p.name,p.value]));}
+  if(tab==="channel"){rows.push(["Kanal","Jumlah Transaksi","Net Sales","Rata-rata Order"],...channels.map(([name,x])=>[name,x.orders,x.sales,x.orders?x.sales/x.orders:0]));}
+  if(tab==="orders"){rows.push(["Waktu","Order #","Customer / Meja","Kanal","Status","Pembayaran","Gross","Diskon","Net"],...day.map(o=>[new Date(o.created_at).toLocaleString("id-ID"),o.order_no,o.customer_name||o.restaurant_tables?.name||"Walk-in",o.source==="qr"?"QR Order":"Kasir",o.status,o.is_paid?(PAYMENT_LABEL[o.payment_method??""]??"Lunas"):"Belum lunas",o.subtotal,o.discount,o.total]));}
+  const csv="\\uFEFF"+rows.map(row=>row.map(csvCell).join(",")).join("\\r\\n");
+  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
+  const link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();URL.revokeObjectURL(url);
+ };
+ return <AppShell title="Laporan Penjualan" description="Analitik penjualan, jam ramai, produk, dan pembayaran" actions={<div className="flex flex-wrap items-center gap-2"><div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">{FILTERS.map(f=><button key={f.id} onClick={()=>setQuick(f.id)} className={"rounded-md px-2.5 py-1.5 text-xs "+(filter===f.id?"bg-primary text-primary-foreground":"text-muted-foreground hover:bg-muted")}>{f.label}</button>)}</div><label className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs"><CalendarDays className="size-4 text-muted-foreground"/><input aria-label="Tanggal akhir" type="date" value={endDate} onChange={e=>{setEndDate(e.target.value);setFilter("custom")}} className="w-[125px] bg-transparent outline-none"/></label><Button variant="outline" size="sm" onClick={exportReport} disabled={query.isLoading||query.isError}><Download className="mr-2 size-4"/>Export CSV</Button><Button variant="outline" size="sm" onClick={()=>query.refetch()}><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>}>
  <div className="min-h-full space-y-4 bg-background text-foreground">
   <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{cards.map(c=><Card key={c.label} className="border bg-card text-card-foreground shadow-sm"><CardContent className="flex items-start justify-between p-5"><div><p className="text-xs text-muted-foreground">{c.label}</p>{query.isLoading?<div className="mt-2 h-7 w-28 animate-pulse rounded bg-muted"/>:<p className="num mt-1 text-2xl font-bold text-foreground">{c.value}</p>}<Trend current={c.current} previous={c.previous} label={compare}/></div><div className="grid size-10 place-items-center rounded-xl bg-primary/10 text-primary"><c.icon className="size-5"/></div></CardContent></Card>)}</div>
   <div className="rounded-xl border border-border bg-card/80 px-4 py-3 text-xs leading-relaxed text-muted-foreground">Ringkasan menghitung transaksi lunas pada {period}. Pilih tab di bawah untuk melihat laporan terperinci langsung dari data Cafe Flow.</div>
