@@ -35,7 +35,23 @@ export async function fetchProducts(): Promise<Product[]> { const { data, error 
 export async function fetchMenuProducts(): Promise<Product[]> { const { data, error } = await supabase.from("products").select("*").eq("show_on_menu", true).eq("is_active", true).order("name"); if (error) throw error; return (data ?? []) as unknown as Product[]; }
 export async function fetchTables(): Promise<RestaurantTable[]> { const { data, error } = await supabase.from("restaurant_tables").select("*").order("code"); if (error) throw error; return (data ?? []) as RestaurantTable[]; }
 export async function fetchOutletSettings(): Promise<OutletSettings> { const { data, error } = await supabase.rpc("get_public_outlet_settings"); if (error) throw error; const row = Array.isArray(data) ? data[0] : null; return (row ?? { name: "Cafe Flow", tax_rate: 0, service_rate: 0, cash_enabled: true, card_enabled: true, qris_enabled: true }) as OutletSettings; }
-export async function fetchOrders(opts?: { from?: string; to?: string; limit?: number }): Promise<OrderWithItems[]> { let query = supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").order("created_at", { ascending: false }); if (opts?.from) query = query.gte("created_at", opts.from); if (opts?.to) query = query.lte("created_at", opts.to); if (opts?.limit) query = query.limit(opts.limit); const { data, error } = await query; if (error) throw error; return (data ?? []) as unknown as OrderWithItems[]; }
+export async function fetchOrders(opts?: { from?: string; to?: string; limit?: number }): Promise<OrderWithItems[]> {
+ const requested=opts?.limit??1000;
+ const pageSize=1000;
+ const rows: unknown[]=[];
+ for(let offset=0;offset<requested;offset+=pageSize){
+  let query=supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").order("created_at",{ascending:false});
+  if(opts?.from) query=query.gte("created_at",opts.from);
+  if(opts?.to) query=query.lte("created_at",opts.to);
+  const end=Math.min(offset+pageSize,requested)-1;
+  const {data,error}=await query.range(offset,end);
+  if(error) throw error;
+  const page=data??[];
+  rows.push(...page);
+  if(page.length<end-offset+1) break;
+ }
+ return rows as unknown as OrderWithItems[];
+}
 export async function fetchOrder(id: string): Promise<OrderWithItems | null> { const { data, error } = await supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").eq("id", id).maybeSingle(); if (error) throw error; return (data ?? null) as unknown as OrderWithItems | null; }
 
 export type NewOrderInput = { idempotency_key?: string; promotion_id?: string | null; source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_id?: string | null; outlet_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: "cash" | "card" | "qris" | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: "cash" | "card" | "qris"; amount: number; cash_received?: number | null; change_amount?: number | null } };
