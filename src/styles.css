@@ -52,22 +52,45 @@
 }
 
 :root, .light {
-  color-scheme: light; --radius: 0.875rem;
-  --background: 222 229 238; --foreground: 31 43 59;
-  --card: 234 239 246; --card-foreground: 31 43 59;
-  --popover: 234 239 246; --popover-foreground: 31 43 59;
-  --primary: 59 130 246; --primary-foreground: 255 255 255;
-  --secondary: 211 220 231; --secondary-foreground: 37 51 69;
-  --muted: 215 223 233; --muted-foreground: 69 85 105;
-  --accent: 207 224 244; --accent-foreground: 30 67 112;
-  --destructive: 220 65 65; --destructive-foreground: 255 255 255;
-  --success: 22 163 104; --success-foreground: 255 255 255;
-  --warning: 217 119 6; --warning-foreground: 255 255 255;
-  --border: 190 202 217; --input: 190 202 217; --ring: 59 130 246;
-  --chart-1: 59 130 246; --chart-2: 20 184 166; --chart-3: 245 158 11; --chart-4: 139 92 246; --chart-5: 236 102 130;
-  --sidebar: 231 237 245; --sidebar-foreground: 35 49 67; --sidebar-primary: 59 130 246;
-  --sidebar-primary-foreground: 255 255 255; --sidebar-accent: 235 243 253; --sidebar-accent-foreground: 31 70 125;
-  --sidebar-border: 201 211 224; --sidebar-ring: 59 130 246;
+  color-scheme: light;
+  --radius: 0.75rem;
+  /* Artisan Oatmilk Cream — warm cafe light mode */
+  --background: 249 246 240;
+  --foreground: 44 37 32;
+  --card: 255 255 255;
+  --card-foreground: 44 37 32;
+  --popover: 255 255 255;
+  --popover-foreground: 44 37 32;
+  --primary: 160 140 125;
+  --primary-foreground: 255 255 255;
+  --secondary: 243 240 234;
+  --secondary-foreground: 44 37 32;
+  --muted: 243 240 234;
+  --muted-foreground: 120 111 102;
+  --accent: 243 240 234;
+  --accent-foreground: 44 37 32;
+  --destructive: 190 65 58;
+  --destructive-foreground: 255 255 255;
+  --success: 42 126 91;
+  --success-foreground: 255 255 255;
+  --warning: 176 112 38;
+  --warning-foreground: 255 255 255;
+  --border: 235 230 220;
+  --input: 235 230 220;
+  --ring: 160 140 125;
+  --chart-1: 160 140 125;
+  --chart-2: 119 151 132;
+  --chart-3: 190 145 93;
+  --chart-4: 151 132 171;
+  --chart-5: 190 119 126;
+  --sidebar: 255 255 255;
+  --sidebar-foreground: 44 37 32;
+  --sidebar-primary: 160 140 125;
+  --sidebar-primary-foreground: 255 255 255;
+  --sidebar-accent: 243 240 234;
+  --sidebar-accent-foreground: 44 37 32;
+  --sidebar-border: 235 230 220;
+  --sidebar-ring: 160 140 125;
 }
 .dark {
   color-scheme: dark; --radius: 0.875rem;
