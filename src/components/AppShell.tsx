@@ -50,7 +50,11 @@ export function AppShell({ title, description, actions, children }: { title: str
       if (!originals.has(node)) originals.set(node, reverse.get(current.trim()) ?? current);
       const original = originals.get(node) ?? current;
       const trimmed = original.trim();
-      const translated = i18n.language === "zh" ? globalChineseText[trimmed] : undefined;
+      let translated = i18n.language === "zh" ? globalChineseText[trimmed] : undefined;
+      if (i18n.language === "zh" && translated === undefined && trimmed.length < 180) {
+        translated = [...Object.entries(globalChineseText)].sort((a, b) => b[0].length - a[0].length).reduce((value, [source, target]) => value.includes(source) ? value.split(source).join(target) : value, trimmed);
+        if (translated === trimmed) translated = undefined;
+      }
       const next = translated === undefined ? original : original.replace(trimmed, translated);
       if (current !== next) { applying = true; node.nodeValue = next; applying = false; }
       rendered.set(node, next);
