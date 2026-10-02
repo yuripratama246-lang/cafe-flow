@@ -1,3 +1,3 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { WebsiteManagementPage } from "@/components/website/WebsiteManagement";
-export const Route = createFileRoute("/_authenticated/website-management/careers")({ component: () => <WebsiteManagementPage kind="careers" /> });
+export const Route = createFileRoute("/_authenticated/website-management/careers" as any)({ component: () => <WebsiteManagementPage kind="careers" /> });
