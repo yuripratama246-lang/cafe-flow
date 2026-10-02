@@ -106,7 +106,7 @@ jobs:
           test -f "$entrypoint" || { echo "FAIL: Nitro entrypoint missing: $entrypoint"; exit 1; }
           echo "NITRO_ENTRYPOINT_FOUND: $entrypoint"
           # Run the generated Cloudflare-compatible Nitro worker through Wrangler's local runtime.
-          npx --yes wrangler dev "$entrypoint" --local --ip 127.0.0.1 --port 4179 --log-level error > "$RUNNER_TEMP/cafe-flow-wrangler.log" 2>&1 &
+          npx --yes wrangler dev --config "$GITHUB_WORKSPACE/.output/server/wrangler.json" --local --ip 127.0.0.1 --port 4179 --log-level error > "$RUNNER_TEMP/cafe-flow-wrangler.log" 2>&1 &
           server_pid=$!
           trap 'kill "$server_pid" 2>/dev/null || true' EXIT
           ready=0
@@ -181,5 +181,6 @@ jobs:
         with:
           name: cafe-flow-phase-3-output-${{ github.run_id }}
           path: ${{ github.workspace }}/.output/**
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 14
