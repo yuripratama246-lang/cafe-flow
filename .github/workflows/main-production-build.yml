@@ -1,0 +1,50 @@
+name: Main Production Build Validation
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/main-production-build.yml'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'npm-shrinkwrap.json'
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  production-build:
+    name: Production build on main
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Print HEAD and verify Phase 3 merge ancestry
+        shell: bash
+        run: |
+          set -euo pipefail
+          HEAD_SHA="$(git rev-parse HEAD)"
+          TARGET_SHA="d9dc922e5f76efdbdf12828d5e3dbc9ffbf55ccb"
+          echo "HEAD_SHA=$HEAD_SHA"
+          echo "TARGET_SHA=$TARGET_SHA"
+          git merge-base --is-ancestor "$TARGET_SHA" "$HEAD_SHA"
+          echo "ANCESTOR_CHECK=PASS"
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Production build
+        run: npm run build
