@@ -53,21 +53,21 @@
 
 :root, .light {
   color-scheme: light; --radius: 0.875rem;
-  --background: 245 248 252; --foreground: 29 41 57;
-  --card: 255 255 255; --card-foreground: 29 41 57;
-  --popover: 255 255 255; --popover-foreground: 29 41 57;
+  --background: 238 242 247; --foreground: 35 47 63;
+  --card: 247 249 251; --card-foreground: 35 47 63;
+  --popover: 247 249 251; --popover-foreground: 35 47 63;
   --primary: 59 130 246; --primary-foreground: 255 255 255;
-  --secondary: 232 239 248; --secondary-foreground: 37 54 77;
-  --muted: 237 242 248; --muted-foreground: 101 116 139;
-  --accent: 231 240 252; --accent-foreground: 29 65 117;
+  --secondary: 226 232 240; --secondary-foreground: 43 56 73;
+  --muted: 230 235 241; --muted-foreground: 83 99 119;
+  --accent: 224 234 246; --accent-foreground: 35 70 115;
   --destructive: 220 65 65; --destructive-foreground: 255 255 255;
   --success: 22 163 104; --success-foreground: 255 255 255;
   --warning: 217 119 6; --warning-foreground: 255 255 255;
-  --border: 220 229 239; --input: 215 225 237; --ring: 59 130 246;
+  --border: 207 216 227; --input: 205 215 226; --ring: 59 130 246;
   --chart-1: 59 130 246; --chart-2: 20 184 166; --chart-3: 245 158 11; --chart-4: 139 92 246; --chart-5: 236 102 130;
-  --sidebar: 255 255 255; --sidebar-foreground: 36 51 72; --sidebar-primary: 59 130 246;
+  --sidebar: 246 248 250; --sidebar-foreground: 39 52 70; --sidebar-primary: 59 130 246;
   --sidebar-primary-foreground: 255 255 255; --sidebar-accent: 235 243 253; --sidebar-accent-foreground: 31 70 125;
-  --sidebar-border: 226 233 242; --sidebar-ring: 59 130 246;
+  --sidebar-border: 218 225 234; --sidebar-ring: 59 130 246;
 }
 .dark {
   color-scheme: dark; --radius: 0.875rem;
@@ -215,3 +215,38 @@ body::before { content:""; position:fixed; inset:-18%; z-index:-1; pointer-event
 .dark body::before { background:radial-gradient(ellipse at 18% 24%,rgb(60 124 202 / 13%),transparent 28%),radial-gradient(ellipse at 78% 68%,rgb(63 155 135 / 12%),transparent 30%),radial-gradient(ellipse at 58% 8%,rgb(112 93 184 / 8%),transparent 24%); opacity:.75; }
 @keyframes cafe-flow-ambient { 0%{transform:translate3d(-1.5%,-1%,0) scale(1)} 50%{transform:translate3d(1.5%,1%,0) scale(1.035)} 100%{transform:translate3d(-.5%,1.5%,0) scale(1.015)} }
 @media(prefers-reduced-motion:reduce){body::before{animation:none}*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important}}
+
+
+/* Light mode: soften legacy hard-coded dark panels (notably chat) and improve legibility. */
+html.light [class~="bg-black"],
+html.light [class~="bg-gray-900"],
+html.light [class~="bg-slate-900"],
+html.light [class~="bg-zinc-900"],
+html.light [class~="bg-neutral-900"],
+html.light [class~="bg-gray-950"],
+html.light [class~="bg-slate-950"],
+html.light [class~="bg-zinc-950"],
+html.light [class~="bg-neutral-950"],
+html.light [class*="bg-[#"] {
+  background-color: rgb(var(--card)) !important;
+  color: rgb(var(--foreground));
+  border-color: rgb(var(--border));
+}
+html.light [class~="bg-black"] [class~="text-white"],
+html.light [class~="bg-gray-900"] [class~="text-white"],
+html.light [class~="bg-slate-900"] [class~="text-white"],
+html.light [class~="bg-zinc-900"] [class~="text-white"],
+html.light [class~="bg-neutral-900"] [class~="text-white"],
+html.light [class~="bg-gray-950"] [class~="text-white"],
+html.light [class~="bg-slate-950"] [class~="text-white"],
+html.light [class~="bg-zinc-950"] [class~="text-white"],
+html.light [class~="bg-neutral-950"] [class~="text-white"],
+html.light [class*="bg-[#"] [class~="text-white"] {
+  color: rgb(var(--foreground)) !important;
+}
+html.light [class~="text-gray-100"],
+html.light [class~="text-gray-200"],
+html.light [class~="text-slate-100"],
+html.light [class~="text-slate-200"] {
+  color: rgb(var(--foreground)) !important;
+}
