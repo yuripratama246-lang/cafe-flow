@@ -54,6 +54,8 @@
 :root, .light {
   color-scheme: light;
   --radius: 0.625rem;
+  --sales-trend-line: #475569;
+  --sales-trend-shadow: drop-shadow(0 4px 7px rgba(15, 23, 42, 0.24));
   /* Soft Studio White — calm, low-glare light mode with crisp typography */
   --background: 243 245 247;
   --foreground: 15 23 42;
@@ -94,6 +96,8 @@
 }
 .dark {
   color-scheme: dark; --radius: 0.875rem;
+  --sales-trend-line: #77b1a2;
+  --sales-trend-shadow: drop-shadow(0 4px 8px rgba(119, 177, 162, 0.48));
   --background: 13 20 31; --foreground: 235 242 250;
   --card: 22 31 45; --card-foreground: 235 242 250;
   --popover: 22 31 45; --popover-foreground: 235 242 250;
@@ -303,4 +307,16 @@ html.light [class~="text-white"] {
 html.light [data-slot="card"] {
   border-color: transparent !important;
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
+}
+
+
+/* Keep the sales curve visibly elevated in both themes. Apply directly to Recharts SVG paths. */
+.sales-trend-chart .recharts-area-curve {
+  filter: var(--sales-trend-shadow) !important;
+}
+.sales-trend-chart .recharts-area-area {
+  filter: drop-shadow(0 2px 4px rgba(15, 23, 42, 0.05));
+}
+.dark .sales-trend-chart .recharts-area-area {
+  filter: drop-shadow(0 2px 5px rgba(119, 177, 162, 0.12));
 }
