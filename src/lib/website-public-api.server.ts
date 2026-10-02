@@ -1,4 +1,9 @@
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// CMS tables are created by the Phase 1 migration but are not yet represented
+// in the generated Supabase Database type in this repository.
+export const websiteSupabase = supabaseAdmin as unknown as SupabaseClient;
 
 const DEFAULT_PUBLIC_ORIGIN = "https://cafeflow.alpana1project.workers.dev";
 
@@ -62,4 +67,3 @@ export function resourceNotFound(resource: string): never {
   throw new PublicApiError(404, "NOT_FOUND", `${resource} not found.`);
 }
 
-export { supabaseAdmin };
