@@ -86,15 +86,15 @@ function PrinterSettings() {
   function saveConfig() {
     try {
       window.localStorage.setItem(PRINTER_CONFIG_KEY, JSON.stringify(config));
-      toast.success("Konfigurasi printer tersimpan di browser ini");
+      toast.success(t("settings.printerSaved"));
     } catch {
-      toast.error("Browser tidak mengizinkan penyimpanan konfigurasi printer");
+      toast.error(t("settings.printerSaveError"));
     }
   }
   function testPrint() {
     const printWindow = window.open("", "_blank", "width=420,height=650");
     if (!printWindow) {
-      toast.error("Popup diblokir. Izinkan popup untuk melakukan test print.");
+      toast.error(t("settings.popupBlocked"));
       return;
     }
     const width = config.paperWidth === "58" ? "58mm" : "80mm";
@@ -105,20 +105,20 @@ function PrinterSettings() {
     printWindow.onload = () => printWindow.print();
   }
   return <Card className="xl:col-span-2">
-    <CardHeader><CardTitle className="flex items-center gap-2"><Printer className="size-5" />Printer & Struk Thermal</CardTitle><p className="text-sm text-muted-foreground">Siapkan profil printer sebelum perangkat dibeli. Pengaturan disimpan di browser/perangkat ini.</p></CardHeader>
+    <CardHeader><CardTitle className="flex items-center gap-2"><Printer className="size-5" />{t("settings.printerTitle")}</CardTitle><p className="text-sm text-muted-foreground">{t("settings.printerReady")}</p></CardHeader>
     <CardContent className="space-y-5">
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="space-y-2"><Label htmlFor="printer-name">Nama printer kasir</Label><Input id="printer-name" placeholder="Contoh: Printer Kasir 1" value={config.printerName} onChange={(e) => update("printerName", e.target.value)} /></div>
-        <div className="space-y-2"><Label htmlFor="printer-connection">Jenis koneksi</Label><select id="printer-connection" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.connection} onChange={(e) => update("connection", e.target.value as PrinterConfig["connection"])}><option value="usb">USB (PC kasir)</option><option value="lan">LAN / Ethernet</option><option value="wifi">Wi-Fi</option><option value="bluetooth">Bluetooth</option></select></div>
+        <div className="space-y-2"><Label htmlFor="printer-name">Nama printer kasir</Label><Input id="printer-name" placeholder={t("settings.printerName")} value={config.printerName} onChange={(e) => update("printerName", e.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="printer-connection">Jenis koneksi</Label><select id="printer-connection" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.connection} onChange={(e) => update("connection", e.target.value as PrinterConfig["connection"])}><option value="usb">{t("settings.usb")}</option><option value="lan">{t("settings.lan")}</option><option value="wifi">{t("settings.wifi")}</option><option value="bluetooth">{t("settings.bluetooth")}</option></select></div>
         <div className="space-y-2"><Label htmlFor="printer-width">Lebar kertas</Label><select id="printer-width" className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={config.paperWidth} onChange={(e) => update("paperWidth", e.target.value as PrinterConfig["paperWidth"])}><option value="58">58 mm</option><option value="80">80 mm</option></select></div>
-        <div className="space-y-2"><Label htmlFor="kitchen-printer">Nama printer dapur (opsional)</Label><Input id="kitchen-printer" placeholder="Contoh: Printer Dapur" value={config.kitchenPrinterName} onChange={(e) => update("kitchenPrinterName", e.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="kitchen-printer">Nama printer dapur (opsional)</Label><Input id="kitchen-printer" placeholder={t("settings.kitchenPrinter")} value={config.kitchenPrinterName} onChange={(e) => update("kitchenPrinterName", e.target.value)} /></div>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
-        <SettingToggle label="Auto-print struk pembayaran" description="Aktifkan sebagai preferensi. Perlu konektor printer untuk cetak otomatis tanpa dialog." checked={config.receiptAutoPrint} onChange={(v) => update("receiptAutoPrint", v)} />
-        <SettingToggle label="Auto-print tiket dapur" description="Preferensi tiket order QR masuk. Perlu konektor printer dan pengaturan routing dapur." checked={config.kitchenAutoPrint} onChange={(v) => update("kitchenAutoPrint", v)} />
+        <SettingToggle label={t("settings.autoReceipt")} description={t("settings.autoReceiptDesc")} checked={config.receiptAutoPrint} onChange={(v) => update("receiptAutoPrint", v)} />
+        <SettingToggle label={t("settings.autoKitchen")} description={t("settings.autoKitchenDesc")} checked={config.kitchenAutoPrint} onChange={(v) => update("kitchenAutoPrint", v)} />
       </div>
-      <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm"><p className="font-medium">Status perangkat: Belum terhubung</p><p className="mt-1 text-muted-foreground">Saat ini konfigurasi dan template test print sudah dapat disiapkan. Pemilihan printer fisik dan cetak otomatis langsung memerlukan printer serta konektor/bridge yang sesuai dengan perangkat kasir.</p></div>
-      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={testPrint}><Printer className="mr-2 size-4" />Test print template</Button><Button onClick={saveConfig} disabled={!loaded}><Save className="mr-2 size-4" />Simpan konfigurasi printer</Button></div>
+      <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm"><p className="font-medium">{t("settings.deviceStatus")}</p><p className="mt-1 text-muted-foreground">{t("settings.deviceStatusDesc")}</p></div>
+      <div className="flex flex-wrap gap-2"><Button variant="outline" onClick={testPrint}><Printer className="mr-2 size-4" />{t("settings.testPrintButton")}</Button><Button onClick={saveConfig} disabled={!loaded}><Save className="mr-2 size-4" />{t("settings.savePrinter")}</Button></div>
     </CardContent>
   </Card>;
 }
