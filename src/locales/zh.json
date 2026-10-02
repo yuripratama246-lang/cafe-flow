@@ -134,6 +134,23 @@
     "testPrint": "Cafe Flow 测试打印",
     "printerNotNamed": "未命名",
     "testPrintBody": "如果此文字打印清晰，说明测试打印模板正常。",
-    "printerReady": "购买设备前可先配置打印机。设置保存在此浏览器中。"
+    "printerReady": "购买设备前可先配置打印机。设置保存在此浏览器中。",
+    "description": "管理门店资料、税费、服务费、支付方式和收据。",
+    "printerName": "收银打印机名称",
+    "printerConnection": "连接类型",
+    "paperWidth": "纸张宽度",
+    "kitchenPrinter": "厨房打印机名称（可选）",
+    "autoReceipt": "自动打印付款收据",
+    "autoReceiptDesc": "启用此偏好。若要无弹窗自动打印，需要打印机连接器。",
+    "autoKitchen": "自动打印厨房单",
+    "autoKitchenDesc": "用于接收二维码订单的小票偏好设置，需要打印机连接器和厨房路由配置。",
+    "deviceStatus": "设备状态：尚未连接",
+    "deviceStatusDesc": "可预先配置打印机和测试打印模板。选择实体打印机及自动打印需要兼容的打印机和连接器。",
+    "testPrintButton": "测试打印模板",
+    "savePrinter": "保存打印机配置",
+    "usb": "USB（收银电脑）",
+    "lan": "局域网 / 以太网",
+    "wifi": "Wi-Fi",
+    "bluetooth": "蓝牙"
   }
 }
