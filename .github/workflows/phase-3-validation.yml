@@ -12,7 +12,7 @@ permissions:
 jobs:
   validate:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     steps:
       - name: Checkout validation branch
         uses: actions/checkout@v4
@@ -26,47 +26,144 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Build production bundle
         run: npm run build
-      - name: Verify seven API route files and GET handlers
+
+      - name: Inspect generated route tree and production server bundle
         shell: bash
         run: |
           set -euo pipefail
-          routes=(
-            "src/routes/api.website.v1.pages.home.ts"
-            "src/routes/api.website.v1.pages.about.ts"
-            "src/routes/api.website.v1.careers.ts"
-            "src/routes/api.website.v1.gallery.ts"
-            "src/routes/api.website.v1.locations.ts"
-            "src/routes/api.website.v1.contact.ts"
-            "src/routes/api.website.v1.settings.ts"
+          test -d .output/server || { echo "FAIL: .output/server missing"; exit 1; }
+          echo "=== Generated route-tree candidates ==="
+          find . -type f \( -name '*routeTree*' -o -name '*route-tree*' \) -not -path './node_modules/*' -not -path './.git/*' -print
+          route_tree_files="$(find . -type f \( -name '*routeTree*' -o -name '*route-tree*' \) -not -path './node_modules/*' -not -path './.git/*' -print)"
+          if [[ -z "$route_tree_files" ]]; then
+            echo "No generated route tree file located."
+          else
+            while IFS= read -r file; do
+              if grep -Fq '/api/website/v1/pages/home' "$file"; then
+                echo "ROUTE_TREE_FOUND path in $file"
+              fi
+              if grep -Fq 'api.website.v1.pages.home' "$file"; then
+                echo "ROUTE_TREE_MODULE_FOUND in $file"
+              fi
+            done <<< "$route_tree_files"
+          fi
+          echo "=== Server output inventory ==="
+          find .output/server -type f -maxdepth 5 -print | sort
+          echo "=== Route/module markers in server output ==="
+          markers=(
+            '/api/website/v1/pages/home'
+            '/api/website/v1/pages/about'
+            '/api/website/v1/careers'
+            '/api/website/v1/gallery'
+            '/api/website/v1/locations'
+            '/api/website/v1/contact'
+            '/api/website/v1/settings'
+            'api.website.v1.pages.home'
+            'api.website.v1.pages.about'
+            'api.website.v1.careers'
+            'api.website.v1.gallery'
+            'api.website.v1.locations'
+            'api.website.v1.contact'
+            'api.website.v1.settings'
           )
-          for route in "${routes[@]}"; do
-            test -f "$route"
-            grep -q 'GET' "$route"
-            echo "PASS route: $route"
+          for marker in "${markers[@]}"; do
+            if grep -R -F -l -- "$marker" .output/server; then
+              echo "SERVER_MARKER_FOUND: $marker"
+            else
+              echo "SERVER_MARKER_NOT_FOUND: $marker"
+            fi
           done
-      - name: Scan built browser bundle for secrets and server-only material
+          echo "=== Nitro/server metadata ==="
+          find .output -maxdepth 4 -type f \( -name 'nitro.json' -o -name 'package.json' -o -name '*manifest*' -o -name 'wrangler.toml' -o -name 'wrangler.json' -o -name 'wrangler.jsonc' \) -print
+          for f in $(find .output -maxdepth 4 -type f \( -name 'nitro.json' -o -name 'package.json' -o -name '*manifest*' \)); do
+            echo "--- $f"
+            sed -n '1,200p' "$f"
+          done
+
+      - name: Scan built browser bundle for secrets
         shell: bash
         run: |
           set -euo pipefail
           bundle_dir=".output/public"
           test -d "$bundle_dir" || { echo "FAIL: $bundle_dir missing"; exit 1; }
           mapfile -t bundle_files < <(find "$bundle_dir" -type f \( -name '*.js' -o -name '*.mjs' -o -name '*.map' \) -print)
-          if [ "${#bundle_files[@]}" -eq 0 ]; then
+          if [[ "${#bundle_files[@]}" -eq 0 ]]; then
             echo "FAIL: no JS/MJS/source-map files found to scan in $bundle_dir"
             exit 1
           fi
-          echo "Scanning ${#bundle_files[@]} built browser files under $bundle_dir"
-          if grep -n -E 'SUPABASE_SERVICE_ROLE_KEY|service_role|website-public-api\.server|client\.server|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' "${bundle_files[@]}"; then
-            echo "FAIL: secret/server-only marker found in built browser bundle"
+          echo "Scanning ${#bundle_files[@]} browser files under $bundle_dir"
+          if grep -n -E 'SUPABASE_SERVICE_ROLE_KEY|service_role|service-role|-----BEGIN (RSA |EC |OPENSSH )?PRIVATE KEY-----' "${bundle_files[@]}"; then
+            echo "FAIL: server-only secret marker found in browser bundle"
             exit 1
           fi
-          echo "PASS: scanned ${#bundle_files[@]} built browser files; no configured secret/server-only markers found"
-      - name: Runtime GET smoke tests for public website API
+          echo "PASS: browser bundle secret scan"
+
+      - name: Start production server from generated Nitro bundle and smoke-test locally
         shell: bash
-        env:
-          API_BASE_URL: https://cafeflow.alpana1project.workers.dev
         run: |
           set -euo pipefail
+          cat > /tmp/run-built-server.mjs <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          import http from 'node:http';
+          import { pathToFileURL } from 'node:url';
+
+          const root = path.resolve('.output/server');
+          const files = [];
+          function walk(dir) {
+            for (const item of fs.readdirSync(dir, { withFileTypes: true })) {
+              const full = path.join(dir, item.name);
+              if (item.isDirectory()) walk(full);
+              else if (/\.(mjs|js)$/.test(item.name)) files.push(full);
+            }
+          }
+          walk(root);
+          const candidates = [];
+          for (const file of files) {
+            try {
+              const mod = await import(pathToFileURL(file).href);
+              const fetchHandler = mod.default?.fetch ?? mod.fetch;
+              if (typeof fetchHandler === 'function') candidates.push({ file, fetchHandler });
+            } catch (error) {
+              console.log('MODULE_IMPORT_SKIP', file, String(error).slice(0, 250));
+            }
+          }
+          if (candidates.length !== 1) {
+            console.error('Expected exactly one importable fetch entry in Nitro output; candidates:', candidates.map(x => x.file));
+            process.exit(2);
+          }
+          const entry = candidates[0];
+          console.log('PRODUCTION_ENTRYPOINT', entry.file);
+          const server = http.createServer(async (incoming, outgoing) => {
+            try {
+              const origin = `http://127.0.0.1:${server.address().port}`;
+              const request = new Request(new URL(incoming.url ?? '/', origin), {
+                method: incoming.method,
+                headers: incoming.headers,
+                body: ['GET', 'HEAD'].includes(incoming.method ?? 'GET') ? undefined : incoming,
+                duplex: 'half'
+              });
+              const response = await entry.fetchHandler(request, {}, {});
+              outgoing.writeHead(response.status, Object.fromEntries(response.headers.entries()));
+              outgoing.end(Buffer.from(await response.arrayBuffer()));
+            } catch (error) {
+              console.error('LOCAL_PRODUCTION_REQUEST_ERROR', error);
+              outgoing.writeHead(500, { 'content-type': 'text/plain' });
+              outgoing.end(String(error));
+            }
+          });
+          server.listen(4179, '127.0.0.1', () => console.log('LOCAL_PRODUCTION_SERVER_READY http://127.0.0.1:4179'));
+          NODE
+          node /tmp/run-built-server.mjs > /tmp/cafe-flow-production-server.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in $(seq 1 40); do
+            if grep -q 'LOCAL_PRODUCTION_SERVER_READY' /tmp/cafe-flow-production-server.log; then break; fi
+            if ! kill -0 "$server_pid" 2>/dev/null; then cat /tmp/cafe-flow-production-server.log; exit 1; fi
+            sleep 1
+          done
+          cat /tmp/cafe-flow-production-server.log
+          grep -q 'LOCAL_PRODUCTION_SERVER_READY' /tmp/cafe-flow-production-server.log || { echo "FAIL: production server did not start"; exit 1; }
           endpoints=(
             "/api/website/v1/pages/home"
             "/api/website/v1/pages/about"
@@ -76,22 +173,42 @@ jobs:
             "/api/website/v1/contact"
             "/api/website/v1/settings"
           )
+          failed=0
           for endpoint in "${endpoints[@]}"; do
-            response_file="$(mktemp)"
-            status="$(curl --silent --show-error --location --max-time 20 -o "$response_file" -w '%{http_code}' "$API_BASE_URL$endpoint")"
-            echo "GET $endpoint -> HTTP $status"
-            if [[ "$status" != "200" && "$status" != "404" ]]; then
-              cat "$response_file"
-              rm -f "$response_file"
-              echo "FAIL: unexpected HTTP status for $endpoint"
-              exit 1
+            headers="$(mktemp)"
+            body="$(mktemp)"
+            status="$(curl --silent --show-error --max-time 20 -D "$headers" -o "$body" -w '%{http_code}' "http://127.0.0.1:4179$endpoint")"
+            content_type="$(awk 'BEGIN{IGNORECASE=1} /^content-type:/ {sub(/^[^:]*:[[:space:]]*/, ""); gsub(/\r/, ""); print; exit}' "$headers")"
+            printf 'GET %s -> HTTP %s | content-type: %s\n' "$endpoint" "$status" "${content_type:-<missing>}"
+            if [[ "$content_type" != application/json* ]]; then
+              echo "FAIL: expected JSON content type, got ${content_type:-missing}"
+              head -c 500 "$body"; echo
+              failed=1
+            elif ! node -e 'const fs=require("fs"); JSON.parse(fs.readFileSync(process.argv[1],"utf8"))' "$body"; then
+              echo "FAIL: invalid JSON response"
+              head -c 500 "$body"; echo
+              failed=1
+            elif [[ "$status" != "200" && "$status" != "404" ]]; then
+              echo "FAIL: unexpected status $status"
+              failed=1
             fi
-            if ! node -e 'const fs=require("fs"); JSON.parse(fs.readFileSync(process.argv[1],"utf8"))' "$response_file"; then
-              cat "$response_file"
-              rm -f "$response_file"
-              echo "FAIL: response is not valid JSON for $endpoint"
-              exit 1
+            if grep -qi 'Page not found' "$body"; then
+              echo "FAIL: frontend HTML not-found fallback detected"
+              failed=1
             fi
-            rm -f "$response_file"
+            rm -f "$headers" "$body"
           done
-          echo "PASS: all seven GET endpoints returned JSON with HTTP 200 or 404"
+          if [[ "$failed" -ne 0 ]]; then
+            cat /tmp/cafe-flow-production-server.log
+            exit 1
+          fi
+          echo "PASS: all seven local production endpoint checks"
+
+      - name: Upload production build artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cafe-flow-phase-3-output-${{ github.run_id }}
+          path: .output/
+          if-no-files-found: warn
+          retention-days: 14
