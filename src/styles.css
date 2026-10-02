@@ -53,44 +53,44 @@
 
 :root, .light {
   color-scheme: light;
-  --radius: 0.75rem;
-  /* Artisan Oatmilk Cream — warm cafe light mode */
-  --background: 249 246 240;
-  --foreground: 44 37 32;
+  --radius: 0.5rem;
+  /* Scandinavian Chalk Minimalist — cool, clean, high-contrast light mode */
+  --background: 243 244 246;
+  --foreground: 15 23 42;
   --card: 255 255 255;
-  --card-foreground: 44 37 32;
+  --card-foreground: 15 23 42;
   --popover: 255 255 255;
-  --popover-foreground: 44 37 32;
-  --primary: 160 140 125;
+  --popover-foreground: 15 23 42;
+  --primary: 51 65 85;
   --primary-foreground: 255 255 255;
-  --secondary: 243 240 234;
-  --secondary-foreground: 44 37 32;
-  --muted: 243 240 234;
-  --muted-foreground: 120 111 102;
-  --accent: 243 240 234;
-  --accent-foreground: 44 37 32;
+  --secondary: 241 245 249;
+  --secondary-foreground: 15 23 42;
+  --muted: 241 245 249;
+  --muted-foreground: 100 116 139;
+  --accent: 241 245 249;
+  --accent-foreground: 15 23 42;
   --destructive: 190 65 58;
   --destructive-foreground: 255 255 255;
-  --success: 42 126 91;
+  --success: 22 101 52;
   --success-foreground: 255 255 255;
-  --warning: 176 112 38;
+  --warning: 146 64 14;
   --warning-foreground: 255 255 255;
-  --border: 235 230 220;
-  --input: 235 230 220;
-  --ring: 160 140 125;
-  --chart-1: 160 140 125;
-  --chart-2: 119 151 132;
-  --chart-3: 190 145 93;
-  --chart-4: 151 132 171;
-  --chart-5: 190 119 126;
+  --border: 226 232 240;
+  --input: 226 232 240;
+  --ring: 51 65 85;
+  --chart-1: 51 65 85;
+  --chart-2: 100 116 139;
+  --chart-3: 148 163 184;
+  --chart-4: 71 85 105;
+  --chart-5: 203 213 225;
   --sidebar: 255 255 255;
-  --sidebar-foreground: 44 37 32;
-  --sidebar-primary: 160 140 125;
+  --sidebar-foreground: 15 23 42;
+  --sidebar-primary: 51 65 85;
   --sidebar-primary-foreground: 255 255 255;
-  --sidebar-accent: 243 240 234;
-  --sidebar-accent-foreground: 44 37 32;
-  --sidebar-border: 235 230 220;
-  --sidebar-ring: 160 140 125;
+  --sidebar-accent: 241 245 249;
+  --sidebar-accent-foreground: 15 23 42;
+  --sidebar-border: 226 232 240;
+  --sidebar-ring: 51 65 85;
 }
 .dark {
   color-scheme: dark; --radius: 0.875rem;
@@ -296,4 +296,11 @@ html.light [class~="bg-neutral-100"] {
 }
 html.light [class~="text-white"] {
   color: rgb(var(--foreground)) !important;
+}
+
+
+/* Scandinavian light mode: quiet, borderless cards with restrained elevation. */
+html.light [data-slot="card"] {
+  border-color: transparent !important;
+  box-shadow: 0 1px 3px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
 }
