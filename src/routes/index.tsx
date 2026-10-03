@@ -1,3 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { PublicWebsite } from "@/components/website/PublicWebsite";
-export const Route=createFileRoute("/")({ssr:false,component:()=> <PublicWebsite slug="home"/>});
+import { createFileRoute, redirect } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/")({
+  ssr: false,
+  beforeLoad: () => {
+    throw redirect({ to: "/auth" });
+  },
+  component: () => null,
+});
