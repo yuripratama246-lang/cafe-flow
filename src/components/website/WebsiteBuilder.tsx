@@ -240,7 +240,7 @@ function JsonListEditor({ block, onChange }: { block: Block; onChange: (b: Block
     {block.type !== "faq" && <TextField label="Judul section" value={p.title} onChange={v => onChange({ ...block, props: { ...p, title: v } })} />}
     <div className="space-y-3">
       {items.map((item: any, i: number) => <div key={i} className="rounded-xl border p-3">
-        <div className="mb-3 flex items-center justify-between"><p className="text-sm font-semibold">{block.type === "faq" ? \`Pertanyaan \${i + 1}\` : block.type === "cards" ? \`Kartu \${i + 1}\` : \`Foto \${i + 1}\`}</p><Button size="sm" variant="ghost" className="text-destructive" onClick={() => onChange({ ...block, props: { ...p, items: items.filter((_, n) => n !== i) } })}><Trash2 className="mr-1 size-3" />Hapus</Button></div>
+        <div className="mb-3 flex items-center justify-between"><p className="text-sm font-semibold">{block.type === "faq" ? `Pertanyaan ${i + 1}` : block.type === "cards" ? `Kartu ${i + 1}` : `Foto ${i + 1}`}</p><Button size="sm" variant="ghost" className="text-destructive" onClick={() => onChange({ ...block, props: { ...p, items: items.filter((_, n) => n !== i) } })}><Trash2 className="mr-1 size-3" />Hapus</Button></div>
         {block.type === "faq" ? <>
           <div className="space-y-3"><TextField label="Pertanyaan" value={item.question} onChange={v => update(i, "question", v)} /><TextField label="Jawaban" value={item.answer} onChange={v => update(i, "answer", v)} multi /></div>
         </> : block.type === "cards" ? <>
@@ -258,7 +258,7 @@ function BlockPreview({ block }: { block: Block }) {
   const p = block.props;
   if (block.type === "hero") return <section className="overflow-hidden rounded-xl bg-stone-100 p-7"><div className={p.align === "center" ? "mx-auto max-w-2xl text-center" : p.align === "right" ? "ml-auto max-w-2xl text-right" : "max-w-2xl"}>{p.eyebrow && <p className="text-xs font-bold uppercase tracking-widest text-emerald-700">{p.eyebrow}</p>}<h2 className="mt-2 text-3xl font-bold">{p.title}</h2><p className="mt-3 text-sm text-muted-foreground">{p.description}</p><div className="mt-5 flex flex-wrap gap-2"><span className="rounded-full bg-stone-900 px-4 py-2 text-xs text-white">{p.primaryLabel || "Tombol"}</span>{p.secondaryLabel && <span className="rounded-full border px-4 py-2 text-xs">{p.secondaryLabel}</span>}</div></div></section>;
   if (block.type === "image") return <div>{p.src ? <img src={p.src} alt={p.alt || ""} className="max-h-72 w-full rounded-2xl object-cover" /> : <div className="grid h-40 place-items-center rounded-2xl bg-muted text-sm text-muted-foreground">Gambar belum diisi</div>}{p.caption && <p className="mt-2 text-center text-xs text-muted-foreground">{p.caption}</p>}</div>;
-  if (block.type === "text") return <section className={\`px-5 py-7 \${p.align === "center" ? "text-center" : p.align === "right" ? "text-right" : ""}\`}>{p.eyebrow && <p className="text-xs font-bold uppercase text-primary">{p.eyebrow}</p>}<h2 className="mt-2 text-2xl font-bold">{p.title}</h2><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{p.body}</p></section>;
+  if (block.type === "text") return <section className={`px-5 py-7 ${p.align === "center" ? "text-center" : p.align === "right" ? "text-right" : ""}`}>{p.eyebrow && <p className="text-xs font-bold uppercase text-primary">{p.eyebrow}</p>}<h2 className="mt-2 text-2xl font-bold">{p.title}</h2><p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-muted-foreground">{p.body}</p></section>;
   if (block.type === "whatsapp") return <div className="rounded-2xl border p-5"><MessageCircle className="size-6" /><h3 className="mt-2 font-bold">{p.label}</h3><p className="text-xs text-muted-foreground">WhatsApp: {p.number || "belum diisi"}</p></div>;
   if (block.type === "menu") return <div className="rounded-2xl border p-5"><ShoppingBag className="size-6" /><h3 className="mt-2 text-xl font-bold">{p.title}</h3><p className="text-sm text-muted-foreground">{p.subtitle}</p><div className="mt-4 grid grid-cols-3 gap-2">{[1,2,3].map(i => <div key={i} className="h-16 rounded-xl bg-muted" />)}</div></div>;
   if (block.type === "gallery") return <div className="rounded-2xl border p-5"><h3 className="text-xl font-bold">{p.title}</h3><div className="mt-3 grid grid-cols-3 gap-2">{(p.items ?? []).slice(0,3).map((x:any,i:number) => x.image ? <img key={i} src={x.image} className="aspect-square rounded-xl object-cover" /> : <div key={i} className="aspect-square rounded-xl bg-muted" />)}</div></div>;
@@ -404,7 +404,7 @@ export function WebsiteBuilder() {
   };
 
   const current = draft && selected ? blocksOf(draft).find(x => x.id === selected) : null;
-  const previewUrl = draft ? \`\${PUBLIC_WEBSITE_URL}/\${draft.slug === "home" ? "" : draft.slug}\` : PUBLIC_WEBSITE_URL;
+  const previewUrl = draft ? `${PUBLIC_WEBSITE_URL}/${draft.slug === "home" ? "" : draft.slug}` : PUBLIC_WEBSITE_URL;
 
   return (
     <AppShell title="Management Website · Website Builder" description="Kelola website tanpa coding">
@@ -454,8 +454,8 @@ export function WebsiteBuilder() {
                     <p className="mt-3 text-xs text-muted-foreground">{blocksOf(page).length} bagian{page.is_home ? " · Home" : ""}{page.show_in_navigation ? " · Menu" : ""}</p>
                     <div className="mt-4 flex gap-2">
                       <Button size="sm" className="flex-1" onClick={() => open(page)}><Pencil className="mr-1.5 size-3.5" />Edit</Button>
-                      <Button size="sm" variant="outline" onClick={() => window.open(\`\${PUBLIC_WEBSITE_URL}/\${page.slug === "home" ? "" : page.slug}\`, "_blank")}><Eye className="mr-1.5 size-3.5" />Lihat</Button>
-                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => window.confirm(\`Hapus halaman "\${page.title}"?\`) && remove.mutate(page.id)}><Trash2 className="size-3.5" /></Button>
+                      <Button size="sm" variant="outline" onClick={() => window.open(`${PUBLIC_WEBSITE_URL}/${page.slug === "home" ? "" : page.slug}`, "_blank")}><Eye className="mr-1.5 size-3.5" />Lihat</Button>
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={() => window.confirm(`Hapus halaman "${page.title}"?`) && remove.mutate(page.id)}><Trash2 className="size-3.5" /></Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -518,7 +518,7 @@ export function WebsiteBuilder() {
                   <TextField label="Nama di menu website" value={draft.navigation_label ?? ""} onChange={v => setDraft({ ...draft, navigation_label: v || null })} placeholder="Contoh: Tentang Kami" />
                   <label className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>Tampilkan di menu website</span><Switch checked={!!draft.show_in_navigation} onCheckedChange={v => setDraft({ ...draft, show_in_navigation: v })} /></label>
                   <label className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>Jadikan halaman Home</span><Switch checked={!!draft.is_home} onCheckedChange={v => setDraft({ ...draft, is_home: v })} /></label>
-                  <Button variant="destructive" className="w-full" onClick={() => window.confirm(\`Hapus halaman "\${draft.title}"?\`) && remove.mutate(draft.id)}><Trash2 className="mr-2 size-4" />Hapus Halaman</Button>
+                  <Button variant="destructive" className="w-full" onClick={() => window.confirm(`Hapus halaman "${draft.title}"?`) && remove.mutate(draft.id)}><Trash2 className="mr-2 size-4" />Hapus Halaman</Button>
                 </CardContent>
               </Card>
 
@@ -559,7 +559,7 @@ export function WebsiteBuilder() {
 
       <Dialog open={!!selected && !!draft} onOpenChange={open => { if (!open) setSelected(null); }}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{current ? \`Edit: \${blockMeta.find(x => x.type === current.type)?.label ?? current.type}\` : "Edit Section"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{current ? `Edit: ${blockMeta.find(x => x.type === current.type)?.label ?? current.type}` : "Edit Section"}</DialogTitle></DialogHeader>
           {current && <BlockEditor block={current} onChange={updateBlock} />}
           <div className="flex justify-end gap-2 border-t pt-4">
             <Button variant="outline" onClick={() => setSelected(null)}>Selesai</Button>
