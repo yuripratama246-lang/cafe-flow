@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";\nimport * as React from "react";
+import { useQuery } from "@tanstack/react-query";
+import * as React from "react";
 import { fetchMenuProducts } from "@/lib/pos";
 import { rupiah } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
