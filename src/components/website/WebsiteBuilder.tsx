@@ -217,13 +217,13 @@ function BlockEditor({ block, onChange }: { block: Block; onChange: (b: Block) =
   </SelectField>;
 
   if (block.type === "gallery" || block.type === "cards" || block.type === "faq") {
-    return <JsonListEditor block={block} onChange={onChange} />;
+    return <ListEditor block={block} onChange={onChange} />;
   }
 
   return null;
 }
 
-function JsonListEditor({ block, onChange }: { block: Block; onChange: (b: Block) => void }) {
+function ListEditor({ block, onChange }: { block: Block; onChange: (b: Block) => void }) {
   const p = block.props;
   const items = Array.isArray(p.items) ? p.items : [];
   const update = (index: number, key: string, value: string) =>
@@ -415,7 +415,7 @@ export function WebsiteBuilder() {
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2"><Globe className="size-5 text-primary" /><h2 className="text-xl font-bold">Website Builder</h2></div>
-                  <p className="mt-1 text-sm text-muted-foreground">Semua konten website dikelola dari sini. Klien tidak perlu buka GitHub, coding, atau deploy.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">Kelola isi website dengan cara sederhana: pilih halaman, ubah bagian, lalu simpan. Tidak perlu coding.</p>
                 </div>
                 <Button onClick={() => setCreateOpen(true)}><Plus className="mr-2 size-4" />Tambah Halaman</Button>
               </div>
@@ -426,13 +426,13 @@ export function WebsiteBuilder() {
                 <div className="flex gap-3">
                   <Info className="mt-0.5 size-5 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
-                    <p className="font-semibold">Cara pakai — gampang saja</p>
+                    <p className="font-semibold">Cara pakai untuk pemula</p>
                     <ol className="mt-2 list-decimal space-y-1 pl-5 text-sm text-muted-foreground">
-                      <li>Pilih halaman yang mau diedit.</li>
-                      <li>Klik <b>Tambah Section</b> untuk menambah bagian website.</li>
-                      <li>Klik <b>Edit</b> pada section lalu ubah teks, gambar, tombol, WhatsApp, dan lainnya.</li>
-                      <li>Klik <b>Simpan Perubahan</b>. Perubahan langsung tersimpan ke website — <b>tidak perlu GitHub atau deploy.</b></li>
-                      <li>Gunakan <b>Preview Website</b> untuk melihat hasilnya.</li>
+                      <li><b>Pilih halaman</b> yang ingin diubah.</li>
+                      <li><b>Edit bagian</b> seperti judul, teks, foto, tombol, WhatsApp, dan lainnya.</li>
+                      <li><b>Tambah bagian</b> kalau ingin menambah isi baru.</li>
+                      <li>Klik <b>Simpan Perubahan</b>.</li>
+                      <li>Klik <b>Lihat Website</b> untuk melihat hasilnya.</li>
                     </ol>
                     <button className="mt-2 text-xs text-primary underline" onClick={() => setShowHelp(false)}>Sembunyikan panduan</button>
                   </div>
@@ -453,8 +453,8 @@ export function WebsiteBuilder() {
                     </div>
                     <p className="mt-3 text-xs text-muted-foreground">{blocksOf(page).length} bagian{page.is_home ? " · Home" : ""}{page.show_in_navigation ? " · Menu" : ""}</p>
                     <div className="mt-4 flex gap-2">
-                      <Button size="sm" className="flex-1" onClick={() => open(page)}><Pencil className="mr-1.5 size-3.5" />Edit</Button>
-                      <Button size="sm" variant="outline" onClick={() => window.open(`${PUBLIC_WEBSITE_URL}/${page.slug === "home" ? "" : page.slug}`, "_blank")}><Eye className="mr-1.5 size-3.5" />Lihat</Button>
+                      <Button size="sm" className="flex-1" onClick={() => open(page)}><Pencil className="mr-1.5 size-3.5" />Edit Isi</Button>
+                      <Button size="sm" variant="outline" onClick={() => window.open(`${PUBLIC_WEBSITE_URL}/${page.slug === "home" ? "" : page.slug}`, "_blank")}><Eye className="mr-1.5 size-3.5" />Lihat Website</Button>
                       <Button size="sm" variant="ghost" className="text-destructive" onClick={() => window.confirm(`Hapus halaman "${page.title}"?`) && remove.mutate(page.id)}><Trash2 className="size-3.5" /></Button>
                     </div>
                   </CardContent>
@@ -466,7 +466,7 @@ export function WebsiteBuilder() {
 
             <div className="grid gap-3 md:grid-cols-2">
               <Card>
-                <CardHeader><CardTitle className="text-base">Pengaturan website</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-base">Menu lain</CardTitle></CardHeader>
                 <CardContent className="grid gap-2 text-sm">
                   <Link className="rounded-lg border p-3 hover:bg-muted" to="/website-management/settings">Branding, logo, SEO & sosial media</Link>
                   <Link className="rounded-lg border p-3 hover:bg-muted" to="/website-management/gallery">Gallery</Link>
@@ -476,10 +476,10 @@ export function WebsiteBuilder() {
                 </CardContent>
               </Card>
               <Card>
-                <CardHeader><CardTitle className="text-base">Catatan penting</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="text-base">3. Selesai</CardTitle></CardHeader>
                 <CardContent className="space-y-2 text-sm text-muted-foreground">
-                  <p>✏️ Edit konten → 💾 Simpan → 🌐 langsung terlihat di website.</p>
-                  <p>GitHub hanya dipakai untuk pengembangan sistem builder, bukan untuk pekerjaan harian klien.</p>
+                  <p>✏️ Edit → 💾 Simpan → 🌐 lihat website.</p>
+                  <p>Klien tidak perlu membuka GitHub, menulis kode, atau melakukan deploy.</p>
                 </CardContent>
               </Card>
             </div>
@@ -489,11 +489,11 @@ export function WebsiteBuilder() {
             <div className="rounded-2xl border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
-                  <Button variant="outline" onClick={() => setDraft(null)}>← Semua Halaman</Button>
+                  <Button variant="outline" onClick={() => setDraft(null)}>← Kembali</Button>
                   <div><p className="font-semibold">{draft.title}</p><p className="text-xs text-muted-foreground">/{draft.slug}</p></div>
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Button variant="outline" onClick={() => window.open(previewUrl, "_blank")}><ExternalLink className="mr-2 size-4" />Preview Website</Button>
+                  <Button variant="outline" onClick={() => window.open(previewUrl, "_blank")}><ExternalLink className="mr-2 size-4" />Lihat Website</Button>
                   <Button onClick={() => save.mutate()} disabled={save.isPending}><Save className="mr-2 size-4" />{save.isPending ? "Menyimpan..." : "Simpan Perubahan"}</Button>
                 </div>
               </div>
@@ -502,27 +502,28 @@ export function WebsiteBuilder() {
             <Card className="border-primary/30 bg-primary/5">
               <CardContent className="p-4">
                 <p className="text-sm font-semibold">Sedang mengedit: {draft.title}</p>
-                <p className="mt-1 text-xs text-muted-foreground">Urutan section dari atas ke bawah = urutan tampil di website. Klik <b>Edit</b> untuk mengubah isi. Semua perubahan baru masuk website setelah tombol <b>Simpan Perubahan</b> ditekan.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Cara kerja: <b>1. Edit isi</b> → <b>2. Atur urutan</b> → <b>3. Simpan</b>. Bagian paling atas tampil paling atas di website.</p>
               </CardContent>
             </Card>
 
-            <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
+            <div className="grid gap-4 lg:grid-cols-[300px_minmax(0,1fr)]">
               <Card className="h-fit">
-                <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Settings2 className="size-4" />Pengaturan Halaman</CardTitle></CardHeader>
+                <CardHeader><CardTitle className="flex items-center gap-2 text-sm">Pengaturan Halaman</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <TextField label="Nama halaman" value={draft.title} onChange={v => setDraft({ ...draft, title: v })} />
-                  <TextField label="Alamat halaman (slug)" value={draft.slug} onChange={v => setDraft({ ...draft, slug: v.replace(/^\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase() })} help="Contoh: about, careers, contact" />
+                  <TextField label="Alamat website" value={draft.slug} onChange={v => setDraft({ ...draft, slug: v.replace(/^\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase() })} help="Contoh: about, promo, kontak. Ini adalah bagian alamat setelah nama website." />
                   <SelectField label="Status" value={draft.status} onChange={v => setDraft({ ...draft, status: v as "draft" | "published" })}>
                     <option value="published">Tayang di website</option><option value="draft">Simpan sebagai draft</option>
                   </SelectField>
                   <TextField label="Nama di menu website" value={draft.navigation_label ?? ""} onChange={v => setDraft({ ...draft, navigation_label: v || null })} placeholder="Contoh: Tentang Kami" />
-                  <label className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>Tampilkan di menu website</span><Switch checked={!!draft.show_in_navigation} onCheckedChange={v => setDraft({ ...draft, show_in_navigation: v })} /></label>
-                  <label className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>Jadikan halaman Home</span><Switch checked={!!draft.is_home} onCheckedChange={v => setDraft({ ...draft, is_home: v })} /></label>
+                  <label className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>Masukkan ke menu website</span><Switch checked={!!draft.show_in_navigation} onCheckedChange={v => setDraft({ ...draft, show_in_navigation: v })} /></label>
+                  <label className="flex items-center justify-between rounded-lg border p-3 text-sm"><span>Jadikan halaman utama</span><Switch checked={!!draft.is_home} onCheckedChange={v => setDraft({ ...draft, is_home: v })} /></label>
                   <Button variant="destructive" className="w-full" onClick={() => window.confirm(`Hapus halaman "${draft.title}"?`) && remove.mutate(draft.id)}><Trash2 className="mr-2 size-4" />Hapus Halaman</Button>
                 </CardContent>
               </Card>
 
               <div className="space-y-3">
+                <div className="rounded-xl border bg-card p-4"><p className="text-sm font-semibold">2. Isi Website</p><p className="mt-1 text-xs text-muted-foreground">Klik <b>Edit Isi</b> untuk mengubah bagian. Gunakan tombol panah untuk mengatur urutan.</p></div>
                 {blocksOf(draft).map((block, index) => {
                   const meta = blockMeta.find(x => x.type === block.type);
                   return (
@@ -550,7 +551,7 @@ export function WebsiteBuilder() {
                   );
                 })}
 
-                <Button variant="outline" className="w-full border-dashed py-6" onClick={() => setAdding(true)}><Plus className="mr-2 size-4" />Tambah Section / Bagian Website</Button>
+                <Button variant="outline" className="w-full border-dashed py-6" onClick={() => setAdding(true)}><Plus className="mr-2 size-4" />Tambah Bagian Website</Button>
               </div>
             </div>
           </>
@@ -559,18 +560,18 @@ export function WebsiteBuilder() {
 
       <Dialog open={!!selected && !!draft} onOpenChange={open => { if (!open) setSelected(null); }}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
-          <DialogHeader><DialogTitle>{current ? `Edit: ${blockMeta.find(x => x.type === current.type)?.label ?? current.type}` : "Edit Section"}</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>{current ? `Edit ${blockMeta.find(x => x.type === current.type)?.label ?? current.type}` : "Edit Bagian"}</DialogTitle></DialogHeader>
           {current && <BlockEditor block={current} onChange={updateBlock} />}
-          <div className="flex justify-end gap-2 border-t pt-4">
+          <div className="border-t pt-4"><p className="mb-3 text-xs text-muted-foreground">Perubahan belum tampil di website sampai Anda menekan <b>Simpan Perubahan</b>.</p><div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setSelected(null)}>Selesai</Button>
-          </div>
+          </div></div>
         </DialogContent>
       </Dialog>
 
       <Dialog open={adding} onOpenChange={setAdding}>
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader><DialogTitle>Tambah Bagian Website</DialogTitle></DialogHeader>
-          <p className="text-sm text-muted-foreground">Pilih sesuai kebutuhan. Tidak perlu coding.</p>
+          <DialogHeader><DialogTitle>Pilih Bagian Website</DialogTitle></DialogHeader>
+          <div className="rounded-xl bg-muted/50 p-3 text-sm"><b>Pilih yang ingin ditambahkan.</b><p className="mt-1 text-xs text-muted-foreground">Setelah dipilih, isi teks atau informasi yang diminta. Tidak perlu menulis kode.</p></div>
           <div className="grid gap-4 sm:grid-cols-2">
             {["Konten", "Media", "Tampilan", "Bisnis"].map(group => (
               <div key={group} className="space-y-2">
