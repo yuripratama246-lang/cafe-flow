@@ -302,7 +302,7 @@ export function WebsiteBuilder() {
       if (!draft) throw new Error("Belum ada halaman.");
       const payload = {
         title: draft.title.trim(),
-        slug: draft.slug.replace(/^\\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase(),
+        slug: draft.slug.replace(/^\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase(),
         content: { ...(draft.content ?? {}), sections: blocksOf(draft) },
         status: draft.status,
         seo_meta: draft.seo_meta ?? {},
@@ -332,7 +332,7 @@ export function WebsiteBuilder() {
   const create = useMutation({
     mutationFn: async () => {
       const title = newPage.title.trim() || "Halaman Baru";
-      const slug = (newPage.slug.trim() || title).replace(/^\\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase();
+      const slug = (newPage.slug.trim() || title).replace(/^\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase();
       const count = pages.data?.length ?? 0;
       const { data, error } = await supabase.from("website_pages").insert({
         title, slug, content: { sections: [] }, status: "draft", seo_meta: {}, sort_order: count,
@@ -511,7 +511,7 @@ export function WebsiteBuilder() {
                 <CardHeader><CardTitle className="flex items-center gap-2 text-sm"><Settings2 className="size-4" />Pengaturan Halaman</CardTitle></CardHeader>
                 <CardContent className="space-y-4">
                   <TextField label="Nama halaman" value={draft.title} onChange={v => setDraft({ ...draft, title: v })} />
-                  <TextField label="Alamat halaman (slug)" value={draft.slug} onChange={v => setDraft({ ...draft, slug: v.replace(/^\\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase() })} help="Contoh: about, careers, contact" />
+                  <TextField label="Alamat halaman (slug)" value={draft.slug} onChange={v => setDraft({ ...draft, slug: v.replace(/^\/+/, "").replace(/[^a-zA-Z0-9-_]/g, "-").toLowerCase() })} help="Contoh: about, careers, contact" />
                   <SelectField label="Status" value={draft.status} onChange={v => setDraft({ ...draft, status: v as "draft" | "published" })}>
                     <option value="published">Tayang di website</option><option value="draft">Simpan sebagai draft</option>
                   </SelectField>
