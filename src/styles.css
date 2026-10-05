@@ -317,7 +317,7 @@ html.light [class~="text-white"] {
 
 /* Soft Studio White: clean cards with subtle elevation instead of hard outlines. */
 html.light [data-slot="card"] {
-  border-color: transparent !important;
+  border: 0 !important;
   box-shadow: 0 1px 3px rgb(15 23 42 / 0.06), 0 1px 2px rgb(15 23 42 / 0.04);
 }
 
