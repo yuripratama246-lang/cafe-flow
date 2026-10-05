@@ -64,6 +64,7 @@
   --chart-payment-5: #93c5fd;
   --chart-payment-6: #1e40af;
   --chart-glow: rgba(37, 99, 235, 0.18);
+  --chart-dot: #1d4ed8;
   --sales-trend-shadow: drop-shadow(0 2px 2px rgba(15, 23, 42, 0.65)) drop-shadow(0 7px 7px rgba(15, 23, 42, 0.42));
   /* Soft Studio White — calm, low-glare light mode with crisp typography */
   --background: 243 245 247;
@@ -115,6 +116,7 @@
   --chart-payment-5: #d58e9c;
   --chart-payment-6: #78a9b5;
   --chart-glow: rgba(119, 177, 162, 0.18);
+  --chart-dot: #475569;
   --sales-trend-shadow: drop-shadow(0 4px 8px rgba(119, 177, 162, 0.48));
   --background: 13 20 31; --foreground: 235 242 250;
   --card: 22 31 45; --card-foreground: 235 242 250;
