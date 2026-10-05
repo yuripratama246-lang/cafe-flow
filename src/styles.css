@@ -115,6 +115,18 @@
   --sidebar-border: 43 57 76; --sidebar-ring: 119 177 162;
 }
 
+@layer components {
+  /* Global semantic icon badges: cool, muted pastel tones by business function. */
+  .icon-badge-sales { background-color: rgb(236 253 245); color: rgb(5 150 105); }
+  .icon-badge-logistics { background-color: rgb(238 242 255); color: rgb(79 70 229); }
+  .icon-badge-transactions { background-color: rgb(240 253 250); color: rgb(13 148 136); }
+  .icon-badge-analytics { background-color: rgb(245 243 255); color: rgb(124 58 237); }
+}
+.dark .icon-badge-sales { background-color: rgb(16 185 129 / 0.12); color: rgb(110 231 183); }
+.dark .icon-badge-logistics { background-color: rgb(99 102 241 / 0.14); color: rgb(165 180 252); }
+.dark .icon-badge-transactions { background-color: rgb(20 184 166 / 0.13); color: rgb(94 234 212); }
+.dark .icon-badge-analytics { background-color: rgb(139 92 246 / 0.14); color: rgb(196 181 253); }
+
 @layer base {
   * {
     border-color: rgb(var(--border));
