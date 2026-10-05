@@ -3,10 +3,16 @@ import { createFileRoute } from "@tanstack/react-router";
 export const Route = createFileRoute("/api/website/v1/pages/$slug")({
   server: {
     handlers: {
-      GET: async ({ request, params }) => {
+      GET: async ({ request }) => {
         const api = await import("@/lib/website-public-api.server");
         return api.publicGet(request, async () => {
-          const slug = String(params.slug ?? "").trim().toLowerCase();
+          const url = new URL(request.url);
+          const marker = "/api/website/v1/pages/";
+          const rawSlug = url.pathname.startsWith(marker)
+            ? url.pathname.slice(marker.length).split("/")[0]
+            : "";
+          const slug = decodeURIComponent(rawSlug).trim().toLowerCase();
+
           if (!slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
             api.resourceNotFound("Website page");
           }
