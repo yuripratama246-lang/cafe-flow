@@ -71,4 +71,4 @@ function ApiPage() {
   </AppShell>;
 }
 
-function Stat({ icon: Icon, label, value }: { icon: typeof KeyRound; label: string; value: string }) { return <Card><CardContent className="flex items-center gap-3 p-4"><div className="grid size-10 place-items-center rounded-full bg-primary/10 text-primary"><Icon className="size-5" /></div><div><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-bold">{value}</p></div></CardContent></Card>; }
+function Stat({ icon: Icon, label, value }: { icon: typeof KeyRound; label: string; value: string }) { return <Card><CardContent className="flex items-center gap-3 p-4"><div className="grid size-10 place-items-center rounded-full icon-badge icon-badge-transactions"><Icon className="size-5" /></div><div><p className="text-xs text-muted-foreground">{label}</p><p className="text-xl font-bold">{value}</p></div></CardContent></Card>; }
