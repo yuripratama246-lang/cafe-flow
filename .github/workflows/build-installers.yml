@@ -46,6 +46,8 @@ jobs:
           java-version: "21"
       - run: npm install --no-audit --no-fund
       - run: npm install --no-save @capacitor/core @capacitor/cli @capacitor/android
+      # Capacitor requires the configured webDir to exist, even though the app loads the hosted Cafe Flow URL.
+      - run: mkdir -p www && printf '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>' > www/index.html
       - run: npx cap add android
       - run: npx cap sync android
       - run: cd android && ./gradlew assembleDebug
