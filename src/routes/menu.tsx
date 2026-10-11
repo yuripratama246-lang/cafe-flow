@@ -62,7 +62,7 @@ function PublicMenuPage() {
         <div className="flex flex-col items-center px-6 pb-6 pt-7 text-center">
           <img src="https://vtpewxagzuiqdxtnfoyy.supabase.co/storage/v1/object/public/cafe-assets/branding/qr-1791470955004.png" alt="Kereta Malam Cafe" className="mb-3 size-16 rounded-2xl object-contain" />
           <h2 className="text-base font-bold tracking-tight text-slate-900">Kereta Malam Cafe</h2>
-          <div className={`mt-6 grid size-[76px] place-items-center rounded-full ${cancelled ? "bg-red-50 text-red-600" : completed ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-700"}`}>
+          <div className={`mt-6 grid size-[76px] place-items-center rounded-full ${cancelled ? "bg-red-50 text-red-600" : completed ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-500"}`}>
             {cancelled ? <XCircle className="size-10" /> : completed ? <CheckCircle2 className="size-10" /> : preparing ? <ChefHat className="size-10" /> : ready ? <Coffee className="size-10" /> : <Clock3 className="size-10" />}
           </div>
           <h1 className="mt-4 text-xl font-extrabold tracking-tight text-slate-900">{statusTitle}</h1>
@@ -83,21 +83,21 @@ function PublicMenuPage() {
               const isCurrent = index === currentStep;
               const isDone = index < currentStep;
               return <div key={step.title} className="relative flex gap-3 pb-5 last:pb-0">
-                {index < steps.length - 1 && <div className={`absolute left-[17px] top-9 h-[calc(100%-20px)] w-0.5 ${isDone ? "bg-blue-600" : "bg-slate-200"}`} />}
-                <div className={`relative z-10 grid size-9 shrink-0 place-items-center rounded-full ${isDone ? "bg-blue-700 text-white" : isCurrent ? "bg-blue-50 text-blue-700 ring-2 ring-blue-600 ring-offset-2" : "bg-slate-100 text-slate-400"}`}>
+                {index < steps.length - 1 && <div className={`absolute left-[17px] top-9 h-[calc(100%-20px)] w-0.5 ${isDone ? "bg-blue-200" : "bg-slate-200"}`} />}
+                <div className={`relative z-10 grid size-9 shrink-0 place-items-center rounded-full ${isDone ? "bg-blue-700 text-white" : isCurrent ? "bg-blue-50 text-blue-500 ring-2 ring-blue-600 ring-offset-2" : "bg-slate-100 text-slate-400"}`}>
                   {isDone ? <CheckCircle2 className="size-5" /> : <StepIcon className="size-[18px]" />}
                 </div>
                 <div className="min-w-0 flex-1 pt-0.5">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className={`text-sm font-bold ${isCurrent ? "text-blue-800" : isDone ? "text-slate-800" : "text-slate-400"}`}>{step.title}</p>
-                    {isCurrent && <span className="rounded-full bg-blue-700 px-2 py-0.5 text-[9px] font-extrabold tracking-wider text-white">SEKARANG</span>}
+                    <p className={`text-sm font-bold ${isCurrent ? "text-blue-600" : isDone ? "text-slate-800" : "text-slate-400"}`}>{step.title}</p>
+                    {isCurrent && <span className="rounded-full bg-blue-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-blue-500">SEKARANG</span>}
                   </div>
                   {(isCurrent || isDone) && <p className="mt-1 text-xs leading-5 text-slate-500">{step.description}</p>}
                 </div>
               </div>;
             })}
           </div>}
-          {!completed && !cancelled && <p className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-3 py-2.5 text-xs font-medium text-blue-700"><span className="size-2 animate-pulse rounded-full bg-blue-600" />Status diperbarui otomatis dari kasir</p>}
+          {!completed && !cancelled && <p className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-blue-50/70 px-3 py-2.5 text-xs font-medium text-blue-500"><span className="size-2 animate-pulse rounded-full bg-blue-300" />Status diperbarui otomatis dari kasir</p>}
           {completed && <div className="mt-6 grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-xl" onClick={() => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); setCart([]); setSelectedPromotionId(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Selesai</Button><Button className="rounded-xl" onClick={() => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); setCart([]); setSelectedPromotionId(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Order Again</Button></div>}
           {cancelled && <Button variant="outline" className="mt-6 w-full rounded-xl" onClick={() => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Kembali ke menu</Button>}
         </div>
