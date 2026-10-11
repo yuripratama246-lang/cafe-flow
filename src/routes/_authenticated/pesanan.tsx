@@ -54,7 +54,7 @@ function OrdersPage() {
   }), [stageOrders.history, fromDate, toDate]);
   const approve = useMutation({
     mutationFn: ({ id, cashReceived, method }: { id: string; cashReceived?: number | null; method: string }) => approveQrOrder(id, cashReceived, method),
-    onSuccess: () => { setSelected(null); setCash(""); void qc.invalidateQueries({ queryKey: ["orders"] }); toast.success("Pembayaran dikonfirmasi"); },
+    onSuccess: () => { setSelected(null); setCash(""); setStage("preparing"); void qc.invalidateQueries({ queryKey: ["orders"] }); toast.success("Pembayaran dikonfirmasi — pesanan dipindahkan ke Diproses"); },
     onError: e => toast.error(e instanceof Error ? e.message : "Gagal mengonfirmasi pembayaran"),
   });
   const reject = useMutation({
@@ -64,7 +64,7 @@ function OrdersPage() {
   });
   const move = useMutation({
     mutationFn: ({ id, status }: { id: string; status: OrderStatus }) => updateOrderStatus(id, status),
-    onSuccess: () => { void qc.invalidateQueries({ queryKey: ["orders"] }); toast.success("Status pesanan diperbarui"); },
+    onSuccess: (_data, variables) => { setStage(variables.status === "preparing" ? "preparing" : variables.status === "ready" ? "ready" : variables.status === "completed" || variables.status === "cancelled" ? "history" : "new"); void qc.invalidateQueries({ queryKey: ["orders"] }); toast.success(variables.status === "ready" ? "Pesanan dipindahkan ke Siap" : variables.status === "completed" ? "Pesanan selesai — dipindahkan ke Riwayat" : "Status pesanan diperbarui"); },
     onError: e => toast.error(e instanceof Error ? e.message : "Gagal memperbarui status"),
   });
   function openApproval(o: OrderWithItems) {
