@@ -27,7 +27,7 @@ export type OrderItem = { id: string; order_id: string; product_id: string | nul
 export type Order = { id: string; order_no: number; source: "pos" | "qr"; status: OrderStatus; table_id: string | null; customer_name: string | null; notes: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method: string | null; payment_status: PaymentStatus; created_at: string; updated_at: string };
 export type OrderWithItems = Order & { order_items: OrderItem[]; payments?: { method: string; amount: number; cash_received: number | null; change_amount: number | null }[]; restaurant_tables?: { name: string } | null };
 export type RestaurantTable = { id: string; name: string; code: string };
-export type OutletSettings = { name: string; tax_rate: number; service_rate: number; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
+export type OutletSettings = { name: string; tax_rate: number; service_rate: number; tax_enabled: boolean; service_enabled: boolean; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean };
 export type PaymentMethodConfig = { id?: string; owner_id?: string; code: string; name: string; type: "cash" | "bank_transfer" | "ewallet" | "qris" | "other"; provider: string | null; account_name: string | null; account_number: string | null; instructions: string | null; image_url: string | null; is_active?: boolean; sort_order?: number };
 export const STATUS_LABEL: Record<OrderStatus, string> = { new: "Baru", preparing: "Diproses", ready: "Siap", completed: "Selesai", cancelled: "Dibatalkan" };
 export const PAYMENT_LABEL: Record<string, string> = { cash: "Cash", card: "Kartu (legacy)", qris: "QRIS", unpaid: "Belum dibayar", awaiting_confirmation: "Menunggu konfirmasi", paid: "Sudah dibayar", rejected: "Ditolak" };
@@ -37,7 +37,18 @@ export async function fetchProducts(): Promise<Product[]> { const { data, error 
 export async function fetchMenuProducts(): Promise<Product[]> { const { data, error } = await supabase.from("products").select("*").eq("show_on_menu", true).eq("is_active", true).order("name"); if (error) throw error; return (data ?? []) as unknown as Product[]; }
 export async function fetchTables(): Promise<RestaurantTable[]> { const { data, error } = await supabase.from("restaurant_tables").select("*").order("code"); if (error) throw error; return (data ?? []) as RestaurantTable[]; }
 export async function fetchPublicPaymentMethods(): Promise<PaymentMethodConfig[]> { const { data, error } = await supabase.rpc("get_public_payment_methods"); if (error) throw error; return (data ?? []) as PaymentMethodConfig[]; }
-export async function fetchOutletSettings(): Promise<OutletSettings> { const fallback: OutletSettings = { name: "Cafe Flow", tax_rate: 0, service_rate: 0, cash_enabled: true, card_enabled: true, qris_enabled: true }; const { data: auth } = await supabase.auth.getUser(); if (auth.user) { const { data: own, error: ownError } = await supabase.from("outlet_settings").select("name,tax_rate,service_rate,cash_enabled,card_enabled,qris_enabled").eq("owner_id", auth.user.id).maybeSingle(); if (!ownError && own) return { ...fallback, ...own, tax_rate: Number(own.tax_rate ?? 0), service_rate: Number(own.service_rate ?? 0) } as OutletSettings; } const { data, error } = await supabase.rpc("get_public_outlet_settings"); if (error) throw error; const row = Array.isArray(data) ? data[0] : null; return { ...fallback, ...(row ?? {}), tax_rate: Number(row?.tax_rate ?? 0), service_rate: Number(row?.service_rate ?? 0) } as OutletSettings; }
+export async function fetchOutletSettings(): Promise<OutletSettings> {
+  const fallback: OutletSettings = { name: "Cafe Flow", tax_rate: 11, service_rate: 5, tax_enabled: false, service_enabled: false, cash_enabled: true, card_enabled: true, qris_enabled: true };
+  const { data: auth } = await supabase.auth.getUser();
+  if (auth.user) {
+    const { data: own, error: ownError } = await supabase.from("outlet_settings").select("name,tax_rate,service_rate,tax_enabled,service_enabled,cash_enabled,card_enabled,qris_enabled").eq("owner_id", auth.user.id).maybeSingle();
+    if (!ownError && own) return { ...fallback, ...own, tax_rate: Number(own.tax_rate ?? 0), service_rate: Number(own.service_rate ?? 0), tax_enabled: Boolean(own.tax_enabled), service_enabled: Boolean(own.service_enabled) } as OutletSettings;
+  }
+  const { data, error } = await supabase.rpc("get_public_outlet_settings");
+  if (error) throw error;
+  const row = Array.isArray(data) ? data[0] : null;
+  return { ...fallback, ...(row ?? {}), tax_rate: Number(row?.tax_rate ?? 0), service_rate: Number(row?.service_rate ?? 0), tax_enabled: Boolean(row?.tax_enabled), service_enabled: Boolean(row?.service_enabled) } as OutletSettings;
+}
 export async function fetchOrders(opts?: { from?: string; to?: string; limit?: number }): Promise<OrderWithItems[]> {
  const requested=opts?.limit??1000;
  const pageSize=1000;
