@@ -13,7 +13,8 @@ import { Label } from "@/components/ui/label";
 import { fetchOrders, fetchPublicPaymentMethods, updateOrderStatus, approveQrOrder, rejectQrOrder, PAYMENT_LABEL, STATUS_LABEL, type OrderStatus, type OrderWithItems, type PaymentMethodConfig } from "@/lib/pos";
 import { rupiah, timeLabel } from "@/lib/format";
 import { Receipt } from "@/components/Receipt";
-import { supabase } from "@/integrations/supabase/client";\nimport { printKitchenTicket, getPrinterConfig } from "@/lib/bluetooth-printer";
+import { supabase } from "@/integrations/supabase/client";
+import { printKitchenTicket, getPrinterConfig } from "@/lib/bluetooth-printer";
 
 export const Route = createFileRoute("/_authenticated/pesanan")({ component: OrdersPage });
 type Stage = "new" | "preparing" | "ready" | "history";
@@ -96,7 +97,8 @@ function OrdersPage() {
       String(o.total), o.payment_status, PAYMENT_LABEL[o.payment_method ?? "cash"] ?? o.payment_method ?? "-",
       STATUS_LABEL[o.status] ?? o.status,
     ]));
-    const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r\n");
+    const csv = rows.map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\r
+");
     const url = URL.createObjectURL(new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" }));
     const a = document.createElement("a"); a.href = url; a.download = `riwayat-pesanan-${fromDate || "awal"}-${toDate || "terbaru"}.csv`; a.click(); URL.revokeObjectURL(url);
   }
