@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Banknote, CheckCircle2, ChefHat, Clock3, Download, Printer, QrCode, ShieldCheck, XCircle } from "lucide-react";
+import { Banknote, CheckCircle2, ChefHat, Clock3, Download, Eye, Printer, QrCode, ShieldCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,7 @@ function OrdersPage() {
   const [stage, setStage] = useState<Stage>("new");
   const [selected, setSelected] = useState<OrderWithItems | null>(null);
   const [receiptOrder, setReceiptOrder] = useState<OrderWithItems | null>(null);
+  const [itemsOrder, setItemsOrder] = useState<OrderWithItems | null>(null);
   const [cash, setCash] = useState("");
   const [confirmMethod, setConfirmMethod] = useState("qris");
   const [selectedPaymentCode, setSelectedPaymentCode] = useState("qris");
@@ -129,8 +130,8 @@ function OrdersPage() {
                 <div className="shrink-0 text-right"><p className="text-[10px] text-muted-foreground">{timeLabel(o.created_at)}</p><p className="mt-0.5 text-sm font-bold tabular-nums">{rupiah(o.total)}</p></div>
               </div>
               <div className="space-y-1 px-3 py-2">
-                {o.order_items.slice(0, 4).map(i => <div key={i.id} className="flex min-w-0 items-start justify-between gap-2 text-xs"><span className="min-w-0 truncate"><b className="mr-1 text-muted-foreground">{i.quantity}×</b>{i.product_name}{i.note ? <span className="mt-0.5 block whitespace-normal break-words pl-5 text-[10px] leading-snug text-muted-foreground">Catatan: {i.note}</span> : null}</span><span className="shrink-0 text-muted-foreground">{rupiah(i.line_total)}</span></div>)}
-                {o.order_items.length > 4 && <p className="text-[10px] text-muted-foreground">+{o.order_items.length - 4} item lainnya</p>}
+                {o.order_items.slice(0, 3).map(i => <div key={i.id} className="flex min-w-0 items-start justify-between gap-2 text-xs"><span className="min-w-0"><span className="block truncate"><b className="mr-1 text-muted-foreground">{i.quantity}×</b>{i.product_name}</span>{i.note ? <span className="mt-0.5 block whitespace-normal break-words pl-5 text-[10px] leading-snug text-muted-foreground">Catatan: {i.note}</span> : null}</span><span className="shrink-0 text-muted-foreground">{rupiah(i.line_total)}</span></div>)}
+                {o.order_items.length > 3 && <button type="button" onClick={() => setItemsOrder(o)} className="flex w-full items-center justify-center gap-1 rounded-md border border-dashed px-2 py-1.5 text-[11px] font-medium text-primary hover:bg-primary/5"><Eye className="size-3.5" />Lihat semua {o.order_items.length} item ({o.order_items.length - 3} lainnya)</button>}
                 {o.notes && <p className="whitespace-normal break-words rounded-md bg-muted/60 px-2 py-1 text-[10px] leading-snug text-muted-foreground">Catatan order: {o.notes}</p>}
               </div>
               <div className="flex items-center justify-between gap-2 border-t bg-muted/20 px-3 py-2"><div className="min-w-0"><p className="truncate text-[10px] text-muted-foreground">{PAYMENT_LABEL[o.payment_method ?? "cash"] ?? o.payment_method ?? "Cash"}</p><p className="text-[10px] font-medium">{o.is_paid ? "Pembayaran lunas" : rejected ? "Pembayaran ditolak" : "Menunggu pembayaran"}</p></div>
@@ -146,6 +147,7 @@ function OrdersPage() {
           })}
         </div>}
     </div>
+    <Dialog open={!!itemsOrder} onOpenChange={open => !open && setItemsOrder(null)}><DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg"><DialogHeader><DialogTitle>Detail item pesanan #{itemsOrder?.order_no}</DialogTitle><DialogDescription>{itemsOrder?.customer_name ? `Pesanan dari ${itemsOrder.customer_name} · ` : ""}{itemsOrder?.order_items.length ?? 0} item. Scroll untuk melihat semua item dan catatan customer.</DialogDescription></DialogHeader>{itemsOrder && <div className="max-h-[55dvh] space-y-2 overflow-y-auto pr-1">{itemsOrder.order_items.map((i, index) => <div key={i.id} className="rounded-lg border p-3"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><p className="text-sm font-medium"><span className="mr-1.5 text-muted-foreground">{index + 1}.</span>{i.quantity}× {i.product_name}</p>{i.note && <p className="mt-1 whitespace-normal break-words text-xs text-muted-foreground">Catatan: {i.note}</p>}</div><p className="shrink-0 text-sm font-medium">{rupiah(i.line_total)}</p></div></div>)}</div>}<DialogFooter><Button onClick={() => setItemsOrder(null)}>Tutup</Button></DialogFooter></DialogContent></Dialog>
     <Dialog open={!!selected} onOpenChange={open => { if (!open) { setSelected(null); setCash(""); } }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md"><DialogHeader><DialogTitle className="flex items-center gap-2"><ShieldCheck className="size-5 text-primary" />Konfirmasi pembayaran</DialogTitle><DialogDescription>Periksa total dan pastikan pembayaran sudah diterima.</DialogDescription></DialogHeader>
         {selected && <div className="space-y-3"><div className="rounded-xl border bg-muted/30 p-3"><div className="flex justify-between text-sm"><span className="text-muted-foreground">Order</span><b>#{selected.order_no}</b></div><div className="mt-2 text-sm"><span className="text-muted-foreground">Metode customer: </span><b>{PAYMENT_LABEL[selected.payment_method ?? "cash"] ?? selected.payment_method}</b></div><div className="mt-3 space-y-1.5"><Label htmlFor="confirm-payment-method">Metode pembayaran kasir</Label><select id="confirm-payment-method" value={confirmMethod} onChange={e => { const method = e.target.value; setConfirmMethod(method); const first = paymentMethods.find(m => m.type === method); setSelectedPaymentCode(method === "cash" ? "cash" : first?.code ?? method); }} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="cash">Tunai / Cash</option><option value="ewallet">E-Wallet</option><option value="bank_transfer">Transfer Bank</option><option value="qris">QRIS</option></select></div>
