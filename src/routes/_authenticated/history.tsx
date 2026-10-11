@@ -6,7 +6,6 @@ import { CalendarDays, CheckCircle2, Clock3, History as HistoryIcon, RefreshCw, 
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { fetchOrders, PAYMENT_LABEL, STATUS_LABEL, type OrderWithItems } from "@/lib/pos";
@@ -15,7 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 
 export const Route = createFileRoute("/_authenticated/history")({ component: HistoryPage });
 function HistoryPage() {
@@ -75,7 +73,7 @@ function HistoryPage() {
       <div className="overflow-x-auto rounded-lg border bg-card">
         <table className="w-full min-w-[980px] border-collapse text-left text-xs">
           <thead className="bg-muted/60 text-muted-foreground"><tr>
-            <th className="w-9 px-3 py-3"><Checkbox checked={allVisibleSelected} onCheckedChange={v => setSelectedIds(v ? Array.from(new Set([...selectedIds, ...visibleIds])) : selectedIds.filter(id => !visibleIds.includes(id))} aria-label="Pilih semua transaksi yang terlihat" /></th>
+            <th className="w-9 px-3 py-3"><Checkbox checked={allVisibleSelected} onCheckedChange={v => setSelectedIds(v ? Array.from(new Set([...selectedIds, ...visibleIds])) : selectedIds.filter(id => !visibleIds.includes(id)))} aria-label="Pilih semua transaksi yang terlihat" /></th>
             <th className="px-3 py-3 font-semibold">Waktu</th><th className="px-3 py-3 font-semibold">Order</th><th className="px-3 py-3 font-semibold">Sumber</th><th className="px-3 py-3 text-right font-semibold">Total</th><th className="px-3 py-3 font-semibold">Metode</th><th className="px-3 py-3 text-right font-semibold">Dibayar</th><th className="px-3 py-3 font-semibold">Status</th><th className="px-3 py-3 text-right font-semibold">Aksi</th>
           </tr></thead>
           <tbody className="divide-y">
