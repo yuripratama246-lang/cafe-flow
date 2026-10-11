@@ -70,8 +70,19 @@ function ReportsPage(){
   if(tab==="channel"){rows.push(["Kanal","Jumlah Transaksi","Net Sales","Rata-rata Order"],...channels.map(([name,x])=>[name,x.orders,x.sales,x.orders?x.sales/x.orders:0]));}
   if(tab==="orders"){rows.push(["Waktu","Order #","Customer / Meja","Kanal","Status","Pembayaran","Gross","Diskon","Net"],...day.map(o=>[new Date(o.created_at).toLocaleString("id-ID"),o.order_no,o.customer_name||o.restaurant_tables?.name||"Walk-in",o.source==="qr"?"QR Order":"Kasir",o.status,o.is_paid?(PAYMENT_LABEL[o.payment_method??""]??"Lunas"):"Belum lunas",o.subtotal,o.discount,o.total]));}
   const csv="\uFEFF"+rows.map(row=>row.map(csvCell).join(",")).join("\r\n");
-  const url=URL.createObjectURL(new Blob([csv],{type:"text/csv;charset=utf-8;"}));
-  const link=document.createElement("a");link.href=url;link.download=filename;document.body.appendChild(link);link.click();link.remove();window.setTimeout(() => URL.revokeObjectURL(url), 30000);
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const url=URL.createObjectURL(blob);
+  const link=document.createElement("a");
+  link.href=url;link.download=filename;link.setAttribute("target","_blank");link.setAttribute("rel","noopener");
+  link.style.position="fixed";link.style.left="-9999px";link.style.opacity="0";
+  document.body.appendChild(link);
+  try {
+   link.click();
+   // Android WebView may ignore the download attribute; open the generated CSV as a fallback.
+   window.setTimeout(()=>{ if(document.visibilityState==="visible") { try { window.open(url,"_blank","noopener"); } catch {} } },700);
+  } finally {
+   window.setTimeout(()=>{link.remove();URL.revokeObjectURL(url);},60000);
+  }
  };
  return <AppShell title="Laporan Penjualan" description="Analitik penjualan, jam ramai, produk, dan pembayaran" actions={<div className="flex flex-wrap items-center gap-2"><div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">{FILTERS.map(f=><button key={f.id} onClick={()=>setQuick(f.id)} className={"rounded-md px-2.5 py-1.5 text-xs "+(filter===f.id?"bg-primary text-primary-foreground":"text-muted-foreground hover:bg-muted")}>{f.label}</button>)}</div><label className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs"><CalendarDays className="size-4 text-muted-foreground"/><input aria-label="Tanggal akhir" type="date" value={endDate} onChange={e=>{setEndDate(e.target.value);setFilter("custom")}} className="w-[125px] bg-transparent outline-none"/></label><Button variant="outline" size="sm" onClick={exportReport} disabled={query.isLoading||query.isError}><Download className="mr-2 size-4"/>Export CSV</Button><Button variant="outline" size="sm" onClick={()=>query.refetch()}><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>}>
  <div className="min-h-full space-y-4 bg-background text-foreground">
