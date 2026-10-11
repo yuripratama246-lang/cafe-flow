@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Globe, LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound, Bot, Banknote, ReceiptText, Sun, Moon } from "lucide-react";
+import { Globe, LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound, Bot, Banknote, ReceiptText, Sun, Moon, Printer } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,7 @@ const ICON_TONE: Record<string, string> = {
   "/laporan": "icon-badge-analytics",
   "/pegawai": "icon-badge-transactions",
   "/pengaturan": "icon-badge-transactions",
+  "/printer": "icon-badge-transactions",
   "/ai": "icon-badge-analytics",
 };
 
@@ -35,7 +36,7 @@ const GROUPS: { label: string; items: { to: string; label: string; icon: typeof 
   { label: "transactions", items: [{ to: "/kasir", label: "Kasir", icon: ScanLine, permission: "orders" }, { to: "/pesanan", label: "Pesanan", icon: ClipboardList, permission: "orders" }, { to: "/history", label: "History", icon: History, permission: "orders" }, { to: "/shift-kasir", label: "Opening & Closing", icon: Banknote, permission: "orders" }, { to: "/audit-shift", label: "Audit Shift", icon: ShieldCheck, permission: "orders" }, { to: "/activity-log", label: "Log Aktivitas", icon: History, permission: "settings" }] },
   { label: "productOutlet", items: [{ to: "/produk", label: "Produk & Stok", icon: Package, permission: "products" }, { to: "/meja", label: "Meja & QR Menu", icon: QrCode, permission: "tables" }, { to: "/inventory", label: "Inventory", icon: Boxes, permission: "inventory" }] },
   { label: "marketing", items: [{ to: "/promosi", label: "Promosi & Diskon", icon: BadgePercent, permission: "promotions" }] },
-  { label: "management", items: [{ to: "/keuangan", label: "Pengeluaran & Laba Rugi", icon: ReceiptText, permission: "reports" }, { to: "/laporan", label: "Laporan Penjualan", icon: BarChart3, permission: "reports" }, { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog, permission: "settings" }, { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings, permission: "settings" },] },
+  { label: "management", items: [{ to: "/keuangan", label: "Pengeluaran & Laba Rugi", icon: ReceiptText, permission: "reports" }, { to: "/laporan", label: "Laporan Penjualan", icon: BarChart3, permission: "reports" }, { to: "/pegawai", label: "Pegawai & Shift", icon: UserCog, permission: "settings" }, { to: "/pengaturan", label: "Pengaturan Outlet", icon: Settings, permission: "settings" }, { to: "/printer", label: "Printer", icon: Printer, permission: "settings" },] },
 ];
 
 function NavList({ onNavigate, profile, collapsed = false, incomingCount = 0 }: { onNavigate?: () => void; profile?: ReturnType<typeof useStaffProfile>["data"]; collapsed?: boolean; incomingCount?: number }) {
