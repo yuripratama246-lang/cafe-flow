@@ -1,6 +1,6 @@
 {
   "appId": "com.cafeflow.pos",
-  "appName": "Kereta Malam Cafe",
+  "appName": "Cafe Flow",
   "webDir": "www",
   "server": {
     "url": "https://pos.yuripratama246.workers.dev",
