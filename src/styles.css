@@ -54,18 +54,18 @@
 :root, .light {
   color-scheme: light;
   --radius: 0.625rem;
-  --sales-trend-line: #39FF14;
-  --chart-accent: #39FF14;
-  --chart-accent-strong: #16A34A;
+  --sales-trend-line: #1D4ED8;
+  --chart-accent: #1D4ED8;
+  --chart-accent-strong: #0B1F5E;
   --chart-payment-1: #F59E0B;
   --chart-payment-2: #A855F7;
   --chart-payment-3: #F97316;
   --chart-payment-4: #14B8A6;
   --chart-payment-5: #EC4899;
   --chart-payment-6: #84CC16;
-  --chart-glow: rgba(57, 255, 20, 0.24);
-  --chart-dot: #39FF14;
-  --sales-trend-shadow: drop-shadow(0 3px 5px rgba(57, 255, 20, 0.28)) drop-shadow(0 8px 12px rgba(22, 163, 74, 0.18));
+  --chart-glow: rgba(29, 78, 216, 0.38);
+  --chart-dot: #1D4ED8;
+  --sales-trend-shadow: drop-shadow(0 4px 8px rgba(29, 78, 216, 0.48)) drop-shadow(0 10px 20px rgba(11, 31, 94, 0.30)) drop-shadow(0 0 28px rgba(37, 99, 235, 0.18));
   /* Soft Studio White — calm, low-glare light mode with crisp typography */
   --background: 243 245 247;
   --foreground: 15 23 42;
@@ -355,11 +355,11 @@ html.light [data-slot="card"] {
   filter: drop-shadow(0 2px 5px rgba(119, 177, 162, 0.12));
 }
 
-/* Subtle neon-green depth for chart strokes and bars across the app. */
+/* Deep blue depth for chart strokes and bars across the app. */
 .sales-trend-chart .recharts-area-curve,
 .recharts-line-curve {
-  filter: drop-shadow(0 3px 5px rgba(57, 255, 20, 0.32)) drop-shadow(0 7px 12px rgba(22, 163, 74, 0.18));
+  filter: drop-shadow(0 3px 5px rgba(29, 78, 216, 0.48)) drop-shadow(0 9px 18px rgba(11, 31, 94, 0.30));
 }
 .recharts-bar-rectangle path {
-  filter: drop-shadow(0 3px 5px rgba(57, 255, 20, 0.28));
+  filter: drop-shadow(0 3px 5px rgba(29, 78, 216, 0.42));
 }
