@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Banknote, CheckCircle2, ChefHat, Clock3, Download, Eye, Printer, QrCode, ShieldCheck, XCircle } from "lucide-react";
+import { Banknote, CheckCircle2, ChefHat, Clock3, Download, Eye, QrCode, ShieldCheck, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +12,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { fetchOrders, fetchPublicPaymentMethods, updateOrderStatus, approveQrOrder, rejectQrOrder, PAYMENT_LABEL, STATUS_LABEL, type OrderStatus, type OrderWithItems, type PaymentMethodConfig } from "@/lib/pos";
 import { rupiah, timeLabel } from "@/lib/format";
-import { Receipt } from "@/components/Receipt";
 import { supabase } from "@/integrations/supabase/client";
 import { printKitchenTicket, getPrinterConfig } from "@/lib/bluetooth-printer";
 
@@ -39,7 +38,6 @@ function OrdersPage() {
   }, [qc]);
   const [stage, setStage] = useState<Stage>("new");
   const [selected, setSelected] = useState<OrderWithItems | null>(null);
-  const [receiptOrder, setReceiptOrder] = useState<OrderWithItems | null>(null);
   const [itemsOrder, setItemsOrder] = useState<OrderWithItems | null>(null);
   const [cash, setCash] = useState("");
   const [confirmMethod, setConfirmMethod] = useState("qris");
@@ -137,7 +135,7 @@ function OrdersPage() {
               </div>
               <div className="flex items-center justify-between gap-2 border-t bg-muted/20 px-3 py-2"><div className="min-w-0"><p className="truncate text-[10px] text-muted-foreground">{PAYMENT_LABEL[o.payment_method ?? "cash"] ?? o.payment_method ?? "Cash"}</p><p className="text-[10px] font-medium">{o.is_paid ? "Pembayaran lunas" : rejected ? "Pembayaran ditolak" : "Menunggu pembayaran"}</p></div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Button variant="ghost" size="icon" className="size-8" aria-label="Cetak struk" onClick={() => setReceiptOrder(o)}><Printer className="size-3.5" /></Button>
+                  
                   {unpaidQr && <><Button variant="outline" size="sm" className="h-8 px-2 text-[11px]" disabled={reject.isPending || approve.isPending} onClick={() => reject.mutate(o.id)}><XCircle className="mr-1 size-3" />Tolak</Button><Button size="sm" className="h-8 px-2 text-[11px]" onClick={() => openApproval(o)}><ShieldCheck className="mr-1 size-3" />Tandai bayar</Button></>}
                   {!isHistory && !unpaidQr && stage === "new" && <Button size="sm" className="h-8 px-2 text-[11px]" disabled={!o.is_paid || move.isPending} onClick={() => move.mutate({ id: o.id, status: "preparing" })}>Mulai proses</Button>}
                   {stage === "preparing" && <Button size="sm" className="h-8 px-2 text-[11px]" onClick={() => move.mutate({ id: o.id, status: "ready" })}>Tandai siap</Button>}
@@ -157,6 +155,5 @@ function OrdersPage() {
         <DialogFooter className="gap-2 sm:gap-0"><Button variant="outline" onClick={() => { setSelected(null); setCash(""); }}>Batal</Button><Button disabled={approve.isPending} onClick={submitApproval}>{approve.isPending ? "Memproses…" : "Konfirmasi bayar"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
-    <Dialog open={!!receiptOrder} onOpenChange={open => !open && setReceiptOrder(null)}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm"><DialogHeader><DialogTitle>Struk pesanan {receiptOrder ? `#${receiptOrder.order_no}` : ""}</DialogTitle></DialogHeader>{receiptOrder ? <Receipt order={receiptOrder} onClose={() => setReceiptOrder(null)} /> : null}</DialogContent></Dialog>
   </AppShell>;
 }
