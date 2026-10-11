@@ -1,15 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useQuery } from "@tanstack/react-query";
-import { CalendarDays, CheckCircle2, Clock3, History as HistoryIcon, RefreshCw, Search, XCircle, Trash2, Eye, AlertTriangle } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { RefreshCw, Search, Trash2, Eye, AlertTriangle } from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { fetchOrders, PAYMENT_LABEL, STATUS_LABEL, type OrderWithItems } from "@/lib/pos";
-import { endOfDayISO, rupiah, startOfDayISO, timeLabel, toDateInput } from "@/lib/format";
+import { rupiah, timeLabel } from "@/lib/format";
 import { supabase } from "@/integrations/supabase/client";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
