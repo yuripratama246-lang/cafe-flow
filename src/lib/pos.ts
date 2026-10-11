@@ -2,7 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Category = { id: string; name: string; sort_order: number };
 export type Product = { id: string; name: string; description: string | null; price: number; image_url: string | null; category_id: string | null; stock: number; low_stock_threshold: number; menu_badge?: string | null; show_on_menu: boolean; is_active: boolean; created_at: string };
-export type Promotion = { id: string; name: string; type: "percentage" | "fixed"; value: number; min_purchase: number; scope: "cart" | "product"; product_id: string | null; starts_at: string | null; ends_at: string | null };
+export type Promotion = { id: string; name: string; type: "percentage" | "fixed"; value: number; min_purchase: number; min_quantity?: number; scope: "cart" | "product"; product_id: string | null; starts_at: string | null; ends_at: string | null };
 export type VoucherItem = { product_id: string; unit_price: number; quantity: number };
 export function promotionBase(promotion: Promotion, items: VoucherItem[]) {
   return promotion.scope === "product"
@@ -10,8 +10,9 @@ export function promotionBase(promotion: Promotion, items: VoucherItem[]) {
     : items.reduce((sum, item) => sum + Number(item.unit_price) * item.quantity, 0);
 }
 export function promotionDiscount(promotion: Promotion, items: VoucherItem[]): number | null {
-  if (promotion.scope === "product" && !items.some((item) => item.product_id === promotion.product_id && item.quantity > 0)) return null;
+  if (promotion.scope === "product" && !items.some((item) => item.product_id === promotion.product_id && item.quantity >= Number(promotion.min_quantity ?? 1))) return null;
   const base = promotionBase(promotion, items);
+  if (promotion.scope === "product" && items.filter((item) => item.product_id === promotion.product_id).reduce((sum, item) => sum + item.quantity, 0) < Number(promotion.min_quantity ?? 1)) return null;
   if (base < Number(promotion.min_purchase || 0)) return null;
   return Math.min(base, promotion.type === "percentage" ? base * Number(promotion.value) / 100 : Number(promotion.value));
 }
