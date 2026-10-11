@@ -2,7 +2,7 @@
 @source "../src";
 @import "tw-animate-css";
 
-/* Cafe Flow — The Black Gold Roastery. Semantic tokens use raw RGB triplets for Tailwind/shadcn. */
+/* Kereta Malam Cafe — Monochrome Classic. Semantic tokens use raw RGB triplets for Tailwind/shadcn. */
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
