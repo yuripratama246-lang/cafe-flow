@@ -14,7 +14,7 @@ import { rupiah } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/audit-shift")({ component: AuditShiftPage });
 
 type Shift = {
-  id: string; owner_id: string; staff_user_id: string; opened_at: string; closed_at: string | null;
+  id: string; owner_id: string; staff_user_id: string; closed_by_user_id: string | null; opened_at: string; closed_at: string | null;
   opening_cash: number | string; closing_cash: number | string | null; status: string; note: string | null;
 };
 type Profile = { user_id: string; full_name: string | null; role: string | null };
@@ -140,7 +140,7 @@ function AuditShiftPage() {
                   <Detail label="Selisih kas closing" value={expected == null || selected.closing_cash == null ? "—" : rupiah(Number(selected.closing_cash) - expected)} />
                   <Detail label="Closing shift sebelumnya" value={prev?.closing_cash == null ? "Belum ada data closing sebelumnya" : rupiah(prev.closing_cash)} />
                   <Detail label="Opening ID / akun" value={`${nameFor(selected.staff_user_id)} · ${selected.staff_user_id}`} />
-                  <Detail label="Closing ID / akun kasir" value={selected.closed_at ? `${nameFor(selected.staff_user_id)} · ${selected.staff_user_id}` : "Belum ditutup"} />
+                  <Detail label="Closing ID / akun kasir" value={selected.closed_at ? `${nameFor(selected.closed_by_user_id)} · ${selected.closed_by_user_id}` : "Belum ditutup"} />
                   {openingDiff !== null && <Detail label="Selisih opening vs closing sebelumnya" value={rupiah(openingDiff)} />}
                 </div>
                 <div className="rounded-lg bg-muted/40 p-3"><p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Catatan shift</p><p className="mt-1 whitespace-pre-wrap break-words text-sm">{selected.note || "Tidak ada catatan."}</p></div>
