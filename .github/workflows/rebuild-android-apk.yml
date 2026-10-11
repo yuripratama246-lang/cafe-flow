@@ -43,6 +43,7 @@ jobs:
         run: |
           node -e "for (const p of ['@capacitor/core','@capacitor/cli','@capacitor/android','@kduma-autoid/capacitor-bluetooth-printer']) { try { console.log(p + ': ' + require('./node_modules/' + p + '/package.json').version) } catch { console.error('Missing dependency: ' + p); process.exitCode = 1 } }"
           grep -q 'pos.yuripratama246.workers.dev' capacitor.config.ts
+          grep -q 'android.permission.BLUETOOTH_CONNECT' node_modules/@kduma-autoid/capacitor-bluetooth-printer/android/src/main/AndroidManifest.xml
 
       - name: Prepare Capacitor web directory
         run: mkdir -p www && printf '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>' > www/index.html
@@ -57,7 +58,6 @@ jobs:
         run: |
           test -f android/app/src/main/assets/capacitor.plugins.json
           grep -qi 'bluetooth-printer' android/app/src/main/assets/capacitor.plugins.json || grep -qi 'BluetoothPrinter' android/app/src/main/assets/capacitor.plugins.json
-          grep -q 'android.permission.BLUETOOTH_CONNECT' android/app/src/main/AndroidManifest.xml
 
       - name: Build debug APK
         run: cd android && ./gradlew --no-daemon assembleDebug
