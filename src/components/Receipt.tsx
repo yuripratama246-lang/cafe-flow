@@ -1,7 +1,3 @@
-import { useEffect } from "react";
-import { Printer } from "lucide-react";
-
-import { Button } from "@/components/ui/button";
 import { rupiah, dateTimeLabel } from "@/lib/format";
 import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
 
@@ -14,19 +10,7 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
-function printReceipt(_order: OrderWithItems) {
-  // Cetak dokumen di halaman yang sedang aktif; jangan membuka popup/tab baru.
-  // Ini menghindari pemblokiran popup di browser dan WebView Android.
-  window.print();
-}
-
-export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {
-  useEffect(() => {
-    if (!autoPrint) return;
-    const timer = window.setTimeout(() => printReceipt(order), 350);
-    return () => window.clearTimeout(timer);
-  }, [autoPrint, order]);
-
+export function Receipt({ order, onClose }: { order: OrderWithItems; onClose?: () => void }) {
   const payment = order.payments?.[0];
   return (
     <div className="space-y-4">
@@ -78,12 +62,6 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
         </dl>
         <div className="my-3 border-t border-dashed border-border" />
         <p className="text-center text-[11px] text-muted-foreground">Terima kasih atas kunjungan Anda!</p>
-      </div>
-      <div className="no-print flex gap-2">
-        <Button variant="outline" className="flex-1" onClick={() => printReceipt(order)}>
-          <Printer className="size-4" /> Cetak struk
-        </Button>
-        {onClose ? <Button variant="ghost" onClick={onClose}>Tutup</Button> : null}
       </div>
     </div>
   );
