@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { listBluetoothPrinters, savePrinterConfig, testBluetoothPrinter, getPrinterConfig, type PrinterDevice, type PrinterRole, type SavedPrinter } from "@/lib/bluetooth-printer";
+import { listBluetoothPrinters, savePrinterConfig, testBluetoothPrinter, getPrinterConfig, printCashierReceipt, printKitchenTicket, type PrinterDevice, type PrinterRole, type SavedPrinter } from "@/lib/bluetooth-printer";
 
 export const Route = createFileRoute("/_authenticated/printer")({ component: PrinterPage });
 
@@ -61,9 +61,21 @@ function PrinterPage() {
   }
 
   async function retryJob(job: any) {
-    if (job.document_type !== "test") { toast.error("Cetak ulang transaksi perlu snapshot struk/tiket dari alur order."); return; }
-    if (!config[job.printer_role as PrinterRole] || config[job.printer_role as PrinterRole]?.address !== job.bluetooth_address) { toast.error("Pilih printer yang sama terlebih dahulu."); return; }
-    await loggedTest(job.printer_role as PrinterRole);
+    setBusy(true); let retry: any = null;
+    try {
+      const { data: auth } = await supabase.auth.getUser(); if (!auth.user) throw new Error("Sesi login tidak ditemukan.");
+      const printer = config[job.printer_role as PrinterRole]; if (!printer) throw new Error("Atur printer terlebih dahulu.");
+      const payload = job.document_payload;
+      if (job.document_type === "test") { await loggedTest(job.printer_role as PrinterRole); return; }
+      if (!payload?.order_items || !["receipt", "kitchen_ticket"].includes(job.document_type)) throw new Error("Snapshot dokumen tidak tersedia.");
+      const { data, error } = await db.from("printer_print_jobs").insert({ owner_id: auth.user.id, order_id: job.order_id, order_no: job.order_no, printer_role: job.printer_role, document_type: job.document_type, printer_name: printer.name, bluetooth_address: printer.address, status: "queued", attempt_count: 0, document_payload: payload }).select("*").single();
+      if (error) throw error; retry = data;
+      await db.from("printer_print_jobs").update({ status: "printing", attempt_count: 1 }).eq("id", retry.id);
+      if (job.document_type === "receipt") await printCashierReceipt(payload); else await printKitchenTicket(payload);
+      await db.from("printer_print_jobs").update({ status: "success", printed_at: new Date().toISOString(), error_message: null }).eq("id", retry.id);
+      toast.success("Cetak ulang berhasil dikirim.");
+    } catch (err) { if (retry) await db.from("printer_print_jobs").update({ status: "failed", error_message: err instanceof Error ? err.message : "Print gagal" }).eq("id", retry.id); toast.error(err instanceof Error ? err.message : "Cetak ulang gagal"); }
+    finally { await loadJobs(); setBusy(false); }
   }
 
   async function scan() {
