@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Globe, LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound, Bot, Banknote, ReceiptText, Sun, Moon, Printer } from "lucide-react";
+import { Globe, LayoutDashboard, ScanLine, Package, ClipboardList, QrCode, LogOut, Menu, BarChart3, Boxes, Users, Settings, ChevronDown, BadgePercent, UserCog, ShieldAlert, ShieldCheck, History, PanelLeftClose, KeyRound, Bot, Banknote, ReceiptText, Sun, Moon, Printer, Plus, Minus } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -124,12 +124,13 @@ export function AppShell({ title, description, actions, children }: { title: str
     i18n.on("languageChanged", onLanguageChanged);
     return () => { observer.disconnect(); i18n.off("languageChanged", onLanguageChanged); };
   }, [i18n]);
-  const navigate = useNavigate(); const queryClient = useQueryClient(); const [open, setOpen] = useState(false); const [collapsed, setCollapsed] = useState(false); const [theme, setTheme] = useState<"light" | "dark">("light"); const staff = useStaffProfile();
+  const navigate = useNavigate(); const queryClient = useQueryClient(); const [open, setOpen] = useState(false); const [collapsed, setCollapsed] = useState(false); const [theme, setTheme] = useState<"light" | "dark">("light"); const [screenZoom, setScreenZoom] = useState(100); const staff = useStaffProfile();
   const incomingQuery = useQuery({ queryKey: ["orders", "incoming-count"], queryFn: async () => { const { count, error } = await supabase.from("orders").select("id", { count: "exact", head: true }).eq("source", "qr").eq("status", "new").eq("is_paid", false); if (error) throw error; return count ?? 0; }, enabled: !!staff.data && staff.data.role !== "super_admin" && staff.data.is_active, refetchInterval: 3000, staleTime: 1000 });
   const incomingCount = incomingQuery.data ?? 0;
   useEffect(() => { const saved = window.localStorage.getItem("cafe-flow-sidebar-collapsed"); if (saved === "1") setCollapsed(true); const savedTheme = window.localStorage.getItem("cafe-flow-theme"); const nextTheme = savedTheme === "dark" ? "dark" : "light"; setTheme(nextTheme); document.documentElement.classList.toggle("dark", nextTheme === "dark"); document.documentElement.classList.toggle("light", nextTheme === "light"); document.documentElement.style.colorScheme = nextTheme; }, []);
   function toggleTheme() { const nextTheme = theme === "dark" ? "light" : "dark"; setTheme(nextTheme); window.localStorage.setItem("cafe-flow-theme", nextTheme); document.documentElement.classList.toggle("dark", nextTheme === "dark"); document.documentElement.classList.toggle("light", nextTheme === "light"); document.documentElement.style.colorScheme = nextTheme; }
   function toggleSidebar() { setCollapsed((value) => { const next = !value; window.localStorage.setItem("cafe-flow-sidebar-collapsed", next ? "1" : "0"); return next; }); }
+  function changeScreenZoom(delta: number) { setScreenZoom((current) => { const next = Math.min(120, Math.max(60, current + delta)); document.documentElement.style.zoom = String(next / 100); window.localStorage.setItem("cafe-flow-screen-zoom", String(next)); return next; }); }
   async function handleSignOut() { const { data: { user } } = await supabase.auth.getUser(); if (user) { const { data: profile } = await supabase.from("staff_profiles").select("owner_id").eq("user_id", user.id).maybeSingle(); await supabase.from("audit_logs").insert({ owner_id: profile?.owner_id ?? user.id, actor_user_id: user.id, action: "auth.logout", entity_type: "auth", entity_id: user.id, details: { method: "password" } }); } await queryClient.cancelQueries(); queryClient.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }
   const blocked = !!staff.data && !staff.data.is_active;
   return <div className="flex min-h-screen bg-transparent text-foreground transition-colors duration-200">
@@ -147,6 +148,7 @@ export function AppShell({ title, description, actions, children }: { title: str
       </header>
       {blocked ? <div className="m-4 rounded-2xl border border-destructive/20 bg-destructive/5 p-6 text-center"><ShieldAlert className="mx-auto mb-3 size-8 text-destructive" /><h2 className="font-semibold">Akun dinonaktifkan</h2><p className="mt-1 text-sm text-muted-foreground">Akses akun ini sudah dimatikan oleh owner. Hubungi owner untuk mengaktifkannya kembali.</p></div> : <main className="min-h-0 flex-1 bg-transparent p-4 text-foreground transition-colors duration-200 md:p-6">{children}</main>}
     </div>
+    <div className="no-print fixed bottom-20 right-3 z-[60] flex items-center gap-1 rounded-full border border-border bg-background/95 p-1 shadow-lg"><button type="button" onClick={() => changeScreenZoom(-10)} disabled={screenZoom <= 60} aria-label="Perkecil tampilan" className="grid size-8 place-items-center rounded-full hover:bg-muted disabled:opacity-40"><Minus className="size-4" /></button><span className="min-w-9 text-center text-xs font-semibold">{screenZoom}%</span><button type="button" onClick={() => changeScreenZoom(10)} disabled={screenZoom >= 120} aria-label="Perbesar tampilan" className="grid size-8 place-items-center rounded-full hover:bg-muted disabled:opacity-40"><Plus className="size-4" /></button></div>
   </div>;
 }
 function Blocked() { return <div className="rounded-xl border border-border bg-muted/50 p-3 text-xs text-sidebar-foreground/70"><ShieldAlert className="mb-2 size-4" /><p className="font-medium text-sidebar-foreground">Akses dinonaktifkan</p><p className="mt-1">Hubungi owner outlet.</p></div>; }
