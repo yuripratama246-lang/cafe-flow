@@ -64,7 +64,7 @@ jobs:
               <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
               <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />"""
           if "android.permission.BLUETOOTH_SCAN" not in s:
-              s = s.replace(marker, permissions + "\\n    " + marker, 1)
+              s = s.replace(marker, permissions + "\n    " + marker, 1)
           p.write_text(s)
           PY
       - run: cd android && ./gradlew assembleDebug
