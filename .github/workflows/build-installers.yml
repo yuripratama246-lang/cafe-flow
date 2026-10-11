@@ -9,6 +9,7 @@ on:
       - "desktop/**"
       - "capacitor.config.json"
       - "www/**"
+      - "src/**"
       - "package.json"
       - ".github/workflows/build-installers.yml"
 
@@ -51,6 +52,21 @@ jobs:
       - run: mkdir -p www && printf '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>' > www/index.html
       - run: npx cap add android
       - run: npx cap sync android
+      - name: Add Android Bluetooth permissions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          marker = "<application"
+          permissions = """    <uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+              <uses-permission android:name="android.permission.BLUETOOTH_SCAN" android:usesPermissionFlags="neverForLocation" />
+              <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />"""
+          if "android.permission.BLUETOOTH_SCAN" not in s:
+              s = s.replace(marker, permissions + "\\n    " + marker, 1)
+          p.write_text(s)
+          PY
       - run: cd android && ./gradlew assembleDebug
       - uses: actions/upload-artifact@v4
         with:
