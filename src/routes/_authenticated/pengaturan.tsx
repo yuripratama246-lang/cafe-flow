@@ -17,7 +17,7 @@ import i18n, { languageOptions, type LanguageCode } from "@/locales/i18n";
 export const Route = createFileRoute("/_authenticated/pengaturan")({ component: PengaturanPage });
 type PaymentMethodConfig = { id: string; owner_id: string; code: string; name: string; type: "cash" | "bank_transfer" | "ewallet" | "qris" | "other"; provider: string | null; account_name: string | null; account_number: string | null; instructions: string | null; image_url: string | null; is_active: boolean; sort_order: number };
 type Settings = { id?: string; owner_id: string; name: string; address: string; phone: string; tax_rate: number; service_rate: number; rounding: number; receipt_note: string; receipt_footer: string; transaction_prefix: string; cash_enabled: boolean; card_enabled: boolean; qris_enabled: boolean; app_language?: LanguageCode };
-const DEFAULTS = { app_language: "id" as LanguageCode, name: "Outlet Utama", address: "", phone: "", tax_rate: 11, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
+const DEFAULTS = { app_language: "id" as LanguageCode, name: "Outlet Utama", address: "", phone: "", tax_rate: 0, service_rate: 0, rounding: 0, receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", transaction_prefix: "CF", cash_enabled: true, card_enabled: true, qris_enabled: true };
 
 async function getOwnerId() { const { data, error } = await supabase.auth.getUser(); if (error || !data.user) throw new Error("Belum login"); return data.user.id; }
 function PengaturanPage() {
