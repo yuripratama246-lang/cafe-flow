@@ -24,7 +24,7 @@ function PrinterPage() {
   async function loadSaved() {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth.user) return;
-    const { data, error } = await supabase.from("printer_settings").select("printer_role,printer_name,bluetooth_address,paper_width,is_enabled").eq("owner_id", auth.user.id);
+    const { data, error } = await db.from("printer_settings").select("printer_role,printer_name,bluetooth_address,paper_width,is_enabled").eq("owner_id", auth.user.id);
     if (error) { toast.error("Gagal memuat konfigurasi printer: " + error.message); return; }
     const next = getPrinterConfig();
     const nextWidths = { kitchen: 80 as 58 | 80, cashier: 80 as 58 | 80 };
