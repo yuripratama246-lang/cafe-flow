@@ -58,7 +58,7 @@ function ReportsPage(){
  const cards=[{label:"Penjualan kotor",value:money(gross),icon:Wallet,current:gross,previous:prevGross},{label:"Penjualan bersih",value:money(sales),icon:CreditCard,current:sales,previous:prevSales},{label:"Transaksi lunas",value:String(paid.length),icon:ShoppingCart,current:paid.length,previous:previous.length},{label:"Rata-rata transaksi",value:money(avg),icon:BarChart3,current:avg,previous:prevAvg}];
  const setQuick=(next:Filter)=>{setEndDate(toDateInput(new Date()));setFilter(next)};
  const period=range.from===range.to?range.from:range.from+" – "+range.to;
- const exportReport=()=>{
+ const exportReport=async()=>{
   const csvCell=(value:unknown)=>{const raw=String(value??"");const safe=/^[=+\-\t\r]/.test(raw)?"'"+raw:raw;return '"'+safe.replace(/"/g,'""')+'"';};
   const rows:unknown[][]=[];
   const filename="laporan-"+tab+"-"+range.from+"-sampai-"+range.to+".csv";
@@ -71,18 +71,20 @@ function ReportsPage(){
   if(tab==="orders"){rows.push(["Waktu","Order #","Customer / Meja","Kanal","Status","Pembayaran","Gross","Diskon","Net"],...day.map(o=>[new Date(o.created_at).toLocaleString("id-ID"),o.order_no,o.customer_name||o.restaurant_tables?.name||"Walk-in",o.source==="qr"?"QR Order":"Kasir",o.status,o.is_paid?(PAYMENT_LABEL[o.payment_method??""]??"Lunas"):"Belum lunas",o.subtotal,o.discount,o.total]));}
   const csv="\uFEFF"+rows.map(row=>row.map(csvCell).join(",")).join("\r\n");
   const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});
+  const file=new File([blob],filename,{type:"text/csv;charset=utf-8;"});
+  // Android WebView may ignore the download attribute; offer the native share/save sheet when available.
+  if(typeof navigator.share==="function" && typeof navigator.canShare==="function" && navigator.canShare({files:[file]})) {
+   try { await navigator.share({files:[file],title:filename}); return; } catch (error) { if(error instanceof Error && error.name==="AbortError") return; }
+  }
   const url=URL.createObjectURL(blob);
   const link=document.createElement("a");
   link.href=url;link.download=filename;link.setAttribute("target","_blank");link.setAttribute("rel","noopener");
-  link.style.position="fixed";link.style.left="-9999px";link.style.opacity="0";
+  link.style.position="fixed";link.style.left="0";link.style.top="0";link.style.width="1px";link.style.height="1px";link.style.opacity="0.01";
   document.body.appendChild(link);
-  try {
-   link.click();
-   // Android WebView may ignore the download attribute; open the generated CSV as a fallback.
-   window.setTimeout(()=>{ if(document.visibilityState==="visible") { try { window.open(url,"_blank","noopener"); } catch {} } },700);
-  } finally {
-   window.setTimeout(()=>{link.remove();URL.revokeObjectURL(url);},60000);
-  }
+  link.click();
+  // Fallback opens the generated file if the WebView ignores the download attribute.
+  try { window.open(url,"_blank","noopener"); } catch {}
+  window.setTimeout(()=>{link.remove();URL.revokeObjectURL(url);},60000);
  };
  return <AppShell title="Laporan Penjualan" description="Analitik penjualan, jam ramai, produk, dan pembayaran" actions={<div className="flex flex-wrap items-center gap-2"><div className="flex flex-wrap gap-1 rounded-lg border border-border bg-card p-1">{FILTERS.map(f=><button key={f.id} onClick={()=>setQuick(f.id)} className={"rounded-md px-2.5 py-1.5 text-xs "+(filter===f.id?"bg-primary text-primary-foreground":"text-muted-foreground hover:bg-muted")}>{f.label}</button>)}</div><label className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs"><CalendarDays className="size-4 text-muted-foreground"/><input aria-label="Tanggal akhir" type="date" value={endDate} onChange={e=>{setEndDate(e.target.value);setFilter("custom")}} className="w-[125px] bg-transparent outline-none"/></label><Button variant="outline" size="sm" onClick={exportReport} disabled={query.isLoading}><Download className="mr-2 size-4"/>Export CSV</Button><Button variant="outline" size="sm" onClick={()=>query.refetch()}><RefreshCw className="mr-2 size-4"/>Refresh</Button></div>}>
  <div className="min-h-full space-y-4 bg-background text-foreground">
