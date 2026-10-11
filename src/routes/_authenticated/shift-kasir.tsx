@@ -99,7 +99,7 @@ function CashShiftPage() {
         closingReason.trim() ? `Penyebab/catatan closing: ${closingReason.trim()}` : "",
       ].filter(Boolean).join(" | ");
       const { data, error } = await supabase.from("staff_shifts").update({
-        closing_cash: countedCash, closed_at: new Date().toISOString(), status: "closed", note: details || null,
+        closing_cash: countedCash, closed_at: new Date().toISOString(), closed_by_user_id: me.data?.user_id ?? null, status: "closed", note: details || null,
       }).eq("id", activeShift.id).eq("status", "open").select("id");
       if (error) throw error;
       if (!data?.length) throw new Error("Shift tidak berubah. Muat ulang halaman dan periksa status shift.");
