@@ -38,6 +38,7 @@ function OrdersPage() {
   const [selected, setSelected] = useState<OrderWithItems | null>(null);
   const [receiptOrder, setReceiptOrder] = useState<OrderWithItems | null>(null);
   const [cash, setCash] = useState("");
+  const [confirmMethod, setConfirmMethod] = useState("qris");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const orders = query.data ?? [];
@@ -52,7 +53,7 @@ function OrdersPage() {
     return (!fromDate || day >= fromDate) && (!toDate || day <= toDate);
   }), [stageOrders.history, fromDate, toDate]);
   const approve = useMutation({
-    mutationFn: ({ id, cashReceived }: { id: string; cashReceived?: number | null }) => approveQrOrder(id, cashReceived),
+    mutationFn: ({ id, cashReceived, method }: { id: string; cashReceived?: number | null; method: string }) => approveQrOrder(id, cashReceived, method),
     onSuccess: () => { setSelected(null); setCash(""); void qc.invalidateQueries({ queryKey: ["orders"] }); toast.success("Pembayaran dikonfirmasi"); },
     onError: e => toast.error(e instanceof Error ? e.message : "Gagal mengonfirmasi pembayaran"),
   });
@@ -68,15 +69,16 @@ function OrdersPage() {
   });
   function openApproval(o: OrderWithItems) {
     setSelected(o);
+    setConfirmMethod(o.payment_method === "cash" ? "cash" : "qris");
     setCash(o.payment_method === "cash" ? String(Math.ceil(Number(o.total) / 10000) * 10000) : "");
   }
   function submitApproval() {
     if (!selected) return;
-    if (selected.payment_method === "cash") {
+    if (confirmMethod === "cash") {
       const amount = Number(cash);
       if (!Number.isFinite(amount) || amount < Number(selected.total)) { toast.error("Uang diterima belum mencukupi."); return; }
-      approve.mutate({ id: selected.id, cashReceived: amount });
-    } else approve.mutate({ id: selected.id, cashReceived: null });
+      approve.mutate({ id: selected.id, cashReceived: amount, method: confirmMethod });
+    } else approve.mutate({ id: selected.id, cashReceived: null, method: confirmMethod });
   }
   function exportCsv() {
     const rows = [["No Pesanan", "Tanggal", "Sumber", "Meja", "Pelanggan", "Item", "Total", "Pembayaran", "Metode", "Status"]];
@@ -138,9 +140,9 @@ function OrdersPage() {
     </div>
     <Dialog open={!!selected} onOpenChange={open => { if (!open) { setSelected(null); setCash(""); } }}>
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md"><DialogHeader><DialogTitle className="flex items-center gap-2"><ShieldCheck className="size-5 text-primary" />Konfirmasi pembayaran</DialogTitle><DialogDescription>Periksa total dan pastikan pembayaran sudah diterima.</DialogDescription></DialogHeader>
-        {selected && <div className="space-y-3"><div className="rounded-xl border bg-muted/30 p-3"><div className="flex justify-between text-sm"><span className="text-muted-foreground">Order</span><b>#{selected.order_no}</b></div><div className="mt-2 flex justify-between text-sm"><span className="text-muted-foreground">Metode dipilih customer</span><b>{PAYMENT_LABEL[selected.payment_method ?? "cash"] ?? selected.payment_method}</b></div><div className="mt-3 flex justify-between border-t pt-3"><span className="font-medium">Total tagihan</span><b className="text-lg text-primary">{rupiah(selected.total)}</b></div></div>
-        {selected.payment_method === "cash" ? <div className="space-y-2"><Label htmlFor="approval-cash">Uang diterima</Label><Input id="approval-cash" inputMode="numeric" value={cash} onChange={e => setCash(e.target.value.replace(/[^0-9]/g, ""))} className="h-11 text-lg" /><div className="flex justify-between rounded-lg bg-muted/60 p-3 text-sm"><span>Kembalian</span><b>{rupiah(Math.max((Number(cash) || 0) - Number(selected.total), 0))}</b></div></div> : <div className="rounded-lg bg-primary/5 p-3 text-xs">Pastikan dana dari metode pembayaran customer sudah masuk sebelum konfirmasi.</div>}</div>}
-        <DialogFooter className="gap-2 sm:gap-0"><Button variant="outline" onClick={() => setSelected(null)}>Batal</Button><Button disabled={approve.isPending} onClick={submitApproval}>{approve.isPending ? "Memproses…" : "Konfirmasi bayar"}</Button></DialogFooter>
+        {selected && <div className="space-y-3"><div className="rounded-xl border bg-muted/30 p-3"><div className="flex justify-between text-sm"><span className="text-muted-foreground">Order</span><b>#{selected.order_no}</b></div><div className="mt-2 text-sm"><span className="text-muted-foreground">Metode customer: </span><b>{PAYMENT_LABEL[selected.payment_method ?? "cash"] ?? selected.payment_method}</b></div><div className="mt-3 space-y-1.5"><Label htmlFor="confirm-payment-method">Konfirmasi sebagai metode</Label><select id="confirm-payment-method" value={confirmMethod} onChange={e => setConfirmMethod(e.target.value)} className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"><option value="cash">Cash / Tunai</option><option value="qris">QRIS</option><option value="bank_transfer">Transfer Bank</option><option value="ewallet">E-Wallet</option><option value="card">Kartu</option></select></div><div className="mt-3 flex justify-between border-t pt-3"><span className="font-medium">Total tagihan</span><b className="text-lg text-primary">{rupiah(selected.total)}</b></div></div>
+        {confirmMethod === "cash" ? <div className="space-y-2"><Label htmlFor="approval-cash">Uang diterima</Label><Input id="approval-cash" inputMode="numeric" value={cash} onChange={e => setCash(e.target.value.replace(/[^0-9]/g, ""))} className="h-11 text-lg" /><div className="flex justify-between rounded-lg bg-muted/60 p-3 text-sm"><span>Kembalian</span><b>{rupiah(Math.max((Number(cash) || 0) - Number(selected.total), 0))}</b></div></div> : <div className="rounded-lg bg-primary/5 p-3 text-xs">Pastikan dana dari metode pembayaran customer sudah masuk sebelum konfirmasi.</div>}</div>}
+        <DialogFooter className="gap-2 sm:gap-0"><Button variant="outline" onClick={() => { setSelected(null); setCash(""); }}>Batal</Button><Button disabled={approve.isPending} onClick={submitApproval}>{approve.isPending ? "Memproses…" : "Konfirmasi bayar"}</Button></DialogFooter>
       </DialogContent>
     </Dialog>
     <Dialog open={!!receiptOrder} onOpenChange={open => !open && setReceiptOrder(null)}><DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-sm"><DialogHeader><DialogTitle>Struk pesanan {receiptOrder ? `#${receiptOrder.order_no}` : ""}</DialogTitle></DialogHeader>{receiptOrder ? <Receipt order={receiptOrder} onClose={() => setReceiptOrder(null)} /> : null}</DialogContent></Dialog>
