@@ -1,5 +1,6 @@
 name: Build Cafe Flow installers
 
+# Triggered for an Android APK test build.
 on:
   workflow_dispatch:
   push:
