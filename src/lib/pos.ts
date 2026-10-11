@@ -134,6 +134,6 @@ export async function createOrder(input: NewOrderInput): Promise<OrderWithItems>
     throw error;
   }
 }
-export async function updateOrderStatus(id: string, status: OrderStatus) { const { error } = await supabase.from("orders").update({ status }).eq("id", id); if (error) throw error; }
+export async function updateOrderStatus(id: string, status: OrderStatus) { const { data, error } = await supabase.from("orders").update({ status }).eq("id", id).select("id,status").maybeSingle(); if (error) throw error; if (!data) throw new Error("Status pesanan tidak berubah. Data tidak ditemukan atau akun tidak memiliki izin untuk mengubah pesanan."); return data; }
 export async function approveQrOrder(id: string, cashReceived?: number | null, paymentMethod?: string): Promise<Order> { const { data, error } = await supabase.rpc("approve_qr_order_with_method", { p_order_id: id, p_payment_method: paymentMethod ?? "qris", p_cash_received: cashReceived ?? null }); if (error) throw new Error(error.message || "Gagal mengonfirmasi pembayaran"); return data as Order; }
 export async function rejectQrOrder(id: string): Promise<Order> { const { data, error } = await supabase.rpc("reject_qr_order", { p_order_id: id }); if (error) throw new Error(error.message || "Gagal menolak pesanan"); return data as Order; }
