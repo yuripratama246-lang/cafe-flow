@@ -44,7 +44,7 @@ function KasirPage() {
     const input = {
       idempotency_key: checkoutKeyRef.current ?? (checkoutKeyRef.current = crypto.randomUUID()),
       source: "pos" as const, status: "completed" as const,
-      table_id: tableId === "none" ? null : tableId, subtotal, discount: manualDiscount,
+      table_id: tableId === "none" ? null : tableId, subtotal, discount,
       promotion_id: selectedVoucherDiscount !== null ? selectedPromotion?.id ?? null : null,
       tax: tax + service, total, is_paid: true, payment_method: method, payment_status: "paid" as const,
       items: cart.map((l) => ({ product_id: l.product.id, product_name: l.product.name, unit_price: l.unitPrice, quantity: l.quantity, note: l.note || null })),
