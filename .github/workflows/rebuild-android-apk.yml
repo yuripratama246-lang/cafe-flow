@@ -1,10 +1,13 @@
-name: Rebuild Cafe Flow Android APK
+name: Build Cafe Flow Capacitor APK
 
 on:
   push:
-    branches: [main]
+    branches:
+      - fix/android-capacitor-apk
     paths:
       - 'capacitor.config.ts'
+      - 'package.json'
+      - 'package-lock.json'
       - '.github/workflows/rebuild-android-apk.yml'
   workflow_dispatch:
 
@@ -13,45 +16,59 @@ permissions:
 
 jobs:
   android-apk:
-    name: Android APK
+    name: Build Android APK
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - name: Checkout latest Cafe Flow
+      - name: Checkout source
         uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
 
       - name: Set up Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
+          cache: gradle
 
-      - name: Install app dependencies
+      - name: Install project dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Install Capacitor Android tooling
-        run: npm install --no-save @capacitor/core@^6.2.1 @capacitor/cli@^6.2.1 @capacitor/android@^6.2.1
+      - name: Verify Capacitor and Bluetooth printer plugin
+        run: |
+          node -e "for (const p of ['@capacitor/core','@capacitor/cli','@capacitor/android','@kduma-autoid/capacitor-bluetooth-printer']) { try { console.log(p + ': ' + require('./node_modules/' + p + '/package.json').version) } catch { console.error('Missing dependency: ' + p); process.exitCode = 1 } }"
+          grep -q 'pos.yuripratama246.workers.dev' capacitor.config.ts
 
-      - name: Create web directory for remote app shell
+      - name: Prepare Capacitor web directory
         run: mkdir -p www && printf '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>' > www/index.html
 
       - name: Generate Android project
         run: npx cap add android
 
-      - name: Sync Android project
+      - name: Sync native plugins into Android project
         run: npx cap sync android
 
-      - name: Build debug APK
-        run: cd android && ./gradlew assembleDebug
+      - name: Verify Bluetooth printer native plugin is registered
+        run: |
+          test -f android/app/src/main/assets/capacitor.plugins.json
+          grep -qi 'bluetooth-printer' android/app/src/main/assets/capacitor.plugins.json || grep -qi 'BluetoothPrinter' android/app/src/main/assets/capacitor.plugins.json
+          grep -q 'android.permission.BLUETOOTH_CONNECT' android/app/src/main/AndroidManifest.xml
 
-      - name: Upload APK
+      - name: Build debug APK
+        run: cd android && ./gradlew --no-daemon assembleDebug
+
+      - name: Rename APK for clarity
+        run: cp android/app/build/outputs/apk/debug/app-debug.apk Cafe-Flow-Capacitor-debug.apk
+
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: cafe-flow-android-apk-latest
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          name: cafe-flow-capacitor-apk
+          path: Cafe-Flow-Capacitor-debug.apk
           if-no-files-found: error
-          retention-days: 90
+          retention-days: 30
