@@ -33,6 +33,7 @@ import { Route as AuthenticatedPesananRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedProdukRouteImport } from './routes/_authenticated/produk'
 import { Route as AuthenticatedPromosiRouteImport } from './routes/_authenticated/promosi'
 import { Route as AuthenticatedShiftKasirRouteImport } from './routes/_authenticated/shift-kasir'
+import { Route as AuthenticatedAuditShiftRouteImport } from './routes/_authenticated/audit-shift'
 import { Route as AuthenticatedWebsiteManagementRouteImport } from './routes/_authenticated/website-management'
 import { Route as AuthenticatedWebsiteManagementIndexRouteImport } from './routes/_authenticated/website-management.index'
 import { Route as AuthenticatedWebsiteManagementPagesRouteImport } from './routes/_authenticated/website-management.pages'
@@ -162,6 +163,11 @@ const AuthenticatedShiftKasirRoute = AuthenticatedShiftKasirRouteImport.update({
   path: '/shift-kasir',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAuditShiftRoute = AuthenticatedAuditShiftRouteImport.update({
+  id: '/audit-shift',
+  path: '/audit-shift',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -187,6 +193,7 @@ export interface FileRoutesByFullPath {
   '/produk': typeof AuthenticatedProdukRoute
   '/promosi': typeof AuthenticatedPromosiRoute
   '/shift-kasir': typeof AuthenticatedShiftKasirRoute
+  '/audit-shift': typeof AuthenticatedAuditShiftRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -273,6 +280,7 @@ export interface FileRouteTypes {
     | '/produk'
     | '/promosi'
     | '/shift-kasir'
+    | '/audit-shift'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -298,6 +306,7 @@ export interface FileRouteTypes {
     | '/produk'
     | '/promosi'
     | '/shift-kasir'
+    | '/audit-shift'
   id:
     | '__root__'
     | '/'
@@ -324,6 +333,7 @@ export interface FileRouteTypes {
     | '/_authenticated/produk'
     | '/_authenticated/promosi'
     | '/_authenticated/shift-kasir'
+    | '/_authenticated/audit-shift'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -577,6 +587,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProdukRoute: typeof AuthenticatedProdukRoute
   AuthenticatedPromosiRoute: typeof AuthenticatedPromosiRoute
   AuthenticatedShiftKasirRoute: typeof AuthenticatedShiftKasirRoute
+  AuthenticatedAuditShiftRoute: typeof AuthenticatedAuditShiftRoute
   AuthenticatedWebsiteManagementRoute: typeof AuthenticatedWebsiteManagementRouteWithChildren
 }
 
@@ -600,6 +611,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProdukRoute: AuthenticatedProdukRoute,
   AuthenticatedPromosiRoute: AuthenticatedPromosiRoute,
   AuthenticatedShiftKasirRoute: AuthenticatedShiftKasirRoute,
+  AuthenticatedAuditShiftRoute: AuthenticatedAuditShiftRoute,
   AuthenticatedWebsiteManagementRoute: AuthenticatedWebsiteManagementRouteWithChildren,
 }
 
