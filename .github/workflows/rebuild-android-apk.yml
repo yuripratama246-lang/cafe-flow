@@ -1,0 +1,57 @@
+name: Rebuild Cafe Flow Android APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'capacitor.config.ts'
+      - '.github/workflows/rebuild-android-apk.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  android-apk:
+    name: Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout latest Cafe Flow
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Install Capacitor Android tooling
+        run: npm install --no-save @capacitor/core@^6.2.1 @capacitor/cli@^6.2.1 @capacitor/android@^6.2.1
+
+      - name: Create web directory for remote app shell
+        run: mkdir -p www && printf '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body></body></html>' > www/index.html
+
+      - name: Generate Android project
+        run: npx cap add android
+
+      - name: Sync Android project
+        run: npx cap sync android
+
+      - name: Build debug APK
+        run: cd android && ./gradlew assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: cafe-flow-android-apk-latest
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 90
