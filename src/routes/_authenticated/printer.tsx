@@ -39,7 +39,34 @@ function PrinterPage() {
     savePrinterConfig("kitchen", next.kitchen); savePrinterConfig("cashier", next.cashier);
   }
 
-  async function loadJobs() { const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return; const { data, error } = await db.from("printer_print_jobs").select("*").eq("owner_id", auth.user.id).order("created_at", { ascending: false }).limit(100); if (error) { toast.error("Gagal memuat riwayat print: " + error.message); return; } setJobs(data ?? []); }\n\n  async function scan() {
+  async function loadJobs() { const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return; const { data, error } = await db.from("printer_print_jobs").select("*").eq("owner_id", auth.user.id).order("created_at", { ascending: false }).limit(100); if (error) { toast.error("Gagal memuat riwayat print: " + error.message); return; } setJobs(data ?? []); }\n\n  async function loggedTest(role: PrinterRole) {
+    setBusy(true);
+    const printer = config[role];
+    try {
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth.user || !printer) throw new Error("Login dan pilih printer terlebih dahulu.");
+      const { data: job, error } = await db.from("printer_print_jobs").insert({ owner_id: auth.user.id, order_no: "TEST", printer_role: role, document_type: "test", printer_name: printer.name, bluetooth_address: printer.address, status: "queued", document_payload: { kind: "test" }, attempt_count: 0 }).select("*").single();
+      if (error) throw error;
+      await db.from("printer_print_jobs").update({ status: "printing", attempt_count: 1 }).eq("id", job.id);
+      try {
+        await testBluetoothPrinter(role);
+        await db.from("printer_print_jobs").update({ status: "success", printed_at: new Date().toISOString() }).eq("id", job.id);
+        toast.success("Test print berhasil dikirim.");
+      } catch (err) {
+        await db.from("printer_print_jobs").update({ status: "failed", error_message: err instanceof Error ? err.message : "Print gagal" }).eq("id", job.id);
+        throw err;
+      }
+    } catch (err) { toast.error(err instanceof Error ? err.message : "Test print gagal"); }
+    finally { await loadJobs(); setBusy(false); }
+  }
+
+  async function retryJob(job: any) {
+    if (job.document_type !== "test") { toast.error("Cetak ulang transaksi perlu snapshot struk/tiket dari alur order."); return; }
+    if (!config[job.printer_role as PrinterRole] || config[job.printer_role as PrinterRole]?.address !== job.bluetooth_address) { toast.error("Pilih printer yang sama terlebih dahulu."); return; }
+    await loggedTest(job.printer_role as PrinterRole);
+  }
+
+  async function scan() {
     setBusy(true);
     try { const found = await listBluetoothPrinters(); setDevices(found); toast.success(found.length ? `Ditemukan ${found.length} perangkat Bluetooth` : "Printer tidak ditemukan. Pastikan printer menyala dan sudah dipasangkan."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Gagal mencari perangkat Bluetooth"); }
@@ -102,7 +129,7 @@ function PrinterPage() {
           {config[role] && <p className="text-xs text-muted-foreground">Terpilih: {config[role]?.name} ({config[role]?.address})</p>}
         </div>
         <div className="space-y-2"><Label>Ukuran kertas</Label><select className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm" value={widths[role]} onChange={e => setWidths(v => ({ ...v, [role]: Number(e.target.value) as 58 | 80 }))}><option value={58}>58 mm</option><option value={80}>80 mm</option></select></div>
-        <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={!config[role] || busy} onClick={() => void test(role)}><TestTube2 className="mr-2 size-4" />Test print</Button><Button variant="outline" disabled={!config[role]} onClick={() => clear(role)}><Trash2 className="mr-2 size-4" />Lepas printer</Button></div>
+        <div className="flex flex-wrap gap-2"><Button variant="outline" disabled={!config[role] || busy} onClick={() => void loggedTest(role)}><TestTube2 className="mr-2 size-4" />Test print</Button><Button variant="outline" disabled={!config[role]} onClick={() => clear(role)}><Trash2 className="mr-2 size-4" />Lepas printer</Button></div>
       </CardContent>
     </Card>
   );
@@ -113,6 +140,12 @@ function PrinterPage() {
       <div className="flex gap-2"><Button variant="outline" onClick={() => void scan()} disabled={busy}><Bluetooth className="mr-2 size-4" />{busy ? "Memproses…" : "Cari perangkat"}</Button><Button onClick={() => void saveAll()} disabled={busy}><Save className="mr-2 size-4" />Simpan</Button></div>
     </div>
     <div className="grid gap-4 xl:grid-cols-2">{roleCard("cashier", "Printer Kasir", "Untuk struk pembayaran pelanggan.")}{roleCard("kitchen", "Printer Dapur", "Untuk tiket pesanan yang harus disiapkan dapur.")}</div>
-    <p className="mt-4 text-xs text-muted-foreground">Catatan: pemilihan dan penyimpanan printer tersedia di halaman ini. Cetak otomatis setelah pembayaran/pesanan dikonfirmasi perlu dihubungkan dan diuji pada alur transaksi APK.</p>
+    <section className="mt-6 space-y-4">
+      <div className="flex items-center justify-between gap-3"><div><h2 className="flex items-center gap-2 text-lg font-semibold"><History className="size-5" />Monitoring & Riwayat Print</h2><p className="text-sm text-muted-foreground">100 pekerjaan terbaru disimpan di Supabase.</p></div><Button variant="outline" onClick={() => void loadJobs()}><RefreshCw className="mr-2 size-4" />Muat ulang</Button></div>
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">{(["queued","printing","success","failed"] as const).map(status => <Card key={status}><CardContent className="p-4"><p className="text-sm text-muted-foreground">{{queued:"Menunggu",printing:"Sedang mencetak",success:"Berhasil",failed:"Gagal"}[status]}</p><p className="text-2xl font-semibold">{jobs.filter(j => j.status === status).length}</p></CardContent></Card>)}</div>
+      <div className="flex flex-wrap gap-2">{[["all","Semua"],["queued","Menunggu"],["printing","Sedang mencetak"],["success","Berhasil"],["failed","Gagal"]].map(([key,label]) => <Button key={key} size="sm" variant={jobFilter===key?"default":"outline"} onClick={() => setJobFilter(key)}>{label}</Button>)}</div>
+      <Card><CardContent className="p-0">{jobs.filter(j => jobFilter==="all" || j.status===jobFilter).length===0 ? <p className="p-8 text-center text-sm text-muted-foreground">Belum ada riwayat print.</p> : <div className="divide-y">{jobs.filter(j => jobFilter==="all" || j.status===jobFilter).map(job => <div key={job.id} className="flex flex-col gap-2 p-4 md:flex-row md:items-center md:justify-between"><div><p className="font-medium">{job.document_type==="receipt"?"Struk kasir":job.document_type==="kitchen_ticket"?"Tiket dapur":"Test print"} · #{job.order_no} — {{queued:"Menunggu",printing:"Sedang mencetak",success:"Berhasil",failed:"Gagal"}[job.status]}</p><p className="text-xs text-muted-foreground">{new Date(job.created_at).toLocaleString("id-ID")} · {job.printer_name} · Percobaan {job.attempt_count}</p>{job.error_message && <p className="text-sm text-red-600">Alasan: {job.error_message}</p>}</div>{job.status==="failed" && <Button size="sm" variant="outline" disabled={busy} onClick={() => void retryJob(job)}><RotateCcw className="mr-2 size-4" />Cetak ulang</Button>}</div>)}</div>}</CardContent></Card>
+      <p className="text-xs text-muted-foreground">Cetak ulang struk transaksi akan aktif setelah snapshot dokumen transaksi dihubungkan ke alur pembayaran.</p>
+    </section>
   </AppShell>;
 }
