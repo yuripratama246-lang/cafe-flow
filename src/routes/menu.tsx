@@ -50,7 +50,6 @@ function PublicMenuPage() {
     const ready = pendingOrder.status === "ready";
     const statusTitle = cancelled ? "Pesanan dibatalkan" : completed ? "Pesanan selesai" : ready ? "Pesanan siap disajikan" : preparing ? "Pesanan sedang dibuat" : "Menunggu konfirmasi kasir";
     const statusMessage = cancelled ? "Pesanan ini dibatalkan. Silakan hubungi kasir jika ada pertanyaan." : completed ? "Terima kasih! Pesanan kamu sudah selesai." : ready ? "Pesanan kamu sudah siap. Silakan tunggu dipanggil atau ikuti arahan kasir." : preparing ? "Kasir sudah mengonfirmasi pesanan dan dapur sedang menyiapkannya." : "Pesanan sudah diterima, mohon tunggu kasir mengonfirmasi dan mulai menyiapkan pesanan.";
-    const statusIcon = cancelled ? "cancelled" : completed ? "completed" : ready ? "ready" : preparing ? "preparing" : "waiting";
     return <div className="min-h-screen bg-slate-50 p-5"><div className="mx-auto max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
       <div className={`mx-auto grid size-16 place-items-center rounded-full ${cancelled ? "bg-red-50" : completed ? "bg-emerald-50" : ready ? "bg-green-50" : preparing ? "bg-lime-50" : "bg-amber-50"}`}>
         {cancelled ? <Clock3 className="size-9 text-red-500" /> : completed ? <ShoppingBag className="size-9 text-emerald-600" /> : ready ? <Clock3 className="size-9 text-green-600" /> : preparing ? <Clock3 className="size-9 text-lime-600" /> : <Clock3 className="size-9 text-amber-500" />}
