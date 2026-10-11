@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Bluetooth, Printer, RefreshCw, Save, TestTube2, Trash2 } from "lucide-react";
+import { Bluetooth, Printer, RefreshCw, Save, TestTube2, Trash2, History, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,10 @@ function PrinterPage() {
   const [devices, setDevices] = useState<PrinterDevice[]>([]);
   const [config, setConfig] = useState<Record<PrinterRole, SavedPrinter | null>>({ kitchen: null, cashier: null });
   const [widths, setWidths] = useState<Record<PrinterRole, 58 | 80>>({ kitchen: 80, cashier: 80 });
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);\n  const [jobs, setJobs] = useState<any[]>([]);\n  const [jobFilter, setJobFilter] = useState("all");\n  const db = supabase as any;
   useEffect(() => {
     setConfig(getPrinterConfig());
-    void loadSaved();
+    void loadSaved();\n    void loadJobs();
   }, []);
 
   async function loadSaved() {
@@ -39,7 +39,7 @@ function PrinterPage() {
     savePrinterConfig("kitchen", next.kitchen); savePrinterConfig("cashier", next.cashier);
   }
 
-  async function scan() {
+  async function loadJobs() { const { data: auth } = await supabase.auth.getUser(); if (!auth.user) return; const { data, error } = await db.from("printer_print_jobs").select("*").eq("owner_id", auth.user.id).order("created_at", { ascending: false }).limit(100); if (error) { toast.error("Gagal memuat riwayat print: " + error.message); return; } setJobs(data ?? []); }\n\n  async function scan() {
     setBusy(true);
     try { const found = await listBluetoothPrinters(); setDevices(found); toast.success(found.length ? `Ditemukan ${found.length} perangkat Bluetooth` : "Printer tidak ditemukan. Pastikan printer menyala dan sudah dipasangkan."); }
     catch (e) { toast.error(e instanceof Error ? e.message : "Gagal mencari perangkat Bluetooth"); }
