@@ -54,18 +54,18 @@
 :root, .light {
   color-scheme: light;
   --radius: 0.625rem;
-  --sales-trend-line: #2563eb;
-  --chart-accent: #2563eb;
-  --chart-accent-strong: #1d4ed8;
+  --sales-trend-line: #111111;
+  --chart-accent: #111111;
+  --chart-accent-strong: #000000;
   --chart-payment-1: #2563eb;
   --chart-payment-2: #3b82f6;
   --chart-payment-3: #60a5fa;
   --chart-payment-4: #1d4ed8;
   --chart-payment-5: #93c5fd;
   --chart-payment-6: #1e40af;
-  --chart-glow: rgba(37, 99, 235, 0.18);
-  --chart-dot: #1d4ed8;
-  --sales-trend-shadow: drop-shadow(0 2px 2px rgba(15, 23, 42, 0.65)) drop-shadow(0 7px 7px rgba(15, 23, 42, 0.42));
+  --chart-glow: rgba(0, 0, 0, 0.14);
+  --chart-dot: #000000;
+  --sales-trend-shadow: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.24)) drop-shadow(0 7px 10px rgba(0, 0, 0, 0.12));
   /* Soft Studio White — calm, low-glare light mode with crisp typography */
   --background: 243 245 247;
   --foreground: 15 23 42;
@@ -95,17 +95,17 @@
   --chart-3: 148 163 184;
   --chart-4: 51 65 85;
   --chart-5: 203 213 225;
-  --sidebar: 255 255 255;
-  --sidebar-foreground: 15 23 42;
-  --sidebar-primary: 71 85 105;
-  --sidebar-primary-foreground: 255 255 255;
-  --sidebar-accent: 241 245 249;
-  --sidebar-accent-foreground: 15 23 42;
-  --sidebar-border: 226 232 240;
-  --sidebar-ring: 71 85 105;
+  --sidebar: 0 0 0;
+  --sidebar-foreground: 250 250 250;
+  --sidebar-primary: 255 255 255;
+  --sidebar-primary-foreground: 0 0 0;
+  --sidebar-accent: 38 38 38;
+  --sidebar-accent-foreground: 255 255 255;
+  --sidebar-border: 48 48 48;
+  --sidebar-ring: 255 255 255;
 }
 .dark {
-  color-scheme: dark; --radius: 0.875rem;
+  color-scheme: light; --radius: 0.875rem;
   --sales-trend-line: #77b1a2;
   --chart-accent: #87a99c;
   --chart-accent-strong: #77b1a2;
