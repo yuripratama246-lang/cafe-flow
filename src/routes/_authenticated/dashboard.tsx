@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchOrders, fetchProducts, PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
+import { supabase } from "@/integrations/supabase/client";
 import { endOfDayISO, rupiah, startOfDayISO, toDateInput } from "@/lib/format";
 export const Route = createFileRoute("/_authenticated/dashboard")({ head: () => ({ meta: [{ title: "Dashboard — Cafe Flow" }, { name: "description", content: "Dashboard penjualan dan operasional Cafe Flow." }] }), component: DashboardPage });
 const QUICK = [{ to: "/kasir", label: "Buka Kasir", note: "Transaksi manual", icon: ScanLine, tone: "icon-badge-transactions" }, { to: "/pesanan", label: "Pesanan", note: "Order & pembayaran", icon: ClipboardList, tone: "icon-badge-transactions" }, { to: "/produk", label: "Produk & Stok", note: "Menu dan inventory", icon: Package, tone: "icon-badge-logistics" }, { to: "/meja", label: "Meja & QR", note: "QR menu pelanggan", icon: QrCode, tone: "icon-badge-transactions" }];
