@@ -65,7 +65,7 @@ function printReceipt(order: OrderWithItems) {
 </head>
 <body>
   <main class="receipt">
-    <header class="center"><h1 class="title">KASIRKU</h1><p class="subtitle">Struk Pembayaran</p></header>
+    <header class="center"><h1 class="title">KERETA MALAM CAFE</h1><p class="subtitle">Struk Pembayaran</p></header>
     <hr class="rule">
     <div class="row"><span>No. #${escapeHtml(order.order_no)}</span><span>${escapeHtml(dateTimeLabel(order.created_at))}</span></div>
     ${order.restaurant_tables?.name ? `<div class="row"><span>Meja: ${escapeHtml(order.restaurant_tables.name)}</span></div>` : ""}
@@ -110,7 +110,7 @@ export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWit
         className="print-only-area mx-auto w-full max-w-xs rounded-xl border border-dashed border-border bg-card p-5 font-mono text-[13px] leading-relaxed"
       >
         <div className="text-center">
-          <p className="font-display text-base font-semibold tracking-tight">KASIRKU</p>
+          <p className="font-display text-base font-semibold tracking-tight">KERETA MALAM CAFE</p>
           <p className="text-[11px] text-muted-foreground">Struk Pembayaran</p>
         </div>
         <div className="my-3 border-t border-dashed border-border" />
