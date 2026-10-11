@@ -14,84 +14,10 @@ function escapeHtml(value: unknown) {
     .replace(/'/g, "&#39;");
 }
 
-function printReceipt(order: OrderWithItems) {
-  const printWindow = window.open("", "_blank", "width=420,height=700");
-  if (!printWindow) {
-    window.alert("Popup diblokir browser. Izinkan popup untuk mencetak struk.");
-    return;
-  }
-
-  const items = order.order_items.map((item) => `
-    <div class="item">
-      <div class="item-head"><span class="item-name">${escapeHtml(item.product_name)}</span><strong>${escapeHtml(rupiah(item.line_total))}</strong></div>
-      <div class="muted">${escapeHtml(item.quantity)} x ${escapeHtml(rupiah(item.unit_price))}${item.note ? ` · ${escapeHtml(item.note)}` : ""}</div>
-    </div>
-  `).join("");
-
-  const payment = order.payments?.[0];
-  const row = (label: string, value: string) => `<div class="row"><span>${escapeHtml(label)}</span><span>${escapeHtml(value)}</span></div>`;
-  const paymentRows = payment ? `
-    ${row("Metode", PAYMENT_LABEL[payment.method] ?? payment.method)}
-    ${payment.cash_received != null ? row("Tunai", rupiah(payment.cash_received)) : ""}
-    ${payment.change_amount != null ? row("Kembalian", rupiah(payment.change_amount)) : ""}
-  ` : "";
-
-  const html = `<!doctype html>
-<html lang="id">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Struk #${escapeHtml(order.order_no)}</title>
-<style>
-  @page { size: 80mm auto; margin: 0; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; width: 80mm; background: #fff; color: #000; }
-  body { font: 10pt/1.35 "Courier New", monospace; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .receipt { width: 72mm; margin: 0; padding: 3mm 2mm 5mm; overflow-wrap: anywhere; }
-  .center { text-align: center; }
-  .title { margin: 0; font-size: 14pt; font-weight: 700; }
-  .subtitle { margin: 1mm 0 0; font-size: 9pt; }
-  .rule { border: 0; border-top: 1px dashed #555; margin: 3mm 0; }
-  .row, .item-head { display: flex; justify-content: space-between; gap: 3mm; }
-  .row { margin: 1.5mm 0; }
-  .muted { font-size: 8.5pt; white-space: normal; overflow-wrap: anywhere; }
-  .item { margin: 2.5mm 0; break-inside: avoid; }
-  .item-name { min-width: 0; flex: 1; overflow-wrap: anywhere; }
-  .item-head strong { white-space: nowrap; }
-  .total { border-top: 1px dashed #555; margin-top: 2mm; padding-top: 2mm; font-size: 12pt; font-weight: 700; }
-  .thanks { margin: 3mm 0 0; text-align: center; font-size: 9pt; }
-  @media screen { body { margin: 0 auto; } .receipt { margin: 0 auto; } }
-</style>
-</head>
-<body>
-  <main class="receipt">
-    <header class="center"><h1 class="title">KERETA MALAM CAFE</h1><p class="subtitle">Struk Pembayaran</p></header>
-    <hr class="rule">
-    <div class="row"><span>No. #${escapeHtml(order.order_no)}</span><span>${escapeHtml(dateTimeLabel(order.created_at))}</span></div>
-    ${order.restaurant_tables?.name ? `<div class="row"><span>Meja: ${escapeHtml(order.restaurant_tables.name)}</span></div>` : ""}
-    ${order.customer_name ? `<div class="row"><span>Pelanggan: ${escapeHtml(order.customer_name)}</span></div>` : ""}
-    <hr class="rule">
-    ${items}
-    <hr class="rule">
-    ${row("Subtotal", rupiah(order.subtotal))}
-    ${Number(order.discount) > 0 ? row("Diskon", `- ${rupiah(order.discount)}`) : ""}
-    ${row("Pajak", rupiah(order.tax))}
-    <div class="row total"><span>Total</span><span>${escapeHtml(rupiah(order.total))}</span></div>
-    ${paymentRows}
-    <hr class="rule">
-    <p class="thanks">Terima kasih atas kunjungan Anda!</p>
-  </main>
-</body>
-</html>`;
-
-  printWindow.document.open();
-  printWindow.document.write(html);
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.onload = () => {
-    printWindow.setTimeout(() => printWindow.print(), 250);
-  };
-  printWindow.onafterprint = () => printWindow.close();
+function printReceipt(_order: OrderWithItems) {
+  // Cetak dokumen di halaman yang sedang aktif; jangan membuka popup/tab baru.
+  // Ini menghindari pemblokiran popup di browser dan WebView Android.
+  window.print();
 }
 
 export function Receipt({ order, autoPrint = false, onClose }: { order: OrderWithItems; autoPrint?: boolean; onClose?: () => void }) {
