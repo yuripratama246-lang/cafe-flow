@@ -95,14 +95,14 @@
   --chart-3: 148 163 184;
   --chart-4: 51 65 85;
   --chart-5: 203 213 225;
-  --sidebar: 0 0 0;
-  --sidebar-foreground: 250 250 250;
-  --sidebar-primary: 255 255 255;
-  --sidebar-primary-foreground: 0 0 0;
-  --sidebar-accent: 38 38 38;
-  --sidebar-accent-foreground: 255 255 255;
-  --sidebar-border: 48 48 48;
-  --sidebar-ring: 255 255 255;
+  --sidebar: 255 255 255;
+  --sidebar-foreground: 15 23 42;
+  --sidebar-primary: 71 85 105;
+  --sidebar-primary-foreground: 255 255 255;
+  --sidebar-accent: 241 245 249;
+  --sidebar-accent-foreground: 15 23 42;
+  --sidebar-border: 226 232 240;
+  --sidebar-ring: 71 85 105;
 }
 .dark {
   color-scheme: light; --radius: 0.875rem;
