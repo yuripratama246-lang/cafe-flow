@@ -74,7 +74,7 @@ export async function createOrder(input: NewOrderInput): Promise<OrderWithItems>
 
   if (input.source === "qr") {
     const { data, error } = await supabase.rpc("create_qr_order", {
-      p_order: { ...orderData, source: "qr", status: "new", is_paid: false },
+      p_order: { ...orderData, idempotency_key: orderData.idempotency_key ?? crypto.randomUUID(), source: "qr", status: "new", is_paid: false },
       p_items: items,
     });
     if (error) {
