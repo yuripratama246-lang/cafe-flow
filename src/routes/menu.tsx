@@ -57,7 +57,7 @@ function PublicMenuPage() {
       { title: "Pesanan selesai dibuat", description: "Pesanan selesai dibuat dan siap disajikan.", icon: Coffee },
       { title: "Pesanan selesai", description: "Pesanan telah selesai. Terima kasih sudah memesan!", icon: CircleCheck },
     ];
-    return <div className="min-h-screen bg-[#f6f7fb] px-4 py-6 sm:py-10">
+    return <div className="qr-ordering qr-order-status min-h-screen px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-md overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-[0_12px_45px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col items-center px-6 pb-6 pt-7 text-center">
           <img src="https://vtpewxagzuiqdxtnfoyy.supabase.co/storage/v1/object/public/cafe-assets/branding/qr-1791470955004.png" alt="Kereta Malam Cafe" className="mb-3 size-16 rounded-2xl object-contain" />
