@@ -436,3 +436,15 @@ html.light [data-slot="card"] {
 @media(min-width:640px){.qr-ordering .qr-product-image{height:178px}.qr-ordering .qr-hero{min-height:275px}.qr-ordering .qr-hero-content{padding:34px}.qr-ordering .qr-bottom-nav{left:50%;right:auto;width:min(100%,640px);transform:translateX(-50%);border:1px solid var(--qr-border);border-bottom:0;border-radius:20px 20px 0 0}}
 @media(min-width:1024px){.qr-ordering .qr-product-image{height:190px}.qr-ordering .qr-hero{min-height:300px}}
 @media(max-width:380px){.qr-ordering .qr-hero{min-height:205px}.qr-ordering .qr-hero-content{padding:19px 16px}.qr-ordering .qr-product-image{height:132px}.qr-ordering .qr-product-grid{grid-template-columns:1fr}}
+
+/* QR order status view shares the same cafe-night visual system. */
+.qr-order-status .max-w-md{background:#1a1511!important;color:#f4ead9;border-color:rgba(226,190,133,.15)!important;box-shadow:0 18px 48px rgba(0,0,0,.32)!important}
+.qr-order-status .bg-white,.qr-order-status .bg-slate-50,.qr-order-status .bg-slate-100{background:#211a14!important}
+.qr-order-status .text-slate-900,.qr-order-status .text-slate-800{color:#f4ead9!important}
+.qr-order-status .text-slate-600,.qr-order-status .text-slate-500{color:#b8a895!important}
+.qr-order-status .border-slate-100,.qr-order-status .border-slate-200{border-color:rgba(226,190,133,.15)!important}
+.qr-order-status .bg-blue-50,.qr-order-status .bg-blue-50\/70{background:rgba(217,173,103,.12)!important}
+.qr-order-status .text-blue-500,.qr-order-status .text-blue-600{color:#f0c77d!important}
+.qr-order-status .bg-blue-700{background:#d9ad67!important;color:#21170b!important}
+.qr-order-status .ring-blue-600{--tw-ring-color:#d9ad67!important}
+.qr-order-status button.rounded-xl{border-radius:14px}
