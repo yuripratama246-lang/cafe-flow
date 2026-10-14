@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 384" role="img" aria-labelledby="title">
+<title id="title">Kereta Malam Cafe</title>
+<rect x="4" y="4" width="376" height="376" rx="52" fill="#050505"/>
+<g fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round">
+  <circle cx="198" cy="145" r="88" stroke-width="5"/>
+  <path d="M96 180h96l30-23h30l20 22h22l-14 18h-42l-18 22h-42l-18-15H96z" stroke-width="7"/>
+  <circle cx="252" cy="185" r="24" stroke-width="7"/>
+  <circle cx="252" cy="185" r="10" stroke-width="5"/>
+  <path d="M225 203l-1 31h69l-14-31M224 236l-15 26h103l-19-26M231 242l-2 15m17-15v15m17-15v15m17-15v15" stroke-width="5"/>
+  <path d="M167 103c-15 15 11 27 26 13 14-13 30-8 31 6 2 12-7 17-15 20" stroke-width="8"/>
+  <path d="M166 133l-3 12m-68 47v14h98m-86-9h62" stroke-width="5"/>
+  <path d="M111 234c-8 0-14 6-14 14v8c0 22 18 39 40 39h27c22 0 40-17 40-39v-8c0-8-6-14-14-14z" stroke-width="6"/>
+  <path d="M111 244c-16-4-25 2-25 13 0 12 9 18 22 17m94-30c16-4 25 2 25 13 0 12-9 18-22 17M108 297c28 12 67 12 94 0" stroke-width="6"/>
+</g>
+<g fill="#fff" font-family="Arial, Helvetica, sans-serif" text-anchor="middle">
+  <text x="192" y="329" font-size="31" font-weight="700" letter-spacing="2.4">KERETA MALAM</text>
+  <text x="192" y="358" font-size="20" font-weight="700" letter-spacing="8">CAFE</text>
+</g>
+</svg>
