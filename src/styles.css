@@ -448,3 +448,11 @@ html.light [data-slot="card"] {
 .qr-order-status .bg-blue-700{background:#d9ad67!important;color:#21170b!important}
 .qr-order-status .ring-blue-600{--tw-ring-color:#d9ad67!important}
 .qr-order-status button.rounded-xl{border-radius:14px}
+
+.qr-ordering [role="dialog"]{color:#f4ead9!important;background:#1c1712!important;border:1px solid rgba(226,190,133,.18)}
+.qr-ordering [role="dialog"] .text-slate-900,.qr-ordering [role="dialog"] .text-slate-800{color:#f4ead9!important}
+.qr-ordering [role="dialog"] .text-slate-500,.qr-ordering [role="dialog"] .text-slate-600{color:#b8a895!important}
+.qr-ordering [role="dialog"] .border-slate-200{border-color:rgba(226,190,133,.18)!important}
+.qr-ordering [role="dialog"] .bg-white,.qr-ordering [role="dialog"] .bg-slate-50{background:#292119!important}
+.qr-ordering .qr-checkout-overlay button.bg-primary{color:#25180a!important;background:linear-gradient(135deg,#f0cb89,#d5a65e)!important;border-color:rgba(255,225,172,.5)!important}
+.qr-ordering .qr-checkout-overlay button.bg-primary:hover{background:#f4d49a!important}
