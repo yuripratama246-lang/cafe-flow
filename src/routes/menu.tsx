@@ -60,7 +60,7 @@ function PublicMenuPage() {
     return <div className="qr-ordering qr-order-status min-h-screen px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-md overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-[0_12px_45px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col items-center px-6 pb-6 pt-7 text-center">
-          <img src="https://vtpewxagzuiqdxtnfoyy.supabase.co/storage/v1/object/public/cafe-assets/branding/qr-1791470955004.png" alt="Kereta Malam Cafe" className="mb-3 size-16 rounded-2xl object-contain" />
+          <img src="/kereta-malam-cafe-logo.svg" alt="Logo Kereta Malam Cafe" className="mb-3 size-[68px] object-contain" />
           <h2 className="text-base font-bold tracking-tight text-slate-900">Kereta Malam Cafe</h2>
           <div className={`mt-6 grid size-[76px] place-items-center rounded-full ${cancelled ? "bg-red-50 text-red-600" : completed ? "bg-emerald-50 text-emerald-600" : "bg-blue-50 text-blue-500"}`}>
             {cancelled ? <XCircle className="size-10" /> : completed ? <CheckCircle2 className="size-10" /> : preparing ? <ChefHat className="size-10" /> : ready ? <Coffee className="size-10" /> : <Clock3 className="size-10" />}
@@ -106,7 +106,7 @@ function PublicMenuPage() {
   }
   return <div className="qr-ordering min-h-screen pb-36 text-slate-100">
 <header className="qr-header sticky top-0 z-20 px-4 py-3 backdrop-blur-xl"><div className="mx-auto max-w-5xl">
-<div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><div className="qr-brand-mark grid size-11 shrink-0 place-items-center rounded-2xl"><TrainFront className="size-5"/></div><div className="min-w-0"><p className="qr-eyebrow">PERJALANAN RASA · SEJAK SENJA</p><h1 className="truncate text-lg font-bold">Kereta Malam Cafe</h1><p className="mt-0.5 text-xs text-amber-100/65">{tablesQuery.isLoading ? "Memeriksa meja..." : table ? `${table.name} · ${table.code}` : "Tanpa meja · Jelajahi menu"}</p></div></div>
+<div className="flex items-center justify-between gap-3"><div className="flex min-w-0 items-center gap-3"><img src="/kereta-malam-cafe-logo.svg" alt="Logo Kereta Malam Cafe" className="size-11 shrink-0 object-contain" /><div className="min-w-0"><p className="qr-eyebrow">PERJALANAN RASA · SEJAK SENJA</p><h1 className="truncate text-lg font-bold">Kereta Malam Cafe</h1><p className="mt-0.5 text-xs text-amber-100/65">{tablesQuery.isLoading ? "Memeriksa meja..." : table ? `${table.name} · ${table.code}` : "Tanpa meja · Jelajahi menu"}</p></div></div>
 <button type="button" aria-label="Buka keranjang" className="qr-bag-button relative grid size-11 shrink-0 place-items-center rounded-2xl" onClick={() => setActiveTab("cart")}><ShoppingBag className="size-5"/>{itemCount>0&&<span className="qr-count absolute -right-1 -top-1 grid size-5 place-items-center rounded-full text-[10px] font-bold">{itemCount}</span>}</button></div>
 <div className="qr-search-wrap relative mt-4"><Search className="absolute left-3.5 top-3.5 size-4"/><Input className="qr-search h-11 rounded-2xl pl-10" placeholder="Cari menu, kopi, makanan..." value={search} onChange={e=>setSearch(e.target.value)}/></div>
 {activeTab==="menu"&&<div className="qr-categories mt-3 flex gap-2 overflow-x-auto pb-1">{categories.map(c=><button key={c} type="button" onClick={()=>setCategory(c)} className={`qr-category whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold ${category===c?"is-active":""}`}>{c==="Semua"?c:categoryMap.get(c)??"Kategori"}</button>)}</div>}
