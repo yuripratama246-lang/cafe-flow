@@ -434,7 +434,7 @@ html.light [data-slot="card"] {
 .qr-ordering .qr-checkout-overlay .text-emerald-700{color:#91d4a3!important}
 @media(min-width:640px){.qr-ordering .qr-product-image{height:178px}.qr-ordering .qr-hero{min-height:275px}.qr-ordering .qr-hero-content{padding:34px}.qr-ordering .qr-bottom-nav{left:50%;right:auto;width:min(100%,640px);transform:translateX(-50%);border:1px solid var(--qr-border);border-bottom:0;border-radius:20px 20px 0 0}}
 @media(min-width:1024px){.qr-ordering .qr-product-image{height:190px}.qr-ordering .qr-hero{min-height:300px}}
-@media(max-width:380px){.qr-ordering .qr-hero{min-height:205px}.qr-ordering .qr-hero-content{padding:19px 16px}.qr-ordering .qr-product-image{height:132px}.qr-ordering .qr-product-grid{grid-template-columns:1fr}}
+@media(max-width:380px){.qr-ordering .qr-hero{min-height:205px}.qr-ordering .qr-hero-content{padding:19px 16px}.qr-ordering .qr-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.qr-ordering .qr-product-image{height:104px}.qr-ordering .qr-product-card>div:last-child{padding:9px}.qr-ordering .qr-product-card h3{min-height:34px;font-size:12px;line-height:1.25}.qr-ordering .qr-product-card p{display:none}.qr-ordering .qr-product-card .qr-add-button{padding-inline:8px;font-size:11px}}
 
 /* QR order status view shares the same cafe-night visual system. */
 .qr-order-status .max-w-md{background:#1a1511!important;color:#f4ead9;border-color:rgba(226,190,133,.15)!important;box-shadow:0 18px 48px rgba(0,0,0,.32)!important}
