@@ -591,3 +591,36 @@ html.light .qr-order-status .qr-status-step-pending {
 @media (prefers-contrast: more) {
   html.light .qr-ordering { --qr-muted: #e0d2c0; --qr-border: rgba(240,199,125,.55); }
 }
+
+
+/* QR checkout contrast: keep menu names, quantity controls and money readable
+   in both light and dark app themes, without changing the cafe's night palette. */
+.qr-ordering .qr-checkout-overlay > div {
+  color: #f4ead9 !important;
+  background: #1c1712 !important;
+  border: 1px solid rgba(226,190,133,.22);
+}
+.qr-ordering .qr-checkout-overlay :is(.text-black,.text-gray-950,.text-gray-900,.text-gray-800,.text-gray-700,
+  .text-slate-950,.text-slate-900,.text-slate-800,.text-slate-700,
+  .text-zinc-950,.text-zinc-900,.text-zinc-800,.text-neutral-900,.text-neutral-800,.text-neutral-700) {
+  color: #f4ead9 !important;
+}
+.qr-ordering .qr-checkout-overlay :is(.text-slate-600,.text-slate-500,.text-gray-600,.text-gray-500,
+  .text-neutral-600,.text-neutral-500,.text-zinc-600,.text-zinc-500) {
+  color: #c5b5a2 !important;
+}
+.qr-ordering .qr-checkout-overlay :is(.bg-white,.bg-gray-50,.bg-gray-100,.bg-slate-50,.bg-slate-100,
+  .bg-zinc-50,.bg-zinc-100,.bg-neutral-50,.bg-neutral-100) {
+  background-color: #292119 !important;
+}
+.qr-ordering .qr-checkout-overlay :is(.border-slate-200,.border-gray-200,.border-neutral-200,.border-zinc-200) {
+  border-color: rgba(226,190,133,.22) !important;
+}
+.qr-ordering .qr-checkout-overlay button.size-7 {
+  color: #f4ead9 !important;
+  background: #292119 !important;
+  border-color: rgba(226,190,133,.35) !important;
+}
+.qr-ordering .qr-checkout-overlay span.w-4 {
+  color: #f4ead9 !important;
+}
