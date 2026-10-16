@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, RefreshCw } from "lucide-react";
+import { MessageCircle, Send, RefreshCw, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -86,6 +86,29 @@ function CashierChatPage() {
   useEffect(() => { if (!isCustomer && activeId) { void loadMessages(activeId).catch(e => toast.error(e instanceof Error ? e.message : "Pesan gagal dimuat")); setThread(threads.find(t => t.id === activeId) ?? null); } }, [activeId, isCustomer, threads]);
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
+  async function deleteChat() {
+    if (isCustomer || !activeId || sending) return;
+    const selected = threads.find((item) => item.id === activeId);
+    if (!selected) return;
+    const confirmed = window.confirm(`Hapus chat ${selected.table_name} · QR ${selected.table_code}? Semua pesan dalam percakapan ini akan dihapus. Data pesanan tidak terpengaruh.`);
+    if (!confirmed) return;
+    setSending(true);
+    try {
+      const { error } = await supabase.from("cashier_chat_threads").delete().eq("id", activeId);
+      if (error) throw error;
+      const remaining = threads.filter((item) => item.id !== activeId);
+      setThreads(remaining);
+      setActiveId(remaining[0]?.id ?? "");
+      setThread(null);
+      setMessages([]);
+      toast.success("Chat lama berhasil dihapus.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Chat gagal dihapus");
+    } finally {
+      setSending(false);
+    }
+  }
+
   async function sendMessage() {
     const body = draft.trim();
     if (!body || sending) return;
@@ -127,7 +150,7 @@ function CashierChatPage() {
       {loading ? <p className="p-3 text-sm text-muted-foreground">Memuat chat...</p> : threads.length === 0 ? <p className="p-3 text-sm text-muted-foreground">Belum ada pesan masuk.</p> : <div className="space-y-1">{threads.map(t => <button key={t.id} onClick={() => setActiveId(t.id)} className={`w-full rounded-lg border p-3 text-left ${activeId === t.id ? "border-primary bg-primary/5" : "border-transparent hover:bg-muted"}`}><div className="flex justify-between gap-2"><strong className="text-sm">{t.table_name} · QR {t.table_code}</strong><span className="text-[10px] text-muted-foreground">{new Date(t.last_message_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</span></div><p className="text-xs text-muted-foreground">{t.customer_name} · {t.status === "open" ? "Aktif" : "Ditutup"}</p></button>)}</div>}
       </aside>
       <section className="flex min-h-[55vh] flex-col rounded-xl border p-3">
-        <header className="border-b pb-3"><h2 className="font-semibold">{thread?.table_name ?? threads.find(t => t.id === activeId)?.table_name ?? "Pilih percakapan"}</h2><p className="text-sm text-muted-foreground">{thread?.table_code ?? threads.find(t => t.id === activeId)?.table_code ? `Nomor QR: ${thread?.table_code ?? threads.find(t => t.id === activeId)?.table_code}` : "Setiap pesan menampilkan nomor meja dan QR"}</p></header>
+        <header className="flex items-start justify-between gap-3 border-b pb-3"><div><h2 className="font-semibold">{thread?.table_name ?? threads.find(t => t.id === activeId)?.table_name ?? "Pilih percakapan"}</h2><p className="text-sm text-muted-foreground">{thread?.table_code ?? threads.find(t => t.id === activeId)?.table_code ? `Nomor QR: ${thread?.table_code ?? threads.find(t => t.id === activeId)?.table_code}` : "Setiap pesan menampilkan nomor meja dan QR"}</p></div><Button type="button" variant="destructive" size="sm" disabled={!activeId || sending} onClick={() => void deleteChat()}><Trash2 className="mr-2 size-4" />Hapus chat</Button></header>
         <div className="flex-1 space-y-3 overflow-y-auto py-4">{messages.map(m => <div key={m.id} className={`flex ${m.sender_role === "cashier" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${m.sender_role === "cashier" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><p className="mb-1 text-[10px] opacity-70">{m.sender_role === "cashier" ? "Kasir" : "Customer"} · QR {threads.find(t => t.id === activeId)?.table_code ?? "—"}</p>{m.body}<p className="mt-1 text-right text-[10px] opacity-70">{new Date(m.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</p></div></div>)}<div ref={bottomRef} /></div>
         <form className="flex gap-2 border-t pt-3" onSubmit={e => { e.preventDefault(); void sendMessage(); }}><Input type="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={e => setDraft(e.target.value)} placeholder="Balas pesan pelanggan..." maxLength={2000} disabled={!activeId || sending} /><Button type="submit" disabled={!activeId || sending || !draft.trim()}><Send className="mr-2 size-4" />{sending ? "Mengirim..." : "Balas"}</Button></form>
       </section>
