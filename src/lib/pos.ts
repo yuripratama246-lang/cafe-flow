@@ -85,9 +85,30 @@ export async function createOrder(input: NewOrderInput): Promise<OrderWithItems>
     }
     const created = (data as { order?: Order } | null)?.order;
     if (!created?.id) throw new Error("Pesanan dibuat tetapi respons order tidak valid");
-    const full = await fetchOrder(created.id);
-    if (!full) throw new Error("Pesanan tersimpan tetapi gagal memuat detail");
-    return full;
+    // The public QR RPC can successfully create the order while the follow-up
+    // SELECT is blocked/delayed by public RLS. Never leave the customer on
+    // checkout after the insert already succeeded: return the RPC order and let
+    // the status page refresh the authoritative record in the background.
+    try {
+      const full = await fetchOrder(created.id);
+      if (full) return full;
+    } catch (statusError) {
+      console.warn("[create_qr_order] Order created; status lookup will retry on status page", statusError);
+    }
+    return {
+      ...created,
+      order_items: items.map((item, index) => ({
+        id: `pending-${index}`,
+        order_id: created.id,
+        product_id: item.product_id,
+        product_name: item.product_name,
+        unit_price: item.unit_price,
+        quantity: item.quantity,
+        note: item.note ?? null,
+      })),
+      payments: [],
+      restaurant_tables: null,
+    } as unknown as OrderWithItems;
   }
 
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
