@@ -460,7 +460,7 @@ html.light [data-slot="card"] {
 /* Contrast audit: semantic safeguards for warm-night QR Ordering and status screens.
    Keep this after legacy compatibility rules so broad light-mode utilities cannot wash out
    the deliberately dark customer-facing experience. */
-.qr-ordering {
+html.light .qr-ordering {
   --qr-bg: #100d0b;
   --qr-panel: #1a1511;
   --qr-panel-raised: #292119;
@@ -472,122 +472,122 @@ html.light [data-slot="card"] {
   background-color: var(--qr-bg) !important;
   color: var(--qr-cream) !important;
 }
-.qr-ordering :is(.text-black,.text-gray-950,.text-gray-900,.text-gray-800,.text-gray-700,
+html.light .qr-ordering :is(.text-black,.text-gray-950,.text-gray-900,.text-gray-800,.text-gray-700,
   .text-slate-950,.text-slate-900,.text-slate-800,.text-slate-700,
   .text-zinc-950,.text-zinc-900,.text-zinc-800,.text-neutral-900) {
   color: var(--qr-cream) !important;
 }
-.qr-ordering :is(.text-gray-600,.text-gray-500,.text-gray-400,.text-slate-600,.text-slate-500,
+html.light .qr-ordering :is(.text-gray-600,.text-gray-500,.text-gray-400,.text-slate-600,.text-slate-500,
   .text-slate-400,.text-zinc-600,.text-zinc-500,.text-neutral-600,.text-neutral-500) {
   color: var(--qr-muted) !important;
 }
-.qr-ordering :is(.bg-white,.bg-gray-50,.bg-gray-100,.bg-slate-50,.bg-slate-100,
+html.light .qr-ordering :is(.bg-white,.bg-gray-50,.bg-gray-100,.bg-slate-50,.bg-slate-100,
   .bg-zinc-50,.bg-zinc-100,.bg-neutral-50,.bg-neutral-100) {
   background-color: var(--qr-panel-raised) !important;
 }
-.qr-ordering :is(.border-white,.border-gray-100,.border-gray-200,.border-slate-100,
+html.light .qr-ordering :is(.border-white,.border-gray-100,.border-gray-200,.border-slate-100,
   .border-slate-200,.border-zinc-100,.border-neutral-100) {
   border-color: var(--qr-border) !important;
 }
-.qr-ordering input, .qr-ordering select, .qr-ordering textarea {
+html.light .qr-ordering input, html.light .qr-ordering select, html.light .qr-ordering textarea {
   background-color: var(--qr-panel-raised) !important;
   color: var(--qr-cream) !important;
   border-color: var(--qr-border) !important;
 }
-.qr-ordering input::placeholder, .qr-ordering textarea::placeholder {
+html.light .qr-ordering input::placeholder, html.light .qr-ordering textarea::placeholder {
   color: #c0ae98 !important;
   opacity: 1;
 }
-.qr-ordering :is(button,a,[role="button"],input,select,textarea):focus-visible {
+html.light .qr-ordering :is(button,a,[role="button"],input,select,textarea):focus-visible {
   outline: 2px solid var(--qr-gold-bright);
   outline-offset: 2px;
 }
-.qr-ordering :is(button,a,[role="button"]):disabled,
-.qr-ordering [aria-disabled="true"] {
+html.light .qr-ordering :is(button,a,[role="button"]):disabled,
+html.light .qr-ordering [aria-disabled="true"] {
   opacity: .72;
 }
-.qr-ordering .qr-promo-card,
-.qr-ordering .qr-product-card,
-.qr-ordering .qr-cart-item,
-.qr-ordering .qr-info-card,
-.qr-ordering .qr-total-card,
-.qr-ordering .qr-empty-state {
+html.light .qr-ordering .qr-promo-card,
+html.light .qr-ordering .qr-product-card,
+html.light .qr-ordering .qr-cart-item,
+html.light .qr-ordering .qr-info-card,
+html.light .qr-ordering .qr-total-card,
+html.light .qr-ordering .qr-empty-state {
   color: var(--qr-cream);
 }
-.qr-ordering .qr-promo-card strong,
-.qr-ordering .qr-product-card h3,
-.qr-ordering .qr-product-card .font-semibold,
-.qr-ordering main h1,
-.qr-ordering main h2,
-.qr-ordering main h3 {
+html.light .qr-ordering .qr-promo-card strong,
+html.light .qr-ordering .qr-product-card h3,
+html.light .qr-ordering .qr-product-card .font-semibold,
+html.light .qr-ordering main h1,
+html.light .qr-ordering main h2,
+html.light .qr-ordering main h3 {
   color: var(--qr-cream);
 }
-.qr-ordering .qr-product-card .text-amber-300,
-.qr-ordering .qr-cart-item .text-amber-300,
-.qr-ordering .qr-total-card .text-amber-300 {
+html.light .qr-ordering .qr-product-card .text-amber-300,
+html.light .qr-ordering .qr-cart-item .text-amber-300,
+html.light .qr-ordering .qr-total-card .text-amber-300 {
   color: var(--qr-gold-bright) !important;
 }
-.qr-ordering .qr-checkout-overlay,
-.qr-ordering [role="dialog"] {
+html.light .qr-ordering .qr-checkout-overlay,
+html.light .qr-ordering [role="dialog"] {
   color: var(--qr-cream) !important;
   background-color: #1c1712 !important;
   border-color: var(--qr-border) !important;
 }
-.qr-ordering .qr-checkout-overlay :is(.text-slate-900,.text-slate-800,.text-slate-700,
+html.light .qr-ordering .qr-checkout-overlay :is(.text-slate-900,.text-slate-800,.text-slate-700,
   .text-gray-900,.text-gray-800,.text-black) {
   color: var(--qr-cream) !important;
 }
-.qr-ordering .qr-checkout-overlay :is(.text-slate-600,.text-slate-500,.text-gray-600,.text-gray-500) {
+html.light .qr-ordering .qr-checkout-overlay :is(.text-slate-600,.text-slate-500,.text-gray-600,.text-gray-500) {
   color: var(--qr-muted) !important;
 }
-.qr-ordering .qr-checkout-overlay :is(.bg-white,.bg-slate-50,.bg-slate-100,.bg-gray-50) {
+html.light .qr-ordering .qr-checkout-overlay :is(.bg-white,.bg-slate-50,.bg-slate-100,.bg-gray-50) {
   background-color: var(--qr-panel-raised) !important;
 }
-.qr-ordering .qr-checkout-overlay .qr-primary-button,
-.qr-ordering .qr-checkout-overlay button.bg-primary {
+html.light .qr-ordering .qr-checkout-overlay .qr-primary-button,
+html.light .qr-ordering .qr-checkout-overlay button.bg-primary {
   color: #25180a !important;
   background: linear-gradient(135deg,#f0cb89,#d5a65e) !important;
 }
 
 /* Order status: use the same night palette for the entire card, nested panels and timeline. */
-.qr-order-status .max-w-md {
+html.light .qr-order-status .max-w-md {
   background: #1a1511 !important;
   color: #f4ead9 !important;
   border-color: rgba(226,190,133,.22) !important;
   box-shadow: 0 18px 48px rgba(0,0,0,.32) !important;
 }
-.qr-order-status :is(.bg-white,.bg-slate-50,.bg-slate-100,.bg-slate-50\/80) {
+html.light .qr-order-status :is(.bg-white,.bg-slate-50,.bg-slate-100,.bg-slate-50\/80) {
   background-color: #292119 !important;
 }
-.qr-order-status :is(.text-slate-900,.text-slate-800,.text-gray-900,.text-gray-800) {
+html.light .qr-order-status :is(.text-slate-900,.text-slate-800,.text-gray-900,.text-gray-800) {
   color: #f4ead9 !important;
 }
-.qr-order-status :is(.text-slate-600,.text-slate-500,.text-slate-400,.text-gray-600,.text-gray-500) {
+html.light .qr-order-status :is(.text-slate-600,.text-slate-500,.text-slate-400,.text-gray-600,.text-gray-500) {
   color: #c5b5a2 !important;
 }
-.qr-order-status :is(.border-slate-100,.border-slate-200,.border-red-100) {
+html.light .qr-order-status :is(.border-slate-100,.border-slate-200,.border-red-100) {
   border-color: rgba(226,190,133,.22) !important;
 }
-.qr-order-status :is(.bg-blue-50,.bg-blue-50\/70,.bg-red-50,.bg-emerald-50) {
+html.light .qr-order-status :is(.bg-blue-50,.bg-blue-50\/70,.bg-red-50,.bg-emerald-50) {
   background-color: rgba(217,173,103,.13) !important;
 }
-.qr-order-status :is(.text-blue-500,.text-blue-600,.text-blue-700,.text-emerald-600) {
+html.light .qr-order-status :is(.text-blue-500,.text-blue-600,.text-blue-700,.text-emerald-600) {
   color: #f0c77d !important;
 }
-.qr-order-status .text-red-600,
-.qr-order-status .text-red-700 {
+html.light .qr-order-status .text-red-600,
+html.light .qr-order-status .text-red-700 {
   color: #ffaaa0 !important;
 }
-.qr-order-status .bg-blue-700 {
+html.light .qr-order-status .bg-blue-700 {
   background-color: #d9ad67 !important;
   color: #21170b !important;
 }
-.qr-order-status .ring-blue-600 {
+html.light .qr-order-status .ring-blue-600 {
   --tw-ring-color: #d9ad67 !important;
 }
-.qr-order-status .qr-status-step-pending {
+html.light .qr-order-status .qr-status-step-pending {
   color: #c5b5a2;
 }
 @media (prefers-contrast: more) {
-  .qr-ordering { --qr-muted: #e0d2c0; --qr-border: rgba(240,199,125,.55); }
+  html.light .qr-ordering { --qr-muted: #e0d2c0; --qr-border: rgba(240,199,125,.55); }
 }
