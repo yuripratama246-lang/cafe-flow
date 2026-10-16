@@ -87,27 +87,38 @@ function CashierChatPage() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
 
   async function sendMessage() {
-    const body = draft.trim(); if (!body || sending) return;
+    const body = draft.trim();
+    if (!body || sending) return;
+    if (isCustomer && !token) { toast.error("Sesi chat belum siap. Muat ulang halaman lalu coba lagi."); return; }
+    if (!isCustomer && !activeId) { toast.error("Pilih percakapan meja terlebih dahulu."); return; }
     setSending(true);
     try {
-      const { error } = isCustomer
+      const { data: sentId, error } = isCustomer
         ? await supabase.rpc("send_public_cashier_chat", { p_access_token: token, p_body: body })
         : await supabase.rpc("send_cashier_chat", { p_thread_id: activeId, p_body: body });
       if (error) throw error;
+      if (!sentId) throw new Error("Pesan belum tersimpan. Coba kirim lagi.");
       setDraft("");
       if (isCustomer) {
-        const { data } = await supabase.rpc("read_public_cashier_chat", { p_access_token: token });
+        const { data, error: readError } = await supabase.rpc("read_public_cashier_chat", { p_access_token: token });
+        if (readError) throw readError;
         if (data) setMessages(data as ChatMessage[]);
-      } else { await loadMessages(activeId); await loadThreads(); }
-    } catch (e) { toast.error(e instanceof Error ? e.message : "Pesan gagal dikirim"); }
-    finally { setSending(false); }
+      } else {
+        await Promise.all([loadMessages(activeId), loadThreads()]);
+      }
+      toast.success("Pesan terkirim ke kasir.");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Pesan gagal dikirim");
+    } finally {
+      setSending(false);
+    }
   }
 
   if (isCustomer) return <main className="mx-auto flex min-h-screen max-w-xl flex-col bg-background p-4">
     <header className="mb-4 flex items-center gap-3 border-b pb-4"><span className="rounded-xl bg-primary/10 p-3"><MessageCircle className="size-5 text-primary" /></span><div><h1 className="font-semibold">Chat ke Kasir</h1><p className="text-sm text-muted-foreground">Meja {tableCode} · Tanya langsung ke kasir</p></div></header>
     <div className="mb-3 rounded-xl bg-muted p-3 text-sm">Pesan kamu terhubung ke kasir. Cantumkan pertanyaan atau permintaan di sini.</div>
     <section className="flex-1 space-y-3 overflow-y-auto pb-4">{messages.map(m => <div key={m.id} className={`flex ${m.sender_role === "customer" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${m.sender_role === "customer" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><p className="mb-1 text-[10px] opacity-70">{m.sender_role === "customer" ? "Kamu" : "Kasir"} · Meja {tableCode}</p>{m.body}<p className="mt-1 text-right text-[10px] opacity-70">{new Date(m.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</p></div></div>)}<div ref={bottomRef} /></section>
-    <form className="sticky bottom-0 flex gap-2 border-t bg-background py-3" onSubmit={e => { e.preventDefault(); void sendMessage(); }}><Input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Tulis pesan ke kasir..." maxLength={2000} /><Button type="submit" disabled={sending || !draft.trim() || loading}><Send className="mr-2 size-4" />Kirim</Button></form>
+    <form className="sticky bottom-0 flex gap-2 border-t bg-background py-3" onSubmit={e => { e.preventDefault(); void sendMessage(); }}><Input type="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={e => setDraft(e.target.value)} placeholder="Tulis pesan ke kasir..." maxLength={2000} disabled={sending || loading} /><Button type="submit" disabled={sending || !draft.trim() || loading}><Send className="mr-2 size-4" />{sending ? "Mengirim..." : "Kirim"}</Button></form>
   </main>;
 
   return <AppShell title="Chat Customer" description="Percakapan langsung pelanggan dan kasir">
@@ -118,7 +129,7 @@ function CashierChatPage() {
       <section className="flex min-h-[55vh] flex-col rounded-xl border p-3">
         <header className="border-b pb-3"><h2 className="font-semibold">{thread?.table_name ?? threads.find(t => t.id === activeId)?.table_name ?? "Pilih percakapan"}</h2><p className="text-sm text-muted-foreground">{thread?.table_code ?? threads.find(t => t.id === activeId)?.table_code ? `Nomor QR: ${thread?.table_code ?? threads.find(t => t.id === activeId)?.table_code}` : "Setiap pesan menampilkan nomor meja dan QR"}</p></header>
         <div className="flex-1 space-y-3 overflow-y-auto py-4">{messages.map(m => <div key={m.id} className={`flex ${m.sender_role === "cashier" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${m.sender_role === "cashier" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><p className="mb-1 text-[10px] opacity-70">{m.sender_role === "cashier" ? "Kasir" : "Customer"} · QR {threads.find(t => t.id === activeId)?.table_code ?? "—"}</p>{m.body}<p className="mt-1 text-right text-[10px] opacity-70">{new Date(m.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</p></div></div>)}<div ref={bottomRef} /></div>
-        <form className="flex gap-2 border-t pt-3" onSubmit={e => { e.preventDefault(); void sendMessage(); }}><Input value={draft} onChange={e => setDraft(e.target.value)} placeholder="Balas pesan pelanggan..." maxLength={2000} disabled={!activeId || sending} /><Button type="submit" disabled={!activeId || sending || !draft.trim()}><Send className="mr-2 size-4" />Balas</Button></form>
+        <form className="flex gap-2 border-t pt-3" onSubmit={e => { e.preventDefault(); void sendMessage(); }}><Input type="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={e => setDraft(e.target.value)} placeholder="Balas pesan pelanggan..." maxLength={2000} disabled={!activeId || sending} /><Button type="submit" disabled={!activeId || sending || !draft.trim()}><Send className="mr-2 size-4" />{sending ? "Mengirim..." : "Balas"}</Button></form>
       </section>
     </div>
   </AppShell>;
