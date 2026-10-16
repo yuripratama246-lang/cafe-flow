@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
-import { MessageCircle, Send, RefreshCw, Trash2 } from "lucide-react";
+import { MessageCircle, Send, RefreshCw, Trash2, TrainFront, Coffee, CircleHelp, Clock3, CheckCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { AppShell } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
@@ -137,11 +137,34 @@ function CashierChatPage() {
     }
   }
 
-  if (isCustomer) return <main className="mx-auto flex min-h-screen max-w-xl flex-col bg-background p-4">
-    <header className="mb-4 flex items-center gap-3 border-b pb-4"><span className="rounded-xl bg-primary/10 p-3"><MessageCircle className="size-5 text-primary" /></span><div><h1 className="font-semibold">Chat ke Kasir</h1><p className="text-sm text-muted-foreground">Meja {tableCode} · Tanya langsung ke kasir</p></div></header>
-    <div className="mb-3 rounded-xl bg-muted p-3 text-sm">Pesan kamu terhubung ke kasir. Cantumkan pertanyaan atau permintaan di sini.</div>
-    <section className="flex-1 space-y-3 overflow-y-auto pb-4">{messages.map(m => <div key={m.id} className={`flex ${m.sender_role === "customer" ? "justify-end" : "justify-start"}`}><div className={`max-w-[85%] rounded-2xl px-4 py-2.5 text-sm ${m.sender_role === "customer" ? "bg-primary text-primary-foreground" : "bg-muted"}`}><p className="mb-1 text-[10px] opacity-70">{m.sender_role === "customer" ? "Kamu" : "Kasir"} · Meja {tableCode}</p>{m.body}<p className="mt-1 text-right text-[10px] opacity-70">{new Date(m.created_at).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}</p></div></div>)}<div ref={bottomRef} /></section>
-    <form className="sticky bottom-0 flex gap-2 border-t bg-background py-3" onSubmit={e => { e.preventDefault(); void sendMessage(); }}><Input type="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={e => setDraft(e.target.value)} placeholder="Tulis pesan ke kasir..." maxLength={2000} disabled={sending || loading} /><Button type="submit" disabled={sending || !draft.trim() || loading}><Send className="mr-2 size-4" />{sending ? "Mengirim..." : "Kirim"}</Button></form>
+  if (isCustomer) return <main className="qr-customer-chat min-h-screen">
+    <div className="qr-chat-shell mx-auto flex min-h-screen w-full max-w-xl flex-col">
+      <header className="qr-chat-header">
+        <div className="flex items-center gap-3">
+          <span className="qr-chat-brand-icon"><TrainFront className="size-6" /></span>
+          <div className="min-w-0 flex-1"><p className="qr-chat-kicker">KERETA MALAM CAFE</p><h1 className="text-lg font-bold">Chat dengan Kasir</h1><p className="qr-chat-subtitle">QR Meja {tableCode} <span className="mx-1.5 opacity-40">•</span> Tanya atau minta bantuan</p></div>
+          <span className="qr-chat-live-pill"><span className="qr-chat-live-dot" />Chat aktif</span>
+        </div>
+      </header>
+      <div className="qr-chat-notice"><span className="qr-chat-notice-icon"><Coffee className="size-4" /></span><div><p className="font-semibold">Ada yang bisa kami bantu?</p><p className="mt-0.5 text-xs leading-5">Tanyakan menu, ketersediaan makanan, atau sampaikan permintaan khusus. Kasir akan membalas di ruang chat ini.</p></div></div>
+      <section className="qr-chat-messages flex-1 space-y-4 overflow-y-auto px-4 py-5" aria-label="Percakapan dengan kasir">
+        {messages.length===0&&!loading&&<div className="qr-chat-empty"><span className="qr-chat-empty-icon"><MessageCircle className="size-6" /></span><h2 className="mt-3 font-semibold">Mulai percakapan</h2><p className="mt-1 max-w-[250px] text-sm leading-6">Pesan kamu akan langsung masuk ke ruang chat kasir.</p><div className="mt-4 flex flex-wrap justify-center gap-2"><button type="button" className="qr-chat-suggestion" onClick={()=>setDraft("Menu ini masih tersedia?")}>Cek ketersediaan menu</button><button type="button" className="qr-chat-suggestion" onClick={()=>setDraft("Boleh minta bantuan kasir?")}>Minta bantuan</button><button type="button" className="qr-chat-suggestion" onClick={()=>setDraft("Saya ingin mengubah pesanan.")}>Ubah pesanan</button></div></div>}
+        {loading&&messages.length===0&&<div className="qr-chat-loading"><span className="qr-chat-loading-dot"/><span className="qr-chat-loading-dot"/><span className="qr-chat-loading-dot"/><p className="mt-3 text-sm">Menyiapkan ruang chat...</p></div>}
+        {messages.map(m=><div key={m.id} className={`flex items-end gap-2 ${m.sender_role==="customer"?"justify-end":"justify-start"}`}>
+          {m.sender_role!=="customer"&&<span className="qr-chat-avatar cashier"><Coffee className="size-4" /></span>}
+          <div className={`qr-chat-bubble ${m.sender_role==="customer"?"customer":"cashier"}`}><p className="qr-chat-sender">{m.sender_role==="customer"?"Kamu":"Kasir Kereta Malam"}</p><p className="whitespace-pre-wrap break-words leading-6">{m.body}</p><div className="qr-chat-message-meta"><span>{new Date(m.created_at).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}</span>{m.sender_role==="customer"&&<CheckCheck className="size-3.5" />}</div></div>
+          {m.sender_role==="customer"&&<span className="qr-chat-avatar customer-avatar">K</span>}
+        </div>)}
+        <div ref={bottomRef} />
+      </section>
+      <footer className="qr-chat-composer-wrap">
+        <form className="qr-chat-composer" onSubmit={e=>{e.preventDefault();void sendMessage();}}>
+          <Input className="qr-chat-input" type="text" enterKeyHint="send" autoComplete="off" value={draft} onChange={e=>setDraft(e.target.value)} placeholder="Tulis pesan kamu..." maxLength={2000} disabled={sending||loading} aria-label="Tulis pesan ke kasir" />
+          <Button className="qr-chat-send" type="submit" disabled={sending||!draft.trim()||loading} aria-label="Kirim pesan">{sending?<Clock3 className="size-5 animate-pulse"/>:<Send className="size-5"/>}</Button>
+        </form>
+        <p className="qr-chat-footnote"><CircleHelp className="mr-1 inline size-3.5" />Jangan kirim data pembayaran atau informasi pribadi sensitif.</p>
+      </footer>
+    </div>
   </main>;
 
   return <AppShell title="Chat Customer" description="Percakapan langsung pelanggan dan kasir">
