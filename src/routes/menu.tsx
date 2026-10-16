@@ -61,9 +61,11 @@ function PublicMenuPage() {
     const startedAt = Date.parse(pendingOrder.created_at || pendingOrder.updated_at);
     const stoppedAt = completed || cancelled ? Date.parse(pendingOrder.updated_at) : statusClock;
     const elapsedMs = Number.isFinite(startedAt) ? Math.max(0, (Number.isFinite(stoppedAt) ? stoppedAt : statusClock) - startedAt) : 0;
-    const elapsedMinutes = Math.floor(elapsedMs / 60000);
-    const elapsedHours = Math.floor(elapsedMinutes / 60);
-    const elapsedLabel = elapsedMinutes < 1 ? "Kurang dari 1 menit" : elapsedHours > 0 ? `${elapsedHours} jam ${elapsedMinutes % 60} menit` : `${elapsedMinutes} menit`;
+    const elapsedTotalSeconds = Math.floor(elapsedMs / 1000);
+    const elapsedHours = Math.floor(elapsedTotalSeconds / 3600);
+    const elapsedMinutes = Math.floor((elapsedTotalSeconds % 3600) / 60);
+    const elapsedSeconds = elapsedTotalSeconds % 60;
+    const elapsedLabel = elapsedHours > 0 ? `${String(elapsedHours).padStart(2, "0")}:${String(elapsedMinutes).padStart(2, "0")}:${String(elapsedSeconds).padStart(2, "0")}` : `${String(elapsedMinutes).padStart(2, "0")}:${String(elapsedSeconds).padStart(2, "0")}`;
     const statusTitle = cancelled ? "Pesanan dibatalkan" : completed ? "Pesanan selesai" : ready ? "Pesanan selesai dibuat" : preparing ? "Pesanan sedang dibuat" : "Menunggu konfirmasi kasir";
     const statusMessage = cancelled ? "Pesanan ini dibatalkan. Silakan hubungi kasir jika ada pertanyaan." : completed ? "Terima kasih! Pesanan kamu sudah selesai." : ready ? "Pesanan selesai dibuat dan siap disajikan." : preparing ? "Kasir sudah mengonfirmasi pesanan dan dapur sedang menyiapkannya." : "Pesanan sudah diterima. Mohon tunggu kasir mengonfirmasi dan mulai menyiapkan pesanan.";
     const steps = [
@@ -72,6 +74,7 @@ function PublicMenuPage() {
       { title: "Pesanan selesai dibuat", description: "Pesanan selesai dibuat dan siap disajikan.", icon: Coffee },
       { title: "Pesanan selesai", description: "Pesanan telah selesai. Terima kasih sudah memesan!", icon: CircleCheck },
     ];
+    const returnToMenu = () => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); window.sessionStorage.removeItem("cafe-flow-qr-pending-order-data"); const cleanUrl = new URL(window.location.href); cleanUrl.searchParams.delete("order"); window.history.replaceState(window.history.state, "", `${cleanUrl.pathname}${cleanUrl.search}${cleanUrl.hash}`); setCart([]); setSelectedPromotionId(""); window.scrollTo({ top: 0, behavior: "smooth" }); };
     return <div className="qr-ordering qr-order-status min-h-screen px-4 py-6 sm:py-10">
       <div className="mx-auto max-w-md overflow-hidden rounded-[28px] border border-slate-100 bg-white shadow-[0_12px_45px_rgba(15,23,42,0.08)]">
         <div className="flex flex-col items-center px-6 pb-6 pt-7 text-center">
@@ -82,7 +85,7 @@ function PublicMenuPage() {
           </div>
           <h1 className="mt-4 text-xl font-extrabold tracking-tight text-slate-900">{statusTitle}</h1>
           <p className="mt-2 max-w-sm text-sm leading-6 text-slate-500">{statusMessage}</p>
-          <p className="mt-4 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">Order #{pendingOrder.order_no} · {table?.name ?? "Meja -"}</p>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-2"><p className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">Order #{pendingOrder.order_no} · {table?.name ?? "Meja -"}</p><p className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold tabular-nums text-slate-600"><Clock3 className="size-3.5"/>{elapsedLabel}</p></div>
         </div>
         <div className="mx-5 rounded-2xl border border-slate-100 bg-slate-50/80 p-4">
           <div className="flex items-center justify-between gap-3">
@@ -90,7 +93,6 @@ function PublicMenuPage() {
             <strong className="text-lg font-extrabold text-slate-900">{rupiah(pendingOrder.total)}</strong>
           </div>
         </div>
-        <div className="mx-5 mt-3 flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-slate-50/80 p-4"><div className="flex items-center gap-2 text-sm text-slate-600"><Clock3 className="size-4 text-blue-700"/><span>{completed ? "Durasi pesanan" : cancelled ? "Waktu sebelum dibatalkan" : "Waktu sejak pesan"}</span></div><strong className="text-sm font-extrabold text-slate-900 tabular-nums">{elapsedLabel}</strong></div>
         <div className="px-5 pb-6 pt-6">
           <h2 className="mb-5 text-sm font-bold text-slate-900">Status pesanan</h2>
           {cancelled ? <div className="flex gap-3 rounded-2xl border border-red-100 bg-red-50 p-4"><XCircle className="mt-0.5 size-5 shrink-0 text-red-600" /><div><p className="text-sm font-bold text-red-700">Pesanan dibatalkan</p><p className="mt-1 text-xs leading-5 text-red-600">{statusMessage}</p></div></div> : <div className="space-y-0">
@@ -114,7 +116,7 @@ function PublicMenuPage() {
             })}
           </div>}
           {!completed && !cancelled && <p className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-blue-50/70 px-3 py-2.5 text-xs font-medium text-blue-500"><span className="size-2 animate-pulse rounded-full bg-blue-300" />Status diperbarui otomatis dari kasir</p>}
-          {completed && <div className="mt-6 grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-xl" onClick={() => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); setCart([]); setSelectedPromotionId(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Selesai</Button><Button className="rounded-xl" onClick={() => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); setCart([]); setSelectedPromotionId(""); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Order Again</Button></div>}
+          {completed && <div className="mt-6 grid grid-cols-2 gap-3"><Button variant="outline" className="rounded-xl !border-[#d9ad67] !bg-[#211a14] !text-[#f4ead9] hover:!bg-[#302419]" onClick={returnToMenu}>Selesai</Button><Button className="rounded-xl !border-[#d9ad67] !bg-[#d9ad67] !text-[#21170b] hover:!bg-[#f0c77d]" onClick={returnToMenu}>Order Again</Button></div>}
           {cancelled && <Button variant="outline" className="mt-6 w-full rounded-xl" onClick={() => { setPendingOrder(null); window.sessionStorage.removeItem("cafe-flow-qr-pending-order"); window.scrollTo({ top: 0, behavior: "smooth" }); }}>Kembali ke menu</Button>}
         </div>
       </div>
