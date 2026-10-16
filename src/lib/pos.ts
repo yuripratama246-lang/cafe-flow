@@ -94,16 +94,10 @@ export async function createOrder(input: NewOrderInput): Promise<OrderWithItems>
     }
     const created = (data as { order?: Order } | null)?.order;
     if (!created?.id) throw new Error("Pesanan dibuat tetapi respons order tidak valid");
-    // The public QR RPC can successfully create the order while the follow-up
-    // SELECT is blocked/delayed by public RLS. Never leave the customer on
-    // checkout after the insert already succeeded: return the RPC order and let
-    // the status page refresh the authoritative record in the background.
-    try {
-      const full = await fetchOrder(created.id);
-      if (full) return full;
-    } catch (statusError) {
-      console.warn("[create_qr_order] Order created; status lookup will retry on status page", statusError);
-    }
+    // Return the successful RPC response immediately. A second SELECT here can
+    // hang on mobile networks after the order is already committed, leaving the
+    // customer stuck on checkout and likely to submit a duplicate. The status
+    // page fetches the authoritative order independently after navigation.
     return {
       ...created,
       order_items: items.map((item, index) => ({
