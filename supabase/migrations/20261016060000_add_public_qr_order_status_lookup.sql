@@ -10,7 +10,7 @@ returns table (
 language sql
 stable
 security definer
-set search_path = public
+set search_path = ''
 as $function$
   select o.id, o.order_no, o.status, o.payment_status, o.is_paid, o.updated_at
   from public.orders o
