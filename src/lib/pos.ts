@@ -68,6 +68,14 @@ export async function fetchOrders(opts?: { from?: string; to?: string; limit?: n
 }
 export async function fetchOrder(id: string): Promise<OrderWithItems | null> { const { data, error } = await supabase.from("orders").select("*, order_items(*), payments(method, amount, cash_received, change_amount), restaurant_tables(name)").eq("id", id).maybeSingle(); if (error) throw error; return (data ?? null) as unknown as OrderWithItems | null; }
 
+export type PublicQrOrderHistoryItem = { product_name: string; quantity: number; line_total: number };
+export type PublicQrOrderHistory = { id: string; order_no: number; status: OrderStatus; payment_status: PaymentStatus; total: number; created_at: string; items: PublicQrOrderHistoryItem[] };
+export async function fetchPublicQrOrderHistory(sessionId: string, tableCode: string): Promise<PublicQrOrderHistory[]> {
+  const { data, error } = await supabase.rpc("get_public_qr_order_history", { p_session_id: sessionId, p_table_code: tableCode });
+  if (error) throw error;
+  return (data ?? []) as PublicQrOrderHistory[];
+}
+
 // Public QR customers may only read the status fields for their unguessable order UUID.
 // Direct SELECT on orders is intentionally restricted by RLS, so status polling must use this narrow RPC.
 export async function fetchPublicQrOrderStatus(id: string): Promise<Order | null> {
@@ -77,7 +85,7 @@ export async function fetchPublicQrOrderStatus(id: string): Promise<Order | null
   return (row ?? null) as Order | null;
 }
 
-export type NewOrderInput = { idempotency_key?: string; promotion_id?: string | null; source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_id?: string | null; outlet_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: string | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: string; amount: number; cash_received?: number | null; change_amount?: number | null } };
+export type NewOrderInput = { idempotency_key?: string; promotion_id?: string | null; qr_session_id?: string | null; source: "pos" | "qr"; status: OrderStatus; table_id?: string | null; customer_id?: string | null; outlet_id?: string | null; customer_name?: string | null; notes?: string | null; subtotal: number; discount: number; tax: number; total: number; is_paid: boolean; payment_method?: string | null; payment_status?: PaymentStatus; items: { product_id: string; product_name: string; unit_price: number; quantity: number; note?: string | null }[]; payment?: { method: string; amount: number; cash_received?: number | null; change_amount?: number | null } };
 export async function createOrder(input: NewOrderInput): Promise<OrderWithItems> {
   const { items, payment, ...orderData } = input;
 
