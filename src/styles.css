@@ -624,3 +624,37 @@ html.light .qr-order-status .qr-status-step-pending {
 .qr-ordering .qr-checkout-overlay span.w-4 {
   color: #f4ead9 !important;
 }
+
+
+/* QR Ordering final contrast fixes: cancelled-state action and checkout summary. */
+.qr-order-status button.mt-6.w-full.rounded-xl {
+  color: #f4ead9 !important;
+  background: #211a14 !important;
+  border: 1px solid #d9ad67 !important;
+}
+.qr-order-status button.mt-6.w-full.rounded-xl:hover {
+  background: #302419 !important;
+}
+.qr-ordering .qr-checkout-overlay .qr-checkout-total {
+  color: #f4ead9 !important;
+  background: #292119 !important;
+  border: 1px solid rgba(226,190,133,.22) !important;
+}
+.qr-ordering .qr-checkout-overlay .qr-checkout-total :is(span,strong,b) {
+  color: inherit;
+}
+.qr-ordering .qr-checkout-overlay .qr-checkout-total .text-emerald-700 {
+  color: #91d4a3 !important;
+}
+.qr-ordering .qr-checkout-overlay .qr-checkout-total .text-\[\#f0c77d\] {
+  color: #f0c77d !important;
+}
+.qr-ordering .qr-checkout-overlay .bg-slate-50 p.truncate {
+  color: #f4ead9 !important;
+}
+.qr-ordering .qr-checkout-overlay .bg-slate-50 :is(.text-slate-900,.text-slate-800,.text-slate-700,.text-slate-600,.text-slate-500) {
+  color: #c5b5a2 !important;
+}
+.qr-ordering .qr-checkout-overlay .bg-slate-50 .text-slate-900 {
+  color: #f4ead9 !important;
+}
