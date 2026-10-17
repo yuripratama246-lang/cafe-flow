@@ -41,7 +41,7 @@ export async function fetchOutletSettings(): Promise<OutletSettings> {
   const fallback: OutletSettings = { name: "Cafe Flow", address: "", phone: "", opening_hours: "", instagram: "", receipt_note: "", receipt_footer: "Terima kasih sudah berkunjung.", tax_rate: 11, service_rate: 5, tax_enabled: false, service_enabled: false, cash_enabled: true, card_enabled: true, qris_enabled: true };
   const { data: auth } = await supabase.auth.getUser();
   if (auth.user) {
-    const { data: own, error: ownError } = await supabase.from("outlet_settings").select("name,tax_rate,service_rate,tax_enabled,service_enabled,cash_enabled,card_enabled,qris_enabled").eq("owner_id", auth.user.id).maybeSingle();
+    const { data: own, error: ownError } = await supabase.from("outlet_settings").select("name,address,phone,opening_hours,instagram,receipt_note,receipt_footer,tax_rate,service_rate,tax_enabled,service_enabled,cash_enabled,card_enabled,qris_enabled").eq("owner_id", auth.user.id).maybeSingle();
     if (!ownError && own) return { ...fallback, ...own, tax_rate: Number(own.tax_rate ?? 0), service_rate: Number(own.service_rate ?? 0), tax_enabled: Boolean(own.tax_enabled), service_enabled: Boolean(own.service_enabled) } as OutletSettings;
   }
   const { data, error } = await supabase.rpc("get_public_outlet_info");
