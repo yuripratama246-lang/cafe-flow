@@ -1,5 +1,6 @@
 import { rupiah, dateTimeLabel } from "@/lib/format";
-import { PAYMENT_LABEL, type OrderWithItems } from "@/lib/pos";
+import { PAYMENT_LABEL, fetchOutletSettings, type OrderWithItems } from "@/lib/pos";
+import { useQuery } from "@tanstack/react-query";
 
 function escapeHtml(value: unknown) {
   return String(value ?? "")
@@ -12,6 +13,8 @@ function escapeHtml(value: unknown) {
 
 export function Receipt({ order, onClose }: { order: OrderWithItems; onClose?: () => void }) {
   const payment = order.payments?.[0];
+  const settingsQuery = useQuery({ queryKey: ["receipt-outlet-settings"], queryFn: fetchOutletSettings, staleTime: 30_000 });
+  const settings = settingsQuery.data;
   return (
     <div className="space-y-4">
       <div
@@ -20,7 +23,9 @@ export function Receipt({ order, onClose }: { order: OrderWithItems; onClose?: (
         className="print-only-area mx-auto w-full max-w-xs rounded-xl border border-dashed border-border bg-card p-5 font-mono text-[13px] leading-relaxed"
       >
         <div className="text-center">
-          <p className="font-display text-base font-semibold tracking-tight">KERETA MALAM CAFE</p>
+          <p className="font-display text-base font-semibold tracking-tight">{settings?.name || "KERETA MALAM CAFE"}</p>
+          {settings?.address ? <p className="text-[11px] text-muted-foreground">{settings.address}</p> : null}
+          {settings?.phone ? <p className="text-[11px] text-muted-foreground">{settings.phone}</p> : null}
           <p className="text-[11px] text-muted-foreground">Struk Pembayaran</p>
         </div>
         <div className="my-3 border-t border-dashed border-border" />
@@ -61,7 +66,7 @@ export function Receipt({ order, onClose }: { order: OrderWithItems; onClose?: (
           ) : null}
         </dl>
         <div className="my-3 border-t border-dashed border-border" />
-        <p className="text-center text-[11px] text-muted-foreground">Terima kasih atas kunjungan Anda!</p>
+        {settings?.receipt_note ? <p className="mb-1 text-center text-[11px] text-muted-foreground">{settings.receipt_note}</p> : null}<p className="text-center text-[11px] text-muted-foreground">{settings?.receipt_footer || "Terima kasih atas kunjungan Anda!"}</p>
       </div>
     </div>
   );
